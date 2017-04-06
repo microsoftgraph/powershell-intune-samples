@@ -2,6 +2,8 @@
 
 This repository of PowerShell sample scripts show how to access Intune service resources.  They demonstrate this by making HTTPS RESTful API requests to the Microsoft Graph API from PowerShell.
 
+Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+
 These samples demonstrate typical Intune administrator or Microsoft partner actions for managing Intune resources.
 
 The following samples are included in this repository:
@@ -18,6 +20,9 @@ The following samples are included in this repository:
 - User Policy Report
 
 The scripts are licensed "as-is." under the MIT License.
+
+###### Disclaimer
+Some script samples retrieve information from your Intune tenant, and others create, delete or update data in your Intune tenant.  Understand the impact of each sample script prior to running it; samples should be run using a non-production or "test" tenant account. 
 
 ## Using the Intune Graph API
 The Intune Graph API enables access to Intune information programmatically for your tenant, and the API performs the same Intune operations as those available through the Azure Portal.  
@@ -45,6 +50,7 @@ After the prerequisites are installed or met, perform the following steps to use
 * Example Application script usage:
   * To use the Manage Applications scripts, from C:\IntuneGraphSamples, run "cd .\Applications\"
   * Once in the folder run .\Application_MDM_Get.ps1 to get all MDM added applications
+  This sequence of steps can be used for each folder....
 
 #### 2. Authentication with Microsoft Graph
 Once you have authenticated with Microsoft Graph and Azure Active Directory the user token will last for an hour from authentication, once the hour expires within the PowerShell session you will be asked to re-authenticate.

@@ -328,8 +328,6 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 $ManagedDevices = Get-ManagedDevices
 
-$Delimiter = ","
-
 if($ManagedDevices){
 
     foreach($Device in $ManagedDevices){

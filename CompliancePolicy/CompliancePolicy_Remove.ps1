@@ -119,6 +119,7 @@ NAME: Get-DeviceCompliancePolicy
 
 param
 (
+    $Name,
     [switch]$Android,
     [switch]$iOS,
     [switch]$Win10
@@ -134,6 +135,7 @@ $Resource = "deviceManagement/deviceCompliancePolicies"
         if($Android.IsPresent){ $Count_Params++ }
         if($iOS.IsPresent){ $Count_Params++ }
         if($Win10.IsPresent){ $Count_Params++ }
+        if($Name.IsPresent){ $Count_Params++ }
 
         if($Count_Params -gt 1){
 
@@ -159,6 +161,13 @@ $Resource = "deviceManagement/deviceCompliancePolicies"
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'@odata.type').contains("windows10CompliancePolicy") }
+
+        }
+
+        elseif($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
 
         }
 
@@ -305,12 +314,22 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$CPs = Get-DeviceCompliancePolicy
+$CP = Get-DeviceCompliancePolicy -Name "Test Policy"
 
-foreach($CP in $CPs){
+    if($CP){
 
-    write-host "Removing Compliance Policy..." -f Yellow
-    $CP.displayname
-    Remove-DeviceCompliancePolicy -id $CP.id
+        if(@($CP).count -gt 1){
+        
+        Write-Host "More than one compliance policy has been found, please specify a single compliance policy..." -ForegroundColor Red
+        Write-Host
 
-}
+        }
+
+        elseif(@($CP).count -eq 1){
+
+        Write-Host "Removing compliance policy" $CP.displayName -ForegroundColor Yellow
+        Remove-DeviceCompliancePolicy -id $CP.id
+
+        }
+
+    }
