@@ -111,13 +111,29 @@ NAME: Get-DeviceConfigurationPolicy
 
 [cmdletbinding()]
 
+param
+(
+    $name
+)
+
 $graphApiVersion = "Beta"
 $DCP_resource = "deviceManagement/deviceConfigurations"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 
@@ -255,15 +271,29 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$CPs = Get-DeviceConfigurationPolicy
+$CP = Get-DeviceConfigurationPolicy -name "Test Graph Policy"
 
-write-host
+    if($CP){
 
-foreach($CP in $CPs){
+        if(@($CP).count -gt 1){
+        
+        Write-Host "More than one device configuration policy has been found, please specify a single device configuration policy..." -ForegroundColor Red
+        Write-Host
 
-    write-host "Removing Configuration Policy..." -f Yellow
-    $CP.displayname
-    Remove-DeviceConfigurationPolicy -id $CP.id
-    write-host
+        }
 
-}
+        elseif(@($CP).count -eq 1){
+
+        Write-Host "Removing device configuration policy" $CP.displayName -ForegroundColor Yellow
+        Remove-DeviceConfigurationPolicy -id $CP.id
+
+        }
+
+    }
+
+    else {
+
+    Write-Host "Device Configuration Policy doesn't exist..."
+    Write-Host
+
+    }

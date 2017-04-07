@@ -111,13 +111,29 @@ NAME: Get-TermsAndConditions
 
 [cmdletbinding()]
 
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $resource = "termsAndConditions"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 

@@ -260,11 +260,11 @@ $JSON = @"
 
 {
     "@odata.type": "#microsoft.graph.termsAndConditions",
-    "displayName":"Test1",
+    "displayName":"Customer Terms and Conditions",
     "title":"Terms and Conditions",
-    "description":"Some really interesting text goes here",
-    "bodyText":"Some really interesting text goes here\n\nTest Web Address - https://www.bing.com\n\nCustomer IT Department",
-    "acceptanceStatement":"Some really interesting text goes here",
+    "description":"Desription of the terms and conditions",
+    "bodyText":"This is where the body text for the terms and conditions is set\n\nTest Web Address - https://www.bing.com\n\nCustomer IT Department",
+    "acceptanceStatement":"Acceptance statement text goes here",
     "version":1
 }
 

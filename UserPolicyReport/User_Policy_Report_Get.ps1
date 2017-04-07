@@ -345,25 +345,23 @@ NAME: Get-DeviceCompliancePolicy
 
 param
 (
+    $Name,
     [switch]$Android,
     [switch]$iOS,
-    [switch]$Win10,
-    $Name
+    [switch]$Win10
 )
 
 $graphApiVersion = "Beta"
-$DCP_resource = "deviceManagement/deviceCompliancePolicies"
+$Resource = "deviceManagement/deviceCompliancePolicies"
 
     try {
-
-        # windows81CompliancePolicy
-        # windowsPhone81CompliancePolicy
 
         $Count_Params = 0
 
         if($Android.IsPresent){ $Count_Params++ }
         if($iOS.IsPresent){ $Count_Params++ }
         if($Win10.IsPresent){ $Count_Params++ }
+        if($Name.IsPresent){ $Count_Params++ }
 
         if($Count_Params -gt 1){
 
@@ -373,28 +371,35 @@ $DCP_resource = "deviceManagement/deviceCompliancePolicies"
 
         elseif($Android){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'@odata.type').contains("android") }
 
         }
 
         elseif($iOS){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'@odata.type').contains("ios") }
 
         }
 
         elseif($Win10){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'@odata.type').contains("windows10CompliancePolicy") }
+
+        }
+
+        elseif($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
 
         }
 
         else {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
@@ -428,7 +433,7 @@ This function is used to get device compliance policy assignment from the Graph 
 .DESCRIPTION
 The function connects to the Graph API Interface and gets a device compliance policy assignment
 .EXAMPLE
-Get-DeviceCompliancePolicyAssignment $id guid
+Get-DeviceCompliancePolicyAssignment -id guid
 Returns any device compliance policy assignment configured in Intune
 .NOTES
 NAME: Get-DeviceCompliancePolicyAssignment
@@ -487,13 +492,29 @@ NAME: Get-DeviceConfigurationPolicy
 
 [cmdletbinding()]
 
+param
+(
+    $name
+)
+
 $graphApiVersion = "Beta"
 $DCP_resource = "deviceManagement/deviceConfigurations"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 

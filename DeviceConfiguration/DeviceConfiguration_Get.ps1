@@ -113,13 +113,29 @@ NAME: Get-DeviceConfigurationPolicy
 
 [cmdletbinding()]
 
+param
+(
+    $name
+)
+
 $graphApiVersion = "Beta"
 $DCP_resource = "deviceManagement/deviceConfigurations"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 

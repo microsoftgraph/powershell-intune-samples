@@ -111,13 +111,29 @@ NAME: Get-TermsAndConditions
 
 [cmdletbinding()]
 
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $resource = "termsAndConditions"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 
@@ -255,14 +271,23 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$TCs = Get-TermsAndConditions
+$TC = Get-TermsAndConditions -Name "Customer"
 
-foreach($TC in $TCs){
+    if($TC){
 
-write-host "Removing Terms and Condition Definition..." -f Yellow
-$TC.displayname
-$TC.id
-Remove-TermsAndCondition -termsAndConditionId $TC.id
-Write-Host
+        if(@($TC).count -gt 1){
+        
+        Write-Host "More than one terms and conditions has been found, please specify a single terms and conditions..." -ForegroundColor Red
+        Write-Host
 
-}
+        }
+
+        elseif(@($TC).count -eq 1){
+
+        Write-Host "Removing Terms and Conditions:" $TC.displayName -ForegroundColor Yellow
+        Remove-TermsAndCondition -termsAndConditionId $TC.id
+        Write-Host
+
+        }
+
+    }
