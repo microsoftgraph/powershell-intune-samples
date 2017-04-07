@@ -255,7 +255,7 @@ $JSON = @"
 
 {
   "@odata.type": "#microsoft.graph.roleDefinition",
-  "displayName": "Advisors RBAC Role",
+  "displayName": "Graph RBAC Role",
   "description": "New RBAC Role Description",
   "permissions": [
     {

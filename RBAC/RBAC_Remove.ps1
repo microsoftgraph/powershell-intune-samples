@@ -109,13 +109,31 @@ Returns any RBAC Role Definitions configured in Intune
 NAME: Get-RBACRole
 #>
 
+[cmdletbinding()]
+
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "deviceManagement/roleDefinitions"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and $_.isBuiltInRoleDefinition -eq $false }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 
@@ -252,19 +270,31 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$RBAC_Role = Get-RBACRole | Where-Object { $_.isBuiltInRoleDefinition -eq $false -and $_.displayName -eq "New RBAC Role" }
+$RBAC_Role = Get-RBACRole -Name "Graph"
 
     if($RBAC_Role){
 
-    Write-Host "Removing RBAC Role" $RBAC_Role.displayName -ForegroundColor Cyan
+        if(@($RBAC_Role).count -gt 1){
+        
+        Write-Host "More than one RBAC Intune Role has been found, please specify a single Intune Role..." -ForegroundColor Red
+        Write-Host
 
-    Remove-RBACRole -roleDefinitionId $RBAC_Role.id
+        }
+
+        elseif(@($RBAC_Role).count -eq 1){
+
+        Write-Host "Removing RBAC Intune Role" $RBAC_Role.displayName -ForegroundColor Cyan
+        Remove-RBACRole -roleDefinitionId $RBAC_Role.id
+
+        }
+
+
 
     }
 
     else {
 
-    Write-Host "RBAC Role doesn't exist..." -ForegroundColor Yellow
+    Write-Host "RBAC Intune Role doesn't exist..." -ForegroundColor Yellow
     Write-Host
 
     }
