@@ -111,13 +111,29 @@ NAME: Get-ManagedAppPolicy
 
 [cmdletbinding()]
 
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "managedAppPolicies"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 
@@ -255,16 +271,31 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$MAMs = Get-ManagedAppPolicy
+$MAM = Get-ManagedAppPolicy -Name "Graph"
 
-write-host
+    if($MAM){
 
-foreach($MAM in $MAMs){
+        if(@($MAM).count -gt 1){
+        
+        Write-Host "More than one App Protection policy has been found, please specify a single App Protection policy..." -ForegroundColor Red
+        Write-Host
 
-    write-host "Removing Managed App Policy..." -f Yellow
-    $MAM.displayname + ": " + $MAM.'@odata.type'
-    $MAM.id
-    Remove-ManagedAppPolicy -id $MAM.id
-    write-host
+        }
 
-}
+        elseif(@($MAM).count -eq 1){
+
+        Write-Host "Removing App Protection policy" $CP.displayName -ForegroundColor Yellow
+        $MAM.displayname + ": " + $MAM.'@odata.type'
+        $MAM.id
+        Remove-ManagedAppPolicy -id $MAM.id
+
+        }
+
+    }
+
+    else {
+
+    Write-Host "App Protection Policy doesn't exist..."
+    Write-Host
+
+    }
