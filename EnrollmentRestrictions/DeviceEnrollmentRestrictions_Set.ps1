@@ -317,7 +317,7 @@ $JSON = @"
         "personalDeviceEnrollmentBlocked":false
         },
         "macRestrictions":{
-        "platformBlocked":true,
+        "platformBlocked":false,
         "personalDeviceEnrollmentBlocked":false
         },
         "windowsRestrictions":{
