@@ -109,13 +109,31 @@ Returns any application categories configured in Intune
 NAME: Get-ApplicationCategory
 #>
 
+[cmdletbinding()]
+
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "deviceAppManagement/mobileAppCategories"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 
@@ -255,17 +273,29 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$Apps = Get-ApplicationCategory
+$App = Get-ApplicationCategory -Name "LOB Apps 2" | Where-Object { $_.lastModifiedDateTime -ne "0001-01-01T00:00:00Z" }
 
-foreach($App in $Apps){
+    if($App){
 
-    if(!($App.lastModifiedDateTime -eq "0001-01-01T00:00:00Z")){
+        if(@($App).count -gt 1){
+        
+        Write-Host "More than one Application Categrory has been found, please specify a single Application Category..." -ForegroundColor Red
+        Write-Host
 
-    write-host "Removing Application Category..." -f Yellow
-    $App.displayname
-    $App.id
-    Remove-ApplicationCategory -id $App.id
+        }
+
+        elseif(@($App).count -eq 1){
+
+        Write-Host "Removing Application Category" $App.displayName -ForegroundColor Yellow
+        Remove-ApplicationCategory -id $App.id
+
+        }
 
     }
 
-}
+    else {
+
+    Write-Host "Application Category can't be found or its an inbuilt category name that can't be removed..." -ForegroundColor Yellow
+    Write-Host
+
+    }

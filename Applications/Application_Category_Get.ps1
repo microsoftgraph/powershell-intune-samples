@@ -109,13 +109,31 @@ Returns any application categories configured in Intune
 NAME: Get-ApplicationCategory
 #>
 
+[cmdletbinding()]
+
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "deviceAppManagement/mobileAppCategories"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
 
     }
 

@@ -109,13 +109,31 @@ Returns any applications configured in Intune
 NAME: Get-IntuneApplication
 #>
 
+[cmdletbinding()]
+
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "deviceAppManagement/mobileApps"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | ? { (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+
+        }
 
     }
 

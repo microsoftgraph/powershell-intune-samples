@@ -32,7 +32,7 @@ Get-DeviceEnrollmentRestrictions -id 928bf66b-df3a-460d-8203-70a3e4b0a067
 This script sets the device enrollment restrictions in the Intune Service that you have authenticated with. The settings created by the script are shown below in the JSON section below.
 
 #### Set-DeviceEnrollmentRestrictions Function
-This function used to set the device enrollment restrictions in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
+This function is used to set the device enrollment restrictions in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
 
 ```PowerShell
 Set-DeviceEnrollmentRestrictions -id 2981ad5f-d7c5-4422-834c-4381c3a33079 -JSON $JSON

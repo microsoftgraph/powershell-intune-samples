@@ -13,7 +13,7 @@ Within this section there are the following scripts with the explanation of usag
 This script adds a terms and conditions policy into the Intune Service that you have authenticated with. The policy created by the script is shown below in the Sample JSON section below.
 
 #### Add-TermsAndConditions Function
-This function used to add a terms and conditions policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+This function is used to add a terms and conditions policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
 ```
 Add-TermsAndConditions -JSON $JSON

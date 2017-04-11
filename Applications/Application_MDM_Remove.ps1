@@ -109,13 +109,31 @@ Returns any applications configured in Intune
 NAME: Get-IntuneApplication
 #>
 
+[cmdletbinding()]
+
+param
+(
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $Resource = "deviceAppManagement/mobileApps"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | ? { (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+        if($Name){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+
+        }
 
     }
 
@@ -255,11 +273,18 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 
 ####################################################
 
-$Apps = Get-IntuneApplication
+$App = Get-IntuneApplication -Name "Microsoft Excel"
 
-write-host
+if($App){
 
-foreach($App in $Apps){
+    if(@($App).count -gt 1){
+        
+    Write-Host "More than one application has been found, please specify a single application..." -ForegroundColor Red
+    Write-Host
+
+    }
+
+    elseif(@($App).count -eq 1){
 
     write-host "Removing Application..." -f Yellow
     $App.displayname + ": " + $App.'@odata.type'
@@ -267,4 +292,18 @@ foreach($App in $Apps){
     Remove-IntuneApplication -id $App.id
     write-host
 
+    }
+
 }
+
+else {
+
+Write-Host "Application doesn't exist in Intune..." -ForegroundColor Red
+Write-Host
+
+}
+
+
+
+
+

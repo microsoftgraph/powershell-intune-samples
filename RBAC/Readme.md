@@ -13,7 +13,7 @@ Within this section there are the following scripts with the explanation of usag
 This script adds an RBAC Intune Role into the Intune Service that you have authenticated with. The RBAC Intune Role created by the script are shown below in the JSON section below.
 
 #### Add-RBACRole Function
-This function used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+This function is used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
 ```
 Add-RBACRole -JSON $JSON

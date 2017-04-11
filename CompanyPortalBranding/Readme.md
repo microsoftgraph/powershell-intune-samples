@@ -32,7 +32,7 @@ Get-IntuneBrand -id a118295c-d5bf-4c82-bf2f-65ef172dd627
 This script sets the company portal branding in the Intune Service that you have authenticated with. The branding created by the script are shown below in the JSON section below.
 
 #### Set-IntuneBrand Function
-This function used to set the company portal branding in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
+This function is used to set the company portal branding in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
 
 ```
 Set-IntuneBrand -id a118295c-d5bf-4c82-bf2f-65ef172dd627 -JSON $JSON

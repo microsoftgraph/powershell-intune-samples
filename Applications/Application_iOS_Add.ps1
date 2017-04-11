@@ -355,7 +355,7 @@ $global:authToken = Get-AuthToken -TenantName $tenant
 $itunesApps = Get-itunesApplication -SearchString "Microsoft Corporation" -Limit 50
 
 #region Office Example
-$Applications = 'Microsoft Outlook','Microsoft Excel','OneDrive','Outlook Groups','Microsoft Word','Microsoft Excel'
+$Applications = 'Microsoft Outlook','Microsoft Excel','OneDrive','Microsoft Word',"Microsoft PowerPoint"
 #endregion
 
 # If application list is specified

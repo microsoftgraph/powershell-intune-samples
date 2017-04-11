@@ -13,7 +13,7 @@ Within this section there are the following scripts with the explanation of usag
 This script adds an iOS and Android device configuration policy into the Intune Service that you have authenticated with. The policies created by the script are shown below in the Android and iOS JSON sections below.
 
 #### Add-DeviceConfigurationPolicy Function
-This function used to add a device configuration policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+This function is used to add a device configuration policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
 ```
 Add-DeviceConfigurationPolicy -JSON $JSON

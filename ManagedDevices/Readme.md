@@ -10,7 +10,7 @@ Some script samples retrieve information from your Intune tenant, and others cre
 Within this section there are the following scripts with the explanation of usage.
 
 ### 1. Invoke_DeviceAction_Set.ps1
-This script loops through all managed devices that apply to a specified user from the Intune Service that you have authenticated with.
+This script loops through all managed devices assigned to a specified user and runs an action against the device in the Intune Service that you have authenticated with.
 
 The script requests an input of a users principal name.
 
