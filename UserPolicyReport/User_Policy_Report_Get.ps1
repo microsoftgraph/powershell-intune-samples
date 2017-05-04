@@ -21,10 +21,6 @@ Get-AuthToken
 Authenticates you with the Graph API interface
 .NOTES
 NAME: Get-AuthToken
-.REFERENCE
-Acknowledgement to Paolo Marques
-https://blogs.technet.microsoft.com/paulomarques/2016/03/21/working-with-azure-active-directory-graph-api-from-powershell/
-
 #>
 
 [cmdletbinding()]
@@ -32,53 +28,103 @@ https://blogs.technet.microsoft.com/paulomarques/2016/03/21/working-with-azure-a
 param
 (
     [Parameter(Mandatory=$true)]
-    $TenantName
+    $User
 )
- 
-$adal = "${env:ProgramFiles(x86)}\Microsoft SDKs\Azure\PowerShell\ServiceManagement\Azure\Services\Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
- 
-$adalforms = "${env:ProgramFiles(x86)}\Microsoft SDKs\Azure\PowerShell\ServiceManagement\Azure\Services\Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll"
- 
-    if((test-path "$adal") -eq $false){
- 
-    write-host
-    write-host "Azure Powershell module not installed..." -f Red
-    write-host "Please install Azure SDK for Powershell - https://azure.microsoft.com/en-us/downloads/" -f Yellow
-    write-host "Script can't continue..." -f Red
-    write-host
-    exit
- 
+
+$userUpn = New-Object "System.Net.Mail.MailAddress" -ArgumentList $User
+
+$tenant = $userUpn.Host
+
+Write-Host "Checking for AzureAD module..."
+
+    $AadModule = Get-Module -Name "AzureAD" -ListAvailable
+
+    if ($AadModule -eq $null) {
+
+        Write-Host "AzureAD PowerShell module not found, looking for AzureADPreview"
+        $AadModule = Get-Module -Name "AzureADPreview" -ListAvailable
+
     }
- 
+
+    if ($AadModule -eq $null) {
+        write-host
+        write-host "AzureAD Powershell module not installed..." -f Red
+        write-host "Install by running 'Install-Module AzureAD' or 'Install-Module AzureADPreview' from an elevated PowerShell prompt" -f Yellow
+        write-host "Script can't continue..." -f Red
+        write-host
+        exit
+    }
+
+# Getting path to ActiveDirectory Assemblies
+# If the module count is greater than 1 find the latest version
+
+    if($AadModule.count -gt 1){
+
+        $Latest_Version = ($AadModule | select version | Sort-Object)[-1]
+
+        $aadModule = $AadModule | ? { $_.version -eq $Latest_Version.version }
+
+        $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+        $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+
+    }
+
+    else {
+
+        $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+        $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+
+    }
+
 [System.Reflection.Assembly]::LoadFrom($adal) | Out-Null
- 
+
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
- 
-$clientId = "1950a258-227b-4e31-a9cf-717495945fc2"
+
+$clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
  
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
  
 $resourceAppIdURI = "https://graph.microsoft.com"
  
-$authority = "https://login.windows.net/$TenantName"
+$authority = "https://login.windows.net/$Tenant"
  
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
- 
+
     # https://msdn.microsoft.com/en-us/library/azure/microsoft.identitymodel.clients.activedirectory.promptbehavior.aspx
     # Change the prompt behaviour to force credentials each time: Auto, Always, Never, RefreshSession
 
-    $authResult = $authContext.AcquireToken($resourceAppIdURI,$clientId,$redirectUri, "Always")
+    $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
 
-        # Building Rest Api header with authorization token
+    $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
+
+    $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI,$clientId,$redirectUri,$platformParameters,$userId).Result
+
+        # If the accesstoken is valid then create the authentication header
+
+        if($authResult.AccessToken){
+
+        # Creating header for Authorization token
+
         $authHeader = @{
-        'Content-Type'='application\json'
-        'Authorization'=$authResult.CreateAuthorizationHeader()
-        'ExpiresOn'=$authResult.ExpiresOn
+            'Content-Type'='application/json'
+            'Authorization'="Bearer " + $authResult.AccessToken
+            'ExpiresOn'=$authResult.ExpiresOn
+            }
+
+        return $authHeader
+
         }
 
-    return $authHeader
+        else {
+
+        Write-Host
+        Write-Host "Authorization Access Token is null, please re-run authentication..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
 
     }
 
@@ -606,16 +652,16 @@ if($global:authToken){
         write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
         write-host
 
-            # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
+            # Defining User Principal Name if not present
 
-            if($tenant -eq $null -or $tenant -eq ""){
+            if($User -eq $null -or $User -eq ""){
 
-            $tenant = Read-Host -Prompt "Please specify your tenant name"
+            $User = Read-Host -Prompt "Please specify your user principal name for Azure Authentication"
             Write-Host
 
             }
 
-        $global:authToken = Get-AuthToken -TenantName $tenant
+        $global:authToken = Get-AuthToken -User $User
 
         }
 }
@@ -624,16 +670,15 @@ if($global:authToken){
 
 else {
 
-    if($tenant -eq $null -or $tenant -eq ""){
+    if($User -eq $null -or $User -eq ""){
 
-    # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
-
-    $tenant = Read-Host -Prompt "Please specify your tenant name"
+    $User = Read-Host -Prompt "Please specify your user principal name for Azure Authentication"
+    Write-Host
 
     }
 
 # Getting the authorization token
-$global:authToken = Get-AuthToken -TenantName $tenant
+$global:authToken = Get-AuthToken -User $User
 
 }
 
