@@ -31,11 +31,13 @@ Intune provides data into the Microsoft Graph in the same way as other cloud ser
 
 ## Prerequisites
 Use of these Microsoft Graph API Intune PowerShell samples requires the following:
-* [Azure PowerShell command-line tools](https://azure.microsoft.com/en-us/downloads/) - Used to authenticate user credentials with Azure Active Directory
+* Install the AzureAD PowerShell module by running 'Install-Module AzureAD' or 'Install-Module AzureADPreview' from an elevated PowerShell prompt
 * An Intune tenant which supports the Azure Portal with a production or trial license (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
 * Using the Microsoft Graph APIs to configure Intune controls and policies requires an Intune license.
 * An account with permissions to administer the Intune Service
 * PowerShell v5.0 on Windows 10 x64 (PowerShell v4.0 is a minimum requirement for the scripts to function correctly)
+* Note: For PowerShell 4.0 you will require the [PowershellGet Module for PS 4.0](https://www.microsoft.com/en-us/download/details.aspx?id=51451) to enable the usage of the Install-Module functionality
+* First time usage of these scripts requires a Global Administrator of the Tenant to accept the permissions of the application
 
 ## Getting Started
 After the prerequisites are installed or met, perform the following steps to use these scripts:
@@ -53,15 +55,31 @@ After the prerequisites are installed or met, perform the following steps to use
   This sequence of steps can be used for each folder....
 
 #### 2. Authentication with Microsoft Graph
-Once you have authenticated with Microsoft Graph and Azure Active Directory the user token will last for an hour from authentication, once the hour expires within the PowerShell session you will be asked to re-authenticate.
+The first time you run these scripts you will be asked to provide an account to authenticate with the service:
+```
+Please specify your user principal name for Azure Authentication:
+```
+Once you have provided a user principal name a popup will open prompting for your password. After a successful authentication with Azure Active Directory the user token will last for an hour, once the hour expires within the PowerShell session you will be asked to re-authenticate.
 
-Within the Get-AuthToken function by default the authentication prompt is set to "Always" so that the login is always presented to the user.
+If you are running the script for the first time against your tenant a popup will be presented stating:
 
 ```
-$authResult = $authContext.AcquireToken($resourceAppIdURI,$clientId,$redirectUri, "Always")
+Microsoft Intune PowerShell needs permission to:
+
+* Sign you in and read your profile
+* Read all groups
+* Read directory data
+* Read and write Microsoft Intune Device Configuration and Policies (preview)
+* Read and write Microsoft Intune RBAC settings (preview)
+* Perform user-impacting remote actions on Microsoft Intune devices (preview)
+* Sign in as you
+* Read and write Microsoft Intune devices (preview)
+* Read and write all groups
+* Read and write Microsoft Intune configuration (preview)
+* Read and write Microsoft Intune apps (preview)
 ```
 
-To change the prompt behaviour please review [PromptBehavior Enumeration](https://msdn.microsoft.com/en-us/library/azure/microsoft.identitymodel.clients.activedirectory.promptbehavior.aspx) documentation on MSDN.
+Note: If your user account is targeted for device based conditional access your device must be enrolled or compliant to pass authentication.
 
 ## Contributing
 

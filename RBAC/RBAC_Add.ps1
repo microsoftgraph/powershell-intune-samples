@@ -64,6 +64,14 @@ Write-Host "Checking for AzureAD module..."
 
         $aadModule = $AadModule | ? { $_.version -eq $Latest_Version.version }
 
+            # Checking if there are multiple versions of the same module found
+
+            if($AadModule.count -gt 1){
+
+            $aadModule = $AadModule | select -Unique
+
+            }
+
         $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
         $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
 
