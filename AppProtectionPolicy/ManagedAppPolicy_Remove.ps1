@@ -171,7 +171,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "managedAppPolicies"
+$Resource = "deviceAppManagement/managedAppPolicies"
 
     try {
 
@@ -232,7 +232,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "managedAppPolicies"
+$Resource = "deviceAppManagement/managedAppPolicies"
 
     try {
 
