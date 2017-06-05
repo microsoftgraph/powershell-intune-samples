@@ -522,9 +522,9 @@ Write-Host "User has $DeviceCount devices added to Intune..."
         foreach($Device in $Devices){
 
         write-host "User" $User.userPrincipalName "has device" $Device.deviceName
-        Invoke-DeviceAction -DeviceID $Device.id -RemoteLock -Verbose
-        #Invoke-DeviceAction -DeviceID $Device.id -Retire -Verbose
-        #Invoke-DeviceAction -DeviceID $Device.id -Wipe -Verbose
+        # Invoke-DeviceAction -DeviceID $Device.id -RemoteLock -Verbose
+        # Invoke-DeviceAction -DeviceID $Device.id -Retire -Verbose
+        # Invoke-DeviceAction -DeviceID $Device.id -Wipe -Verbose
 
         }
 
@@ -533,9 +533,9 @@ Write-Host "User has $DeviceCount devices added to Intune..."
     elseif($Devices.id.count -eq 1){
 
     write-host "User" $User.userPrincipalName "has one device" $Devices.deviceName
-    Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
-    #Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
-    #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
+    # Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
+    # Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
+    # Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
 
     }
 
