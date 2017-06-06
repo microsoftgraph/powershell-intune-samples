@@ -247,27 +247,7 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
             $Resource = "deviceManagement/enrollmentProfiles('$ProfileId')/updateDeviceProfileAssignment"
 
-            [String]$d = ""
-            Foreach($device in $Devices)
-            {
-                if([String]::IsNullOrWhiteSpace($d))
-                {
-                    $d = "`"" + $device + "`""
-                }
-                else
-                {
-                    $d = $d + ",`"" + $device + "`""
-                }
-            }
-
-            $JSON = @"
-            { 
-                `"deviceIds`": 
-                [
-                    $d
-                ] 
-            }
-"@
+            $JSON = @{ "deviceIds" = $Devices } | ConvertTo-Json
 
             Test-JSON -JSON $JSON
 
