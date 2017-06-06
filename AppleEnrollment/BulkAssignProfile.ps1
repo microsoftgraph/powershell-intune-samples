@@ -200,82 +200,6 @@ $JSON
  
 ####################################################
 
-Function Get-SkipToken(){
-
-<#
-.SYNOPSIS
-This function is used to get the skip token from given response string
-.DESCRIPTION
-The function tests get the skip token from given response string
-.EXAMPLE
-Get-SkipToken -Response $Response
-Get the skip token from given response
-.NOTES
-NAME: Get-SkipToken
-#>
-
-param (
-$response
-)
-
-    $skipToken = ""
-
-    if (![string]::IsNullOrWhiteSpace($response))
-    {
-        $token = "skiptoken="
-        [System.Int32]$index = $response.IndexOf($token)   
-        if ($index -gt 0)
-        {
-            [System.Int32]$nextLinkEndIndex = $response.IndexOf(';', $index + $token.Length)
-            $skipToken = $response.Substring($index + $token.Length, $nextLinkEndIndex - ($index + $token.Length))
-            $skipToken = [System.Web.HttpUtility]::UrlDecode($skipToken)
-        }
-    }
-
-    return $skipToken
-}
-
-####################################################
-
-Function Set-SkipToken(){
-
-<#
-.SYNOPSI
-This function is used to add the skip token to the given Uri
-.DESCRIPTION
-The function adds the skip token to the given Uri
-.EXAMPLE
-Set-SkipToken -RequestUri $requestUri, -Skiptoken $skipToken
-Set the skip token in the given Uri
-.NOTES
-NAME: Set-SkipToken
-#>
-
-param (
-[System.Uri]$requestUri,
-[System.String]$skipToken
-)
-    
-    [System.Uri]$newUri = [System.Uri]::new($requestUri)
-    [System.String]$skipTokenParameter = "`$skiptoken"
-
-    if (![System.String]::IsNullOrWhiteSpace($skipToken))
-    {
-        $qs = [System.Web.HttpUtility]::ParseQueryString($requestUri.Query)
-        $qs.Remove($skipTokenParameter)
-        $qs.Add($skipTokenParameter, $skipToken)
-
-        [System.UriBuilder] $uriBuilder = [System.UriBuilder]::new($requestUri)
-        $uriBuilder.Query = $qs.ToString()
-
-        $newUri = $uriBuilder.Uri
-    }
-
-    return $newUri;
-}
-
-####################################################
-
 Function Assign-ProfileToDevices(){
 <#
 .SYNOPSIS
@@ -298,7 +222,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$ResourceSegment = "deviceManagement/deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfileAssignment"
+$ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfileAssignment"
 
     try {
 
@@ -321,13 +245,7 @@ $ResourceSegment = "deviceManagement/deviceManagement/enrollmentProfiles('{0}')/
         }
         else {
 
-            $Resource = [String]::Format("deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfileAssignment", $ProfileId)
-
-            $JSON = [String]@"
-            `"deviceIds`": [
-                {0}
-            ]
-"@
+            $Resource = "deviceManagement/enrollmentProfiles('$ProfileId')/updateDeviceProfileAssignment"
 
             [String]$d = ""
             Foreach($device in $Devices)
@@ -342,7 +260,14 @@ $ResourceSegment = "deviceManagement/deviceManagement/enrollmentProfiles('{0}')/
                 }
             }
 
-            $JSON = "{" + [String]::Format($JSON, $d) + "}"
+            $JSON = @"
+            { 
+                `"deviceIds`": 
+                [
+                    $d
+                ] 
+            }
+"@
 
             Test-JSON -JSON $JSON
 
@@ -395,7 +320,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=DiscoverySource eq 'deviceEnrollmentProgram'"
+$ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=discoverySource eq 'deviceEnrollmentProgram'"
 
     try {
 
@@ -406,8 +331,8 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=Disc
         DO
         {
             $response = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get -ContentType "application/json"
-            $skipToken = Get-SkipToken([System.string]$response)
-            $uri = Set-SkipToken -requestUri $uri -skipToken $skipToken
+            $devicesNextLink = $response."@odata.nextLink"
+            $uri = $devicesNextLink
 
             foreach($device in $response)
             {
@@ -422,7 +347,7 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=Disc
                    break
                 }
             }
-        }While(![string]::IsNullOrEmpty($skipToken))   
+        }While(![string]::IsNullOrEmpty($devicesNextLink))   
 
         Write-Host $unAssignedDevices -f Yellow
 
@@ -503,7 +428,7 @@ else {
 ####################################################
 
 $global:devices = Get-UnAssignedDevices
- $global:profileId = ''
+$global:profileId = ''
 # $global:profileId = '' #'144ceb39-e922-471e-8337-12848a41d7e1'
 
 Assign-ProfileToDevices -Devices $global:devices -ProfileId $profileId
