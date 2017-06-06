@@ -503,7 +503,7 @@ else {
 ####################################################
 
 $global:devices = Get-UnAssignedDevices
-# $global:profileId = ''
- $global:profileId = '144ceb39-e922-471e-8337-12848a41d7e1' #'144ceb39-e922-471e-8337-12848a41d7e1'
+ $global:profileId = ''
+# $global:profileId = '' #'144ceb39-e922-471e-8337-12848a41d7e1'
 
 Assign-ProfileToDevices -Devices $global:devices -ProfileId $profileId
