@@ -304,7 +304,7 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=disc
 
     try {
 
-        [System.String]$skipToken = ''
+        [System.String]$devicesNextLink = ''
         [System.String[]]$unAssignedDevices = @()
         [System.Uri]$uri = "https://graph.microsoft.com/$graphApiVersion/$($ResourceSegment)"
 
@@ -323,7 +323,7 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=disc
 
                 if ($unAssignedDevices.Count -ge 1000) 
                 { 
-                   $skipToken = ''
+                   $devicesNextLink = ''
                    break
                 }
             }
