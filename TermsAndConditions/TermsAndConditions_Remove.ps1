@@ -171,7 +171,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$resource = "termsAndConditions"
+$resource = "deviceManagement/termsAndConditions"
 
     try {
 
@@ -232,7 +232,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "termsAndConditions/$termsAndConditionId"
+$Resource = "deviceManagement/termsAndConditions/$termsAndConditionId"
 
     try {
 
