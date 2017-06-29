@@ -228,12 +228,12 @@ NAME: Get-ManagedAppPolicyMobileApps
 
 param
 (
-    $id
+    $id,
+    $OS
 
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceAppManagement/managedAppPolicies/$id/?`$Expand=mobileAppIdentifierDeployments"
 
     try {
 
@@ -246,8 +246,32 @@ $Resource = "deviceAppManagement/managedAppPolicies/$id/?`$Expand=mobileAppIdent
 
         else {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get | select mobileAppIdentifierDeployments
+            if($OS -eq "" -or $OS -eq $null){
+
+            write-host "No OS parameter specified, please provide an OS. Supported value Android or iOS..." -f Red
+            Write-Host
+            break
+
+            }
+
+            elseif($OS -eq "Android"){
+
+            $Resource = "deviceAppManagement/androidManagedAppProtections('$id')/?`$Expand=mobileAppIdentifierDeployments"
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get | select mobileAppIdentifierDeployments
+
+            }
+
+            elseif($OS -eq "iOS"){
+
+            $Resource = "deviceAppManagement/iosManagedAppProtections('$id')/?`$Expand=mobileAppIdentifierDeployments"
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get | select mobileAppIdentifierDeployments
+
+
+            }
 
         }
 
@@ -456,7 +480,17 @@ $ManagedAppPolicy
 
     write-host "Managed App Policy - Mobile Apps" -f Cyan
 
-    Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id | select mobileAppIdentifierDeployments
+        if($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.androidManagedAppProtection"){
+
+            Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id -OS "Android" | select mobileAppIdentifierDeployments
+
+        }
+
+        elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.iosManagedAppProtection"){
+
+            Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id -OS "iOS" | select mobileAppIdentifierDeployments
+
+        }
 
     }
 
