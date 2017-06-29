@@ -513,18 +513,34 @@ if($Devices){
 
 $DeviceCount = $Devices.count
 
+Write-Host
 Write-Host "User has $DeviceCount devices added to Intune..."
+Write-Host
 
     if($Devices.id.count -gt 1){
 
-    write-host "Looping through devices..."
+    $Managed_Devices = $Devices.deviceName | sort -Unique
 
-        foreach($Device in $Devices){
+    $menu = @{}
 
-        write-host "User" $User.userPrincipalName "has device" $Device.deviceName
-        # Invoke-DeviceAction -DeviceID $Device.id -RemoteLock -Verbose
-        # Invoke-DeviceAction -DeviceID $Device.id -Retire -Verbose
-        # Invoke-DeviceAction -DeviceID $Device.id -Wipe -Verbose
+    for ($i=1;$i -le $Managed_Devices.count; $i++) 
+    { Write-Host "$i. $($Managed_Devices[$i-1])" 
+    $menu.Add($i,($Managed_Devices[$i-1]))}
+
+    Write-Host
+    [int]$ans = Read-Host 'Enter Device id (Numerical value)'
+    $selection = $menu.Item($ans)
+
+        if($selection){
+
+        $SelectedDevice = $Devices | ? { $_.deviceName -eq "$Selection" }
+
+        $SelectedDeviceId = $SelectedDevice | select -ExpandProperty id
+
+        write-host "User" $User.userPrincipalName "has device" $SelectedDevice.deviceName
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -RemoteLock -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Retire -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Wipe -Verbose
 
         }
 
@@ -532,10 +548,10 @@ Write-Host "User has $DeviceCount devices added to Intune..."
 
     elseif($Devices.id.count -eq 1){
 
-    write-host "User" $User.userPrincipalName "has one device" $Devices.deviceName
-    # Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
-    # Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
-    # Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
+        write-host "User" $User.userPrincipalName "has one device" $Devices.deviceName
+        #Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
+        #Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
+        #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
 
     }
 
