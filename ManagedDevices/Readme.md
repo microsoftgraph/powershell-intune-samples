@@ -75,7 +75,44 @@ This function is used to get the managed device overview from the Intune Service
 Get-ManagedDeviceOverview
 ```
 
-### 3. ManagedDevices_Get.ps1
+### 3.ManagedDevices_Add_ToAADGroup.ps1
+
+This script adds Intune managed devices as assigned members to an Azure AD Device Security Group when the associated user’s Azure AD user name contains a specific string.  For example, if a username is: "Aimee Bowman (Redmond)" – the script can add Aimee’s managed devices to an Azure AD Security Group called "Redmond Devices."
+
+The script iterates through all Intune managed devices and then identifies the associated user for each managed device. The script retrieves the Azure AD user’s name, and checks to see if the name contains the value defined in the $FilterName variable.  If found, the users’ associated Intune managed device is added to the specified Azure Active Directory Group as an assigned entry.  If the device is already in the Group then it won't attempt to add the device to the group.
+
+The script will prompt for two variables: $AADGroup and $FilterName.  When you run the script, input those two values to match the requirements for your organization.  Note that the filter string (search string) is case sensitive, and should not contain quotes when entered on the command line.
+
+There are the following extra functions used:
+
+#### Add-AADGroupMember - Function
+This function is used to add an Azure Active Directory Member (User / Device) to a specified AAD Group.
+```PowerShell
+Add-AADGroupMember -GroupId "Devices Group" -AADMemberID 3a81de89-0447-49b6-a866-0ae62a5ad298
+```
+
+#### Get-AADDevice - Function
+This function is used to get an AAD device information from Azure Active Directory.
+```PowerShell
+Get-AADDevice -DeviceID 3a81de89-0447-49b6-a866-0ae62a5ad298
+
+```
+
+#### Get-AADGroup - Function
+This function is used to get all managed devices from the Intune Service.
+```PowerShell
+# Returns all AAD Groups registered with Azure AD
+Get-AADGroup
+
+# Returns all users registered with Azure AD
+Get-AADGroup -id 7a81de89-0447-49b6-a866-0ae62a5ad298
+
+# Returns all users registered with Azure AD
+Get-AADGroup -GroupName "Devices Group"
+
+```
+
+### 4. ManagedDevices_Get.ps1
 This script returns all managed devices added to the Intune Service that you have authenticated with.
 
 There are the following functions used:
