@@ -184,7 +184,7 @@ try {
 
     if($IncludeEAS.IsPresent){ $Count_Params++ }
     if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
+
         if($Count_Params -gt 1){
 
         write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
@@ -192,7 +192,7 @@ try {
         break
 
         }
-        
+
         elseif($IncludeEAS){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
@@ -204,17 +204,17 @@ try {
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
 
         }
-        
+
         else {
-    
+
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
         Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
         Write-Host
 
         }
 
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-    
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+
     }
 
     catch {

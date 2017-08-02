@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.windows.net/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
- 
+ï¿½
 ####################################################
 
 Function Get-AADUser(){
@@ -177,23 +177,23 @@ param
 # Defining Variables
 $graphApiVersion = "v1.0"
 $User_resource = "users"
-    
+
     try {
-        
+
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-        
+
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-        
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+
         }
 
         else {
-            
+
             if($Property -eq "" -or $Property -eq $null){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
 
             }
 
@@ -201,12 +201,12 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
             }
 
         }
-    
+
     }
 
     catch {
@@ -263,7 +263,7 @@ try {
 
     if($IncludeEAS.IsPresent){ $Count_Params++ }
     if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
+
         if($Count_Params -gt 1){
 
         write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
@@ -271,7 +271,7 @@ try {
         break
 
         }
-        
+
         elseif($IncludeEAS){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
@@ -283,9 +283,9 @@ try {
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
 
         }
-        
+
         else {
-    
+
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
 
         Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
@@ -293,8 +293,8 @@ try {
 
         }
 
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-    
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+
     }
 
     catch {
@@ -384,17 +384,17 @@ if($Devices){
         if($Device.ownerType -eq "personal"){
 
         Write-Host "Device Ownership:" $Device.ownerType -ForegroundColor Cyan
-        
+
         }
 
         elseif($Device.ownerType -eq "company"){
-        
+
         Write-Host "Device Ownership:" $Device.ownerType -ForegroundColor Magenta
-        
+
         }
 
     $uri = "https://graph.microsoft.com/beta/manageddevices('$DeviceID')?`$expand=detectedApps"
-    $DetectedApps = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).detectedApps
+    $DetectedApps = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).detectedApps
 
     $DetectedApps | select displayName,version | ft
 
