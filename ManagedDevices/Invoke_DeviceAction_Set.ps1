@@ -303,6 +303,7 @@ param
     [switch]$ResetPasscode,
     [switch]$Wipe,
     [switch]$Retire,
+    [switch]$Delete,
     [Parameter(Mandatory=$true,HelpMessage="DeviceId (guid) for the Device you want to take action on must be specified:")]
     $DeviceID
 )
@@ -317,6 +318,7 @@ $graphApiVersion = "Beta"
         if($ResetPasscode.IsPresent){ $Count_Params++ }
         if($Wipe.IsPresent){ $Count_Params++ }
         if($Retire.IsPresent){ $Count_Params++ }
+        if($Delete.IsPresent){ $Count_Params++ }
 
         if($Count_Params -eq 0){
 
@@ -407,6 +409,32 @@ $graphApiVersion = "Beta"
             else {
 
             Write-Host "Retire of the device $DeviceID was cancelled..."
+
+            }
+
+        }
+
+        elseif($Delete){
+
+        write-host
+        Write-Warning "A deletion of a device will only work if the device has already had a retire or wipe request sent to the device..."
+        Write-Host
+        write-host "Are you sure you want to delete this device? Y or N?"
+        $Confirm = read-host
+
+            if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+            $Resource = "managedDevices('$DeviceID')"
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+            write-verbose $uri
+            Write-Verbose "Sending delete command to $DeviceID"
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Delete
+
+            }
+
+            else {
+
+            Write-Host "Deletion of the device $DeviceID was cancelled..."
 
             }
 
@@ -541,6 +569,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -RemoteLock -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Retire -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Wipe -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Delete -Verbose
 
         }
 
@@ -552,6 +581,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Delete -Verbose
 
     }
 

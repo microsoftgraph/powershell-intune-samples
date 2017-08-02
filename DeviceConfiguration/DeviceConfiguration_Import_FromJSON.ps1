@@ -1,6 +1,6 @@
-﻿
+
 <#
- 
+�
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+�
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+�
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+�
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+�
 $authority = "https://login.windows.net/$Tenant"
- 
+�
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,77 +146,53 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
- 
+�
 ####################################################
 
-Function Get-ManagedDevices(){
+Function Add-DeviceConfigurationPolicy(){
 
 <#
 .SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
+This function is used to add an device configuration policy using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
+The function connects to the Graph API Interface and adds a device configuration policy
 .EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
+Add-DeviceConfigurationPolicy -JSON $JSON
+Adds a device configuration policy in Intune
 .NOTES
-NAME: Get-ManagedDevices
+NAME: Add-DeviceConfigurationPolicy
 #>
 
 [cmdletbinding()]
 
 param
 (
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
+    $JSON
 )
 
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
+$graphApiVersion = "Beta"
+$DCP_resource = "deviceManagement/deviceConfigurations"
+Write-Verbose "Resource: $DCP_resource"
 
-try {
+    try {
 
-    $Count_Params = 0
+        if($JSON -eq "" -or $JSON -eq $null){
 
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
-
-        }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
+        write-host "No JSON specified, please specify valid JSON for the Android Policy..." -f Red
 
         }
 
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
         else {
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
+
+        Test-JSON -JSON $JSON
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
 
         }
 
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-    
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -236,130 +212,43 @@ try {
 
 ####################################################
 
-Function Get-ManagedDeviceUser(){
+Function Test-JSON(){
 
 <#
 .SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Get-ManagedDeviceUser
+NAME: Test-AuthHeader
 #>
 
-[cmdletbinding()]
+param (
 
-param
-(
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
+$JSON
+
 )
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).userId
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
 
     }
 
     catch {
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
+    $validJson = $false
+    $_.Exception
 
     }
 
-}
-
-####################################################
-
-Function Get-AADUser(){
-
-<#
-.SYNOPSIS
-This function is used to get AAD Users from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any users registered with AAD
-.EXAMPLE
-Get-AADUser
-Returns all users registered with Azure AD
-.EXAMPLE
-Get-AADUser -userPrincipleName user@domain.com
-Returns specific user by UserPrincipalName registered with Azure AD
-.NOTES
-NAME: Get-AADUser
-#>
-
-[cmdletbinding()]
-
-param
-(
-    $userPrincipalName,
-    $Property
-)
-
-# Defining Variables
-$graphApiVersion = "v1.0"
-$User_resource = "users"
-
-    try {
-
-        if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-
-        }
-
-        else {
-
-            if($Property -eq "" -or $Property -eq $null){
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
-            Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
-
-            }
-
-            else {
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
-            Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-
-            }
-
-        }
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
     break
 
     }
@@ -420,39 +309,35 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
 
-if($ManagedDevices){
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
 
-    foreach($Device in $ManagedDevices){
+if(!(Test-Path "$ImportPath")){
 
-    $DeviceID = $Device.id
-
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
-    Write-Host
-    $Device
-
-        if($Device.deviceRegistrationState -eq "registered"){
-
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
-
-        $User = Get-AADUser $userId
-
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
-
-        }
-
-    Write-Host
-
-    }
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
 
 }
 
-else {
+####################################################
 
-Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
-Write-Host
+$JSON_Data = gc "$ImportPath"
 
-}
+# Excluding entries that are not required - id,createdDateTime,lastModifiedDateTime,version
+$JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version
+
+$DisplayName = $JSON_Convert.displayName
+
+$JSON_Output = $JSON_Convert | ConvertTo-Json
+            
+write-host
+write-host "Device Configuration Policy '$DisplayName' Found..." -ForegroundColor Yellow
+write-host
+$JSON_Output
+write-host
+Write-Host "Adding Device Configuration Policy '$DisplayName'" -ForegroundColor Yellow
+Add-DeviceConfigurationPolicy -JSON $JSON_Output

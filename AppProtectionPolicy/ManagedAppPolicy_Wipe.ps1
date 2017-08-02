@@ -1,6 +1,6 @@
-ï»¿
+
 <#
-Â 
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+ 
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
+ 
 $authority = "https://login.windows.net/$Tenant"
-Â 
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,147 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
-####################################################
-
-Function Get-ManagedDevices(){
-
-<#
-.SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
-.EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
-.NOTES
-NAME: Get-ManagedDevices
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
-
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
-
-        }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-
-        }
-
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
-    
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-ManagedDeviceUser(){
-
-<#
-.SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
-.EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
-.NOTES
-NAME: Get-ManagedDeviceUser
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
-
-    try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).userId
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
+ 
 ####################################################
 
 Function Get-AADUser(){
@@ -317,23 +177,23 @@ param
 # Defining Variables
 $graphApiVersion = "v1.0"
 $User_resource = "users"
-
+    
     try {
-
+        
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-
+        
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
-
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        
         }
 
         else {
-
+            
             if($Property -eq "" -or $Property -eq $null){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
 
             }
 
@@ -341,12 +201,79 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
             }
 
         }
+    
+    }
 
+    catch {
+
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
+
+    }
+
+}
+
+####################################################
+
+Function Get-AADUserManagedAppRegistrations(){
+
+<#
+.SYNOPSIS
+This function is used to get an AAD User Managed App Registrations from the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and gets a users Managed App Registrations registered with AAD
+.EXAMPLE
+Get-AADUser
+Returns all Managed App Registration for a User registered with Azure AD
+.EXAMPLE
+Get-AADUserManagedAppRegistrations -id $id
+Returns specific user by id registered with Azure AD
+.NOTES
+NAME: Get-AADUserManagedAppRegistrations
+#>
+
+[cmdletbinding()]
+
+param
+(
+    $id
+)
+
+# Defining Variables
+$graphApiVersion = "beta"
+$User_resource = "users/$id/managedAppRegistrations"
+    
+    try {
+        
+        if(!$id){
+
+        Write-Host "No AAD User ID was passed to the function, specify a valid AAD User ID" -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+        else {
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$User_resource"
+
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
+    
     }
 
     catch {
@@ -420,39 +347,126 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+write-host
+write-host "User Principal Name:" -f Yellow
+$UPN = Read-Host
 
-if($ManagedDevices){
+$User = Get-AADUser -userPrincipalName $UPN
 
-    foreach($Device in $ManagedDevices){
+$UserID = $User.id
 
-    $DeviceID = $Device.id
+write-host
+write-host "Display Name:"$User.displayName
+write-host "User ID:"$User.id
+write-host "User Principal Name:"$User.userPrincipalName
+write-host
 
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
-    Write-Host
-    $Device
+####################################################
 
-        if($Device.deviceRegistrationState -eq "registered"){
+$ManagedAppReg = Get-AADUserManagedAppRegistrations -id $UserID
 
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
+    if($ManagedAppReg){
 
-        $User = Get-AADUser $userId
+    $DeviceTag = $ManagedAppReg.deviceTag | sort -Unique
 
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
+        # If user has only 1 device with managed application follow this flow
+        if($DeviceTag.count -eq 1){
+
+        $DeviceName = $ManagedAppReg.deviceName
+    
+        $uri = "https://graph.microsoft.com/beta/users('$UserID')/wipeManagedAppRegistrationByDeviceTag"
+
+$JSON = @"
+
+    {
+        "deviceTag": "$DeviceTag"
+    }
+
+"@
+            
+            write-host "Are you sure you want to wipe application data on device $DeviceName`? Y or N?" -f Yellow
+            $Confirm = read-host
+
+            if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
+
+            }
+
+            else {
+
+            Write-Host
+            Write-Host "Wipe application data for the device $DeviceName was cancelled..."
+            Write-Host
+
+            }
 
         }
 
-    Write-Host
+        # If the user has more than 1 device with managed application follow this flow
+        else {
 
+        Write-Host "More than one device found with MAM Applications" -ForegroundColor Yellow
+        Write-Host
+
+        $MAM_Devices = $ManagedAppReg.deviceName | sort -Unique
+        
+        # Building menu from Array to show more than one device
+
+        $menu = @{}
+
+        for ($i=1;$i -le $MAM_Devices.count; $i++) 
+        { Write-Host "$i. $($MAM_Devices[$i-1])" 
+        $menu.Add($i,($MAM_Devices[$i-1]))}
+
+        Write-Host
+        [int]$ans = Read-Host 'Enter Device to wipe MAM Data (Numerical value)'
+        $selection = $menu.Item($ans)
+
+            If($selection){
+
+            Write-Host "Device selected:"$selection
+            Write-Host
+
+            $SelectedDeviceTag = $ManagedAppReg | ? { $_.deviceName -eq "$Selection" } | sort -Unique | select -ExpandProperty deviceTag
+
+            $uri = "https://graph.microsoft.com/beta/users('$UserID')/wipeManagedAppRegistrationByDeviceTag"
+
+$JSON = @"
+
+    {
+        "deviceTag": "$SelectedDeviceTag"
     }
 
-}
+"@
 
-else {
+                write-host "Are you sure you want to wipe application data on this device? Y or N?" -ForegroundColor Yellow
+                $Confirm = read-host
 
-Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
-Write-Host
+                if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-}
+                Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
+
+                }
+
+                else {
+
+                Write-Host
+                Write-Host "Wipe application data for this device was cancelled..."
+                Write-Host
+
+                }
+
+            }
+
+            else {
+
+            Write-Host "No device selected..." -ForegroundColor Red
+
+            }
+
+        Write-Host
+
+        }
+
+    }

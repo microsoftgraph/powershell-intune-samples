@@ -1,6 +1,6 @@
-ï»¿
-<#
 
+<#
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+
 function Get-AuthToken {
 
 <#
@@ -38,9 +38,9 @@ $tenant = $userUpn.Host
 Write-Host "Checking for AzureAD module..."
 
     $AadModule = Get-Module -Name "AzureAD" -ListAvailable
-    
+
     if ($AadModule -eq $null) {
-        
+
         Write-Host "AzureAD PowerShell module not found, looking for AzureADPreview"
         $AadModule = Get-Module -Name "AzureADPreview" -ListAvailable
 
@@ -64,6 +64,14 @@ Write-Host "Checking for AzureAD module..."
 
         $aadModule = $AadModule | ? { $_.version -eq $Latest_Version.version }
 
+            # Checking if there are multiple versions of the same module found
+
+            if($AadModule.count -gt 1){
+
+            $aadModule = $AadModule | select -Unique
+
+            }
+
         $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
         $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
 
@@ -81,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
+ 
 $authority = "https://login.windows.net/$Tenant"
-Â 
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -98,7 +106,7 @@ $authority = "https://login.windows.net/$Tenant"
     $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
 
     $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
-    
+
     $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI,$clientId,$redirectUri,$platformParameters,$userId).Result
 
         # If the accesstoken is valid then create the authentication header
@@ -138,7 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
+ 
 ####################################################
 
 Function Get-AADUser(){
@@ -175,7 +183,7 @@ $User_resource = "users"
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
         
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
         
         }
 
@@ -185,7 +193,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
 
             }
 
@@ -193,7 +201,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
             }
 
@@ -252,14 +260,14 @@ $Group_resource = "groups"
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
         
         elseif($GroupName -eq "" -or $GroupName -eq $null){
         
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
         
         }
 
@@ -268,14 +276,14 @@ $Group_resource = "groups"
             if(!$Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
             
             }
             
             elseif($Members){
             
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
             
                 if($Group){
 
@@ -285,7 +293,7 @@ $Group_resource = "groups"
                 write-host
 
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
                 }
 
@@ -314,39 +322,30 @@ $Group_resource = "groups"
 
 ####################################################
 
-Function Get-AADDevice(){
+Function Get-RBACRole(){
 
 <#
 .SYNOPSIS
-This function is used to get an AAD Device from the Graph API REST interface
+This function is used to get RBAC Role Definitions from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets an AAD Device registered with AAD
+The function connects to the Graph API Interface and gets any RBAC Role Definitions
 .EXAMPLE
-Get-AADDevice -DeviceID $DeviceID
-Returns an AAD Device from Azure AD
+Get-RBACRole
+Returns any RBAC Role Definitions configured in Intune
 .NOTES
-NAME: Get-AADDevice
+NAME: Get-RBACRole
 #>
 
-[cmdletbinding()]
-
-param
-(
-    $DeviceID
-)
-
-# Defining Variables
-$graphApiVersion = "v1.0"
-$Resource = "devices"
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/roleDefinitions"
     
     try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$filter=deviceId eq '$DeviceID'"
-
-    (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).value 
-
+    
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+    
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -366,135 +365,101 @@ $Resource = "devices"
 
 ####################################################
 
-Function Add-AADGroupMember(){
+Function Get-RBACRoleDefinition(){
 
 <#
 .SYNOPSIS
-This function is used to add an member to an AAD Group from the Graph API REST interface
+This function is used to get an RBAC Role Definition from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and adds a member to an AAD Group registered with AAD
+The function connects to the Graph API Interface and gets any RBAC Role Definition
 .EXAMPLE
-Add-AADGroupMember -GroupId $GroupId -AADMemberID $AADMemberID
-Returns all users registered with Azure AD
+Get-RBACRoleDefinition -id $id
+Returns an RBAC Role Definitions configured in Intune
 .NOTES
-NAME: Add-AADGroupMember
+NAME: Get-RBACRoleDefinition
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $GroupId,
-    $AADMemberId
+    $id
 )
 
-# Defining Variables
-$graphApiVersion = "v1.0"
-$Resource = "groups"
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/roleDefinitions('$id')?`$expand=roleassignments"
     
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource/$GroupId/members/`$ref"
+        if(!$id){
 
-$JSON = @"
-
-{
-    "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/$AADMemberId"
-}
-
-"@
-
-    Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $Json -ContentType "application/json"
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-ManagedDevices(){
-
-<#
-.SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
-.EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
-.NOTES
-NAME: Get-ManagedDevices
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
-
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
+        write-host "No Role ID was passed to the function, provide an ID variable" -f Red
         break
 
         }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-
-        }
-
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
     
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).roleAssignments
     
     }
+    
+    catch {
 
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
+
+    }
+
+}
+
+####################################################
+
+Function Get-RBACRoleAssignment(){
+
+<#
+.SYNOPSIS
+This function is used to get an RBAC Role Assignment from the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and gets any RBAC Role Assignment
+.EXAMPLE
+Get-RBACRoleAssignment -id $id
+Returns an RBAC Role Assignment configured in Intune
+.NOTES
+NAME: Get-RBACRoleAssignment
+#>
+
+[cmdletbinding()]
+
+param
+(
+    $id
+)
+
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/roleAssignments('$id')"
+    
+    try {
+
+        if(!$id){
+
+        write-host "No Role Assignment ID was passed to the function, provide an ID variable" -f Red
+        break
+
+        }
+    
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+    
+    }
+    
     catch {
 
     $ex = $_.Exception
@@ -566,146 +531,170 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-#region AAD Group
+write-host
+write-host "Please specify the User Principal Name you want to query:" -f Yellow
+$UPN = Read-Host
 
-# Setting application AAD Group to assign application
+    if($UPN -eq $null -or $UPN -eq ""){
 
-$AADGroup = Read-Host -Prompt "Enter the Azure AD device group name where devices will be assigned as members" 
-
-$GroupId = (get-AADGroup -GroupName "$AADGroup").id
-
-    if($GroupId -eq $null -or $GroupId -eq ""){
-
-    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
-    Write-Host
-    exit
-
-    }
-
-    else {
-
-    $GroupMembers = Get-AADGroup -GroupName "$AADGroup" -Members
-
-    }
-
-#endregion
-
-####################################################
-
-#region Variables and Filter
-
-# Variable used for filter on users displayname
-# Note: The filter is case sensitive
-
-$FilterName = Read-Host -Prompt "Specify the Azure AD display name search string" 
-
-    if($FilterName -eq "" -or $FilterName -eq $null){
-
-    Write-Host
-    Write-Host "A string is required to identify the set of users." -ForegroundColor Red
+    Write-Host "Valid UPN not specified, script can't continue..." -f Red
     Write-Host
     break
 
     }
 
-# Count used to calculate how many devices were added to the Group
+$User = Get-AADUser -userPrincipalName $UPN
 
-$count = 0
+$UserID = $User.id
+$UserDN = $User.displayName
+$UserPN = $User.userPrincipalName
 
-# Count to check if any devices have already been added to the Group
-
-$countAdded = 0
-
-#endregion
+Write-Host
+write-host "-------------------------------------------------------------------"
+write-host
+write-host "Display Name:"$User.displayName
+write-host "User ID:"$User.id
+write-host "User Principal Name:"$User.userPrincipalName
+write-host
 
 ####################################################
 
-Write-Host
-Write-Host "Checking if any Managed Devices are registered with Intune..." -ForegroundColor Cyan
-Write-Host
+$MemberOf = Get-AADUser -userPrincipalName $UPN -Property MemberOf
 
-$Devices = Get-ManagedDevices
+$DirectoryRole = $MemberOf | ? { $_.'@odata.type' -eq "#microsoft.graph.directoryRole" }
 
-if($Devices){
+    if($DirectoryRole){
 
-    Write-Host "Intune Managed Devices found..." -ForegroundColor Yellow
+    $DirRole = $DirectoryRole.displayName
+
+    write-host "Directory Role:" -f Yellow
+    $DirectoryRole.displayName
+    write-host
+
+    }
+
+    else {
+
+    write-host "Directory Role:" -f Yellow
+    Write-Host "User"
+    write-host
+
+    }
+
+####################################################
+
+$AADGroups = $MemberOf | ? { $_.'@odata.type' -eq "#microsoft.graph.group" } | sort displayName
+
+    if($AADGroups){
+
+    write-host "AAD Group Membership:" -f Yellow
+        
+        foreach($AADGroup in $AADGroups){
+        
+        $GroupDN = (Get-AADGroup -id $AADGroup.id).displayName
+
+        $GroupDN
+
+        }
+
+    write-host
+
+    }
+
+    else {
+
+    write-host "AAD Group Membership:" -f Yellow
+    write-host "No Group Membership in AAD Groups"
     Write-Host
 
-    foreach($Device in $Devices){
+    }
 
-    $DeviceID = $Device.id
-    $AAD_DeviceID = $Device.azureActiveDirectoryDeviceId
-    $LSD = $Device.lastSyncDateTime
-    $userId = $Device.userPrincipalName
+####################################################
 
-    # Getting User information from AAD to get the users displayName
+write-host "-------------------------------------------------------------------"
 
-    $User = Get-AADUser -userPrincipalName $userId
+# Getting all Intune Roles defined
+$RBAC_Roles = Get-RBACRole
 
-        # Filtering on the display Name to add users device to a specific group
+$Permissions = @()
 
-        if(($User.displayName).contains("$FilterName")){
+# Looping through all Intune Roles defined
+foreach($RBAC_Role in $RBAC_Roles){
 
-        Write-Host "----------------------------------------------------"
-        Write-Host
+$RBAC_id = $RBAC_Role.id
 
-        write-host "Device Name:"$Device.deviceName -f Green
-        write-host "Management State:"$Device.managementState
-        write-host "Operating System:"$Device.operatingSystem
-        write-host "Device Type:"$Device.deviceType
-        write-host "Last Sync Date Time:"$Device.lastSyncDateTime
-        write-host "Jail Broken:"$Device.jailBroken
-        write-host "Compliance State:"$Device.complianceState
-        write-host "Enrollment Type:"$Device.enrollmentType
-        write-host "AAD Registered:"$Device.aadRegistered
-        Write-Host "UPN:"$Device.userPrincipalName
-        write-host
-        write-host "User Details:" -f Green
-        write-host "User Display Name:"$User.displayName
+$RoleAssignments = Get-RBACRoleDefinition -id $RBAC_id
+    
+    # If an Intune Role has an Assignment check if the user is a member of members group
+    if($RoleAssignments){
 
-        Write-Host "Adding user device" $Device.deviceName "to AAD Group $AADGroup..." -ForegroundColor Yellow
+        $RoleAssignments | foreach {
 
-        # Getting Device information from Azure AD Devices
+        $RBAC_Role_Assignments = $_.id
 
-        $AAD_Device = Get-AADDevice -DeviceID $AAD_DeviceID       
+        $Assignment = Get-RBACRoleAssignment -id $RBAC_Role_Assignments
 
-        $AAD_Id = $AAD_Device.id
+        $RA_Names = @()
 
-            if($GroupMembers.id -contains $AAD_Id){
+        $Members = $Assignment.members
+        $ScopeMembers = $Assignment.scopeMembers
 
-            Write-Host "Device already exists in AAD Group..." -ForegroundColor Red
+            $Members | foreach {
 
-            $countAdded++
+                if($AADGroups.id -contains $_){
+
+                $RA_Names += (Get-AADGroup -id $_).displayName
+
+                }
 
             }
 
-            else {
+            if($RA_Names){
 
-            Write-Host "Adding Device to AAD Group..." -ForegroundColor Yellow
+            Write-Host
+            write-host "RBAC Role Assigned -" $RBAC_Role.displayName -ForegroundColor Cyan
+            $Permissions += $RBAC_Role.permissions.actions
+            Write-Host
 
-            Add-AADGroupMember -GroupId $GroupId -AADMemberId $AAD_Id
+            write-host "Assignment Display Name:" $Assignment.displayName -ForegroundColor Yellow
+            Write-Host
 
-            $count++
+            Write-Host "Assignment - Members:" -f Yellow 
+            $RA_Names
+
+            Write-Host
+            Write-Host "Assignment - Scope (Groups):" -f Yellow
+            
+                $ScopeMembers | foreach {
+
+                (Get-AADGroup -id $_).displayName
+
+                }
+
+            Write-Host
+            write-host "-------------------------------------------------------------------"
 
             }
-
-        Write-Host
 
         }
 
     }
-    
-    Write-Host "----------------------------------------------------"
-    Write-Host
-    Write-Host "$count devices added to AAD Group '$AADGroup' with filter '$filterName'..." -ForegroundColor Green
-    Write-Host "$countAdded devices already in AAD Group '$AADGroup' with filter '$filterName'..." -ForegroundColor Yellow
-    Write-Host
+
+}
+
+if($Permissions){
+
+Write-Host
+write-host "Effective Permissions for user:" -ForegroundColor Yellow
+$Permissions | select -Unique | sort
 
 }
 
 else {
 
-write-host "No Intune Managed Devices found..." -f green
 Write-Host
+write-host "User isn't part of any Intune Roles..." -ForegroundColor Yellow
 
 }
+
+Write-Host

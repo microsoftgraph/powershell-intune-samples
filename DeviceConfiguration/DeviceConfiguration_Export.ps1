@@ -1,6 +1,6 @@
-﻿
+
 <#
- 
+�
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+�
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+�
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+�
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+�
 $authority = "https://login.windows.net/$Tenant"
- 
+�
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,77 +146,35 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
- 
+�
 ####################################################
 
-Function Get-ManagedDevices(){
+Function Get-DeviceConfigurationPolicy(){
 
 <#
 .SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
+This function is used to get device configuration policies from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
+The function connects to the Graph API Interface and gets any device configuration policies
 .EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
+Get-DeviceConfigurationPolicy
+Returns any device configuration policies configured in Intune
 .NOTES
-NAME: Get-ManagedDevices
+NAME: Get-DeviceConfigurationPolicy
 #>
 
 [cmdletbinding()]
 
-param
-(
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
-
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
-
-        }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-
-        }
-
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
+$graphApiVersion = "Beta"
+$DCP_resource = "deviceManagement/deviceConfigurations"
     
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+    try {
+    
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+    (Invoke-RestMethod -Uri $uri �Headers $authToken �Method Get).Value
     
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -236,131 +194,84 @@ try {
 
 ####################################################
 
-Function Get-ManagedDeviceUser(){
+Function Export-JSONData(){
 
 <#
 .SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
+This function is used to export JSON data returned from Graph
 .DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
+This function is used to export JSON data returned from Graph
 .EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
+Export-JSONData -JSON $JSON
+Export the JSON inputted on the function
 .NOTES
-NAME: Get-ManagedDeviceUser
+NAME: Export-JSONData
 #>
 
-[cmdletbinding()]
+param (
 
-param
-(
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
+$JSON,
+$ExportPath
+
 )
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).userId
+        if($JSON -eq "" -or $JSON -eq $null){
 
-    }
+        write-host "No JSON specified, please specify valid JSON..." -f Red
 
-    catch {
+        }
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
+        elseif(!$ExportPath){
 
-    }
+        write-host "No export path parameter set, please provide a path to export the file" -f Red
 
-}
+        }
 
-####################################################
+        elseif(!(Test-Path $ExportPath)){
 
-Function Get-AADUser(){
-
-<#
-.SYNOPSIS
-This function is used to get AAD Users from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any users registered with AAD
-.EXAMPLE
-Get-AADUser
-Returns all users registered with Azure AD
-.EXAMPLE
-Get-AADUser -userPrincipleName user@domain.com
-Returns specific user by UserPrincipalName registered with Azure AD
-.NOTES
-NAME: Get-AADUser
-#>
-
-[cmdletbinding()]
-
-param
-(
-    $userPrincipalName,
-    $Property
-)
-
-# Defining Variables
-$graphApiVersion = "v1.0"
-$User_resource = "users"
-
-    try {
-
-        if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        write-host "$ExportPath doesn't exist, can't export JSON Data" -f Red
 
         }
 
         else {
 
-            if($Property -eq "" -or $Property -eq $null){
+        $JSON1 = ConvertTo-Json $JSON
 
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
-            Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
+        $JSON_Convert = $JSON1 | ConvertFrom-Json
 
-            }
+        $displayName = $JSON_Convert.displayName
 
-            else {
+        $Properties = ($JSON_Convert | Get-Member | ? { $_.MemberType -eq "NoteProperty" }).Name
 
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
-            Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            $displayName = $JSON_Convert.displayName
 
-            }
+            $FileName_CSV = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".csv"
+            $FileName_JSON = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".json"
 
+            $Object = New-Object System.Object
+
+                foreach($Property in $Properties){
+
+                $Object | Add-Member -MemberType NoteProperty -Name $Property -Value $JSON_Convert.$Property
+
+                }
+
+            write-host "Export Path:" "$ExportPath"
+
+            $Object | Export-Csv "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
+            $JSON1 | Out-File "$ExportPath\$FileName_JSON"
+            write-host "CSV created in $ExportPath\$FileName_CSV..." -f cyan
+            write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
+            
         }
 
     }
 
     catch {
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
+    $_.Exception
 
     }
 
@@ -420,39 +331,46 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
 
-if($ManagedDevices){
+    # If the directory path doesn't exist prompt user to create the directory
 
-    foreach($Device in $ManagedDevices){
+    if(!(Test-Path "$ExportPath")){
 
-    $DeviceID = $Device.id
-
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
     Write-Host
-    $Device
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
 
-        if($Device.deviceRegistrationState -eq "registered"){
+    $Confirm = read-host
 
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-        $User = Get-AADUser $userId
-
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
 
         }
 
-    Write-Host
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
 
     }
 
-}
-
-else {
+####################################################
 
 Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
+
+$DCPs = Get-DeviceConfigurationPolicy
+
+foreach($DCP in $DCPs){
+
+write-host "Device Configuration Policy:"$DCP.displayName -f Yellow
+Export-JSONData -JSON $DCP -ExportPath "$ExportPath"
 Write-Host
 
 }
+
+Write-Host

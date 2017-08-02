@@ -1,6 +1,6 @@
-ï»¿
+
 <#
-Â 
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
+ 
 $authority = "https://login.windows.net/$Tenant"
-Â 
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,147 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
-####################################################
-
-Function Get-ManagedDevices(){
-
-<#
-.SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
-.EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
-.NOTES
-NAME: Get-ManagedDevices
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
-
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
-
-        }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-
-        }
-
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
-    
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-ManagedDeviceUser(){
-
-<#
-.SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
-.EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
-.NOTES
-NAME: Get-ManagedDeviceUser
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
-
-    try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).userId
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
+ 
 ####################################################
 
 Function Get-AADUser(){
@@ -317,23 +177,23 @@ param
 # Defining Variables
 $graphApiVersion = "v1.0"
 $User_resource = "users"
-
+    
     try {
-
+        
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-
+        
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
-
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        
         }
 
         else {
-
+            
             if($Property -eq "" -or $Property -eq $null){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
 
             }
 
@@ -341,12 +201,12 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
             }
 
         }
-
+    
     }
 
     catch {
@@ -386,7 +246,7 @@ if($global:authToken){
         write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
         write-host
 
-            # Defining User Principal Name if not present
+            # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
 
             if($User -eq $null -or $User -eq ""){
 
@@ -420,39 +280,88 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+# Filter for the minimum number of days where the device hasn't checked in
+$days = 30
+$daysago = "{0:s}" -f (get-date).AddDays(-$days) + "Z"
 
-if($ManagedDevices){
+$CurrentTime = [System.DateTimeOffset]::Now
 
-    foreach($Device in $ManagedDevices){
+Write-Host
+Write-Host "Checking to see if there are devices that haven't synced in the last $days days..." -f Yellow
+Write-Host
 
-    $DeviceID = $Device.id
+    try {
 
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
-    Write-Host
-    $Device
+    $uri = "https://graph.microsoft.com/beta/managedDevices?`$filter=lastSyncDateTime ge $daysago"
 
-        if($Device.deviceRegistrationState -eq "registered"){
+    $Devices = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | sort deviceName
 
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
+        # If there are devices not synced in the past 30 days script continues
+        
+        if($Devices){
 
-        $User = Get-AADUser $userId
+        Write-Host "There are" $Devices.count "devices that have not synced in the last $days days..." -ForegroundColor Red
 
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
+        $Devices | foreach { $_.deviceName + " - " + ($_.managementAgent).toupper() + " - " + $_.userPrincipalName + " - " + $_.lastSyncDateTime }
+
+        Write-Host
+
+            # Looping through all the devices returned
+            
+            foreach($Device in $Devices){
+
+            write-host "------------------------------------------------------------------"
+            Write-Host
+
+            $DeviceID = $Device.id
+            $LSD = $Device.lastSyncDateTime
+
+            write-host "Device Name:"$Device.deviceName -f Green
+            write-host "Management State:"$Device.managementState
+            write-host "Operating System:"$Device.operatingSystem
+            write-host "Device Type:"$Device.deviceType
+            write-host "Last Sync Date Time:"$Device.lastSyncDateTime
+            write-host "Jail Broken:"$Device.jailBroken
+            write-host "Compliance State:"$Device.complianceState
+            write-host "Enrollment Type:"$Device.enrollmentType
+            write-host "AAD Registered:"$Device.aadRegistered
+            write-host "Management Agent:"$Device.managementAgent
+            Write-Host "User Principal Name:"$Device.userPrincipalName
+
+            $LastSyncTime = [datetimeoffset]::Parse($LSD)
+
+            $TimeDifference = $CurrentTime - $LastSyncTime
+
+            write-host
+            write-host "Device last synced"$TimeDifference.days "days ago..." -ForegroundColor Red
+            Write-Host
+
+            }
 
         }
 
-    Write-Host
+        else {
+
+        write-host "No Devices not checked in the last $days days found..." -f green
+        Write-Host
+
+        }
 
     }
 
-}
+    catch {
 
-else {
+    Write-Host
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    Write-Host
 
-Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
-Write-Host
+    break
 
-}
+    }

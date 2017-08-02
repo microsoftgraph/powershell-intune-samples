@@ -1,6 +1,6 @@
-ï»¿
+
 <#
-Â 
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+ 
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
+ 
 $authority = "https://login.windows.net/$Tenant"
-Â 
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,141 +146,46 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
+ 
 ####################################################
 
-Function Get-ManagedDevices(){
+Function Test-JSON(){
 
 <#
 .SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Get-ManagedDevices
+NAME: Test-JSON
 #>
 
-[cmdletbinding()]
+param (
 
-param
-(
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
+$JSON
+
 )
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "managedDevices"
-
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
-        
-        if($Count_Params -gt 1){
-
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
-
-        }
-        
-        elseif($IncludeEAS){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-
-        }
-
-        elseif($ExcludeMDM){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
-    
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-ManagedDeviceUser(){
-
-<#
-.SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
-.EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
-.NOTES
-NAME: Get-ManagedDeviceUser
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
-)
-
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).userId
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
 
     }
 
     catch {
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
+    $validJson = $false
+    $_.Exception
+
+    }
+
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
     break
 
     }
@@ -289,61 +194,217 @@ $Resource = "manageddevices('$DeviceID')?`$select=userId"
 
 ####################################################
 
-Function Get-AADUser(){
+Function Get-AADGroup(){
 
 <#
 .SYNOPSIS
-This function is used to get AAD Users from the Graph API REST interface
+This function is used to get AAD Groups from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any users registered with AAD
+The function connects to the Graph API Interface and gets any Groups registered with AAD
 .EXAMPLE
-Get-AADUser
+Get-AADGroup
 Returns all users registered with Azure AD
-.EXAMPLE
-Get-AADUser -userPrincipleName user@domain.com
-Returns specific user by UserPrincipalName registered with Azure AD
 .NOTES
-NAME: Get-AADUser
+NAME: Get-AADGroup
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $userPrincipalName,
-    $Property
+    $GroupName,
+    $id,
+    [switch]$Members
 )
 
 # Defining Variables
 $graphApiVersion = "v1.0"
-$User_resource = "users"
-
+$Group_resource = "groups"
+    
     try {
 
-        if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
+        if($id){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+        }
+        
+        elseif($GroupName -eq "" -or $GroupName -eq $null){
+        
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        
+        }
+
+        else {
+            
+            if(!$Members){
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            
+            }
+            
+            elseif($Members){
+            
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
+            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            
+                if($Group){
+
+                $GID = $Group.id
+
+                $Group.displayName
+                write-host
+
+                $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
+                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+
+                }
+
+            }
+        
+        }
+
+    }
+
+    catch {
+
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
+
+    }
+
+}
+
+####################################################
+
+Function Add-TermsAndConditions(){
+
+<#
+.SYNOPSIS
+This function is used to add Terms and Conditions using the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and adds Terms and Conditions Statement
+.EXAMPLE
+Add-TermsAndConditions -JSON $JSON
+Adds Terms and Conditions into Intune
+.NOTES
+NAME: Add-TermsAndConditions
+#>
+
+[cmdletbinding()]
+
+param
+(
+    $JSON
+)
+
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/termsAndConditions"
+    
+    try {
+
+        if($JSON -eq "" -or $JSON -eq $null){
+
+        write-host "No JSON specified, please specify valid JSON for the Android Policy..." -f Red
 
         }
 
         else {
 
-            if($Property -eq "" -or $Property -eq $null){
+        Test-JSON -JSON $JSON
 
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
-            Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
 
-            }
+        }
 
-            else {
+    }
+    
+    catch {
 
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
-            Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+    Write-Host
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
 
-            }
+    }
+
+}
+
+####################################################
+
+Function Assign-TermsAndConditions(){
+
+<#
+.SYNOPSIS
+This function is used to assign Terms and Conditions from Intune to a Group using the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and assigns terms and conditions to a group
+.EXAMPLE
+Assign-TermsAndConditions -id $id -TargetGroupId
+.NOTES
+NAME: Assign-TermsAndConditions
+#>   
+
+[cmdletbinding()]
+
+param
+(
+    $id,
+    $TargetGroupId
+)
+
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/termsAndConditions/$id/groupAssignments"
+
+    try {
+
+        if(!$id){
+
+        Write-Host "No Terms and Conditions ID was passed to the function, specify a valid terms and conditions ID" -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+        if(!$TargetGroupId){
+
+        write-host "No Target Group Id specified, specify a valid Target Group Id" -f Red
+        Write-Host
+        break
+
+        }
+
+        else {
+
+$JSON = @"
+
+{
+    "targetGroupId":"$TargetGroupId"
+}
+
+"@
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json" 
 
         }
 
@@ -386,7 +447,7 @@ if($global:authToken){
         write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
         write-host
 
-            # Defining User Principal Name if not present
+            # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
 
             if($User -eq $null -or $User -eq ""){
 
@@ -420,39 +481,47 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+$JSON = @"
 
-if($ManagedDevices){
+{
+    "@odata.type": "#microsoft.graph.termsAndConditions",
+    "displayName":"Customer Terms and Conditions",
+    "title":"Terms and Conditions",
+    "description":"Desription of the terms and conditions",
+    "bodyText":"This is where the body text for the terms and conditions is set\n\nTest Web Address - https://www.bing.com\n\nCustomer IT Department",
+    "acceptanceStatement":"Acceptance statement text goes here",
+    "version":1
+}
 
-    foreach($Device in $ManagedDevices){
+"@
 
-    $DeviceID = $Device.id
+####################################################
 
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
+# Setting AAD Group
+
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where terms and conditions will be assigned"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
     Write-Host
-    $Device
-
-        if($Device.deviceRegistrationState -eq "registered"){
-
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
-
-        $User = Get-AADUser $userId
-
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
-
-        }
-
-    Write-Host
+    exit
 
     }
 
-}
-
-else {
+####################################################
 
 Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
+Write-Host "Adding Terms and Conditions from JSON..." -ForegroundColor Cyan
+Write-Host "Creating Terms and Conditions via Graph"
+$CreateResult = Add-TermsAndConditions -JSON $JSON
+write-host "Terms and Conditions created with id" $CreateResult.id
+
 Write-Host
 
-}
+write-host "Assigning Terms and Conditions to AAD Group '$AADGroup'" -f Yellow
+$Assign_Policy = Assign-TermsAndConditions -id $CreateResult.id -TargetGroupId $TargetGroupId
+Write-Host "Assigned '$AADGroup' to $($CreateResult.displayName)/$($CreateResult.id)"
+Write-Host

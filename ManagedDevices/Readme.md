@@ -52,6 +52,8 @@ Invoke-DeviceAction -DeviceID 87fdd968-63ba-4a61-b587-25f3bb86bca4 -Retire
 # Wipe device configured in Intune
 Invoke-DeviceAction -DeviceID 87fdd968-63ba-4a61-b587-25f3bb86bca4 -Wipe
 
+# Delete device configured in Intune
+Invoke-DeviceAction -DeviceID 87fdd968-63ba-4a61-b587-25f3bb86bca4 -Delete
 ```
 ### 2. ManagedDeviceOverview_Get.ps1
 This script returns a report of all managed devices added to the Intune Service that you have authenticated with.
@@ -76,7 +78,6 @@ Get-ManagedDeviceOverview
 ```
 
 ### 3.ManagedDevices_Add_ToAADGroup.ps1
-
 This script adds Intune managed devices as assigned members to an Azure AD Device Security Group when the associated user’s Azure AD user name contains a specific string.  For example, if a username is: "Aimee Bowman (Redmond)" – the script can add Aimee’s managed devices to an Azure AD Security Group called "Redmond Devices."
 
 The script iterates through all Intune managed devices and then identifies the associated user for each managed device. The script retrieves the Azure AD user’s name, and checks to see if the name contains the value defined in the $FilterName variable.  If found, the users’ associated Intune managed device is added to the specified Azure Active Directory Group as an assigned entry.  If the device is already in the Group then it won't attempt to add the device to the group.
@@ -112,7 +113,99 @@ Get-AADGroup -GroupName "Devices Group"
 
 ```
 
-### 4. ManagedDevices_Get.ps1
+### 4.ManagedDevices_Apps_Get.ps1
+This script is used to return all Managed Devices application installation inventory. The following output is a sample output.
+```
+Device found: DESKTOP-00EUFJK
+
+Device Ownership: company
+
+displayName                            version
+-----------                            -------
+Microsoft.NET.Native.Runtime.1.4       1.4.24201.0
+Microsoft.NET.Native.Runtime.1.3       1.3.23901.0
+Microsoft.NET.Native.Framework.1.3     1.3.24201.0
+Microsoft.VCLibs.140.00                14.0.24123.0
+Microsoft.3DBuilder                    13.0.10349.0
+Microsoft.BingWeather                  4.18.56.0
+Microsoft.DesktopAppInstaller          1.1.25002.0
+Microsoft.Getstarted                   4.5.6.0
+Microsoft.Messaging                    3.2.24002.0
+Microsoft.Microsoft3DViewer            1.1702.21039.0
+Microsoft.MicrosoftOfficeHub           2017.311.255.0
+Microsoft.MicrosoftSolitaireCollection 3.14.1181.0
+Microsoft.MicrosoftStickyNotes         1.4.101.0
+Microsoft.MSPaint                      1.1702.28017.0
+Microsoft.Office.OneNote               2015.7668.58071.0
+Microsoft.OneConnect                   2.1701.277.0
+Microsoft.People                       2017.222.1920.0
+Microsoft.SkypeApp                     11.8.204.0
+Microsoft.StorePurchaseApp             1.0.454.0
+Microsoft.Wallet                       1.0.16328.0
+Microsoft.Windows.Photos               2016.511.9510.0
+Microsoft.WindowsAlarms                2017.203.236.0
+Microsoft.WindowsCalculator            2017.131.1904.0
+Microsoft.WindowsCamera                2017.125.40.0
+microsoft.windowscommunicationsapps    2015.7906.42257.0
+Microsoft.WindowsFeedbackHub           1.1612.10312.0
+Microsoft.WindowsMaps                  2017.209.105.0
+Microsoft.WindowsSoundRecorder         2017.130.1208.0
+Microsoft.WindowsStore                 11701.1001.874.0
+Microsoft.XboxApp                      2017.113.1250.0
+Microsoft.XboxGameOverlay              1.15.2003.0
+Microsoft.XboxIdentityProvider         2016.719.1035.0
+Microsoft.XboxSpeechToTextOverlay      1.14.2002.0
+Microsoft.ZuneMusic                    2019.16112.11621.0
+Microsoft.ZuneVideo                    2019.16112.11601.0
+9E2F88E3.Twitter                       5.7.1.0
+Microsoft.BingNews                     4.20.1102.0
+ThumbmunkeysLtd.PhototasticCollage     2.0.74.0
+Microsoft.NET.Native.Framework.1.6     1.6.24903.0
+KeeperSecurityInc.Keeper               10.2.1.0
+Microsoft.NET.Native.Runtime.1.6       1.6.24903.0
+Microsoft.Services.Store.Engagement    10.0.1610.0
+Microsoft.Advertising.Xaml             10.1705.4.0
+Microsoft.VCLibs.120.00                12.0.21005.1
+flaregamesGmbH.RoyalRevolt2            3.2.0.0
+king.com.CandyCrushSodaSaga            1.91.500.0
+A278AB0D.MarchofEmpires                2.4.0.9
+
+
+Device found: IPADMINI4
+
+Device Ownership: personal
+
+displayName version
+----------- -------
+Comp Portal 51.1706002.000
+```
+The following functions are used:
+
+#### Get-ManagedDevices - Function
+This function is used to get all managed devices from the Intune Service.
+```PowerShell
+Get-ManagedDevices
+```
+### 5. ManagedDevices_DeviceOwnership_Set.ps1
+This script returns all managed devices added to the Intune Service that you have authenticated with.
+
+There are the following functions used:
+
+#### Get-ManagedDevices - Function
+This function is used to get all managed devices from the Intune Service.
+```PowerShell
+Get-ManagedDevices
+```
+#### Set-ManagedDevices - Function
+This function is used to set a managed device Ownership from the Intune Service. It has two mandatory parameters -id and -ownertype.
+
++ id - The ID of the managed device in the Intune Service
++ ownertype - The owner type of the device i.e. personal or company
+```PowerShell
+Set-ManagedDevice -id $ManagedDevice.id -ownertype company
+```
+
+### 6. ManagedDevices_Get.ps1
 This script returns all managed devices added to the Intune Service that you have authenticated with.
 
 There are the following functions used:
@@ -139,4 +232,48 @@ Get-AADUser -userPrincipalName "user@tenant.onmicrosoft.com"
 
 # Gets a specific user property from AAD
 Get-AADUser -userPrincipalName "user@tenant.onmicrosoft.com" -Property MemberOf
+```
+### 7. ManagedDevices_Hardware_Get.ps1
+This script returns all managed devices hardware information that have been added to the Intune Service that you have authenticated with.
+
+The script will prompt for an output Directory so that it can export a CSV of the managed device hardware information.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export Managed Devices hardware data to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+
+Write-Host
+```
+
+There are the following functions used:
+
+#### Get-ManagedDevices - Function
+This function is used to get all managed devices from the Intune Service.
+```PowerShell
+Get-ManagedDevices
 ```

@@ -236,116 +236,110 @@ try {
 
 ####################################################
 
-Function Get-ManagedDeviceUser(){
+Function Set-ManagedDevice(){
 
 <#
 .SYNOPSIS
-This function is used to get a Managed Device username from the Graph API REST interface
+This function is used to set Managed Device property from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets a managed device users registered with Intune MDM
+The function connects to the Graph API Interface and sets a Managed Device property
 .EXAMPLE
-Get-ManagedDeviceUser -DeviceID $DeviceID
-Returns a managed device user registered in Intune
+Set-ManagedDevice -id $id -ownerType company
+Returns Managed Devices configured in Intune
 .NOTES
-NAME: Get-ManagedDeviceUser
+NAME: Set-ManagedDevice
 #>
 
 [cmdletbinding()]
 
 param
 (
-    [Parameter(Mandatory=$true,HelpMessage="DeviceID (guid) for the device on must be specified:")]
-    $DeviceID
+    $id,
+    $ownertype
 )
 
-# Defining Variables
-$graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
+
+$graphApiVersion = "Beta"
+$Resource = "managedDevices"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).userId
+        if($id -eq "" -or $id -eq $null){
 
-    }
+        write-host "No Device id specified, please provide a device id..." -f Red
+        break
 
-    catch {
+        }
+        
+        if($ownerType -eq "" -or $ownerType -eq $null){
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
+            write-host "No ownerType parameter specified, please provide an ownerType. Supported value personal or company..." -f Red
+            Write-Host
+            break
 
-    }
+            }
 
+        elseif($ownerType -eq "company"){
+
+$JSON = @"
+
+{
+    ownerType:"company"
 }
 
-####################################################
+"@
 
-Function Get-AADUser(){
+                write-host
+                write-host "Are you sure you want to change the device ownership to 'company' on this device? Y or N?"
+                $Confirm = read-host
 
-<#
-.SYNOPSIS
-This function is used to get AAD Users from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any users registered with AAD
-.EXAMPLE
-Get-AADUser
-Returns all users registered with Azure AD
-.EXAMPLE
-Get-AADUser -userPrincipleName user@domain.com
-Returns specific user by UserPrincipalName registered with Azure AD
-.NOTES
-NAME: Get-AADUser
-#>
+                if($Confirm -eq "y" -or $Confirm -eq "Y"){
+            
+                # Send Patch command to Graph to change the ownertype
+                $uri = "https://graph.microsoft.com/beta/managedDevices('$ID')"
+                Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $Json -ContentType "application/json"
 
-[cmdletbinding()]
+                }
 
-param
-(
-    $userPrincipalName,
-    $Property
-)
+                else {
 
-# Defining Variables
-$graphApiVersion = "v1.0"
-$User_resource = "users"
+                Write-Host "Change of Device Ownership for the device $ID was cancelled..." -ForegroundColor Yellow
+                Write-Host
 
-    try {
-
-        if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-
-        }
-
-        else {
-
-            if($Property -eq "" -or $Property -eq $null){
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
-            Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
-
+                }
+            
             }
 
-            else {
+        elseif($ownerType -eq "personal"){
 
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
-            Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+$JSON = @"
+
+{
+    ownerType:"personal"
+}
+
+"@
+
+                write-host
+                write-host "Are you sure you want to change the device ownership to 'personal' on this device? Y or N?"
+                $Confirm = read-host
+
+                if($Confirm -eq "y" -or $Confirm -eq "Y"){
+            
+                # Send Patch command to Graph to change the ownertype
+                $uri = "https://graph.microsoft.com/beta/managedDevices('$ID')"
+                Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $Json -ContentType "application/json"
+
+                }
+
+                else {
+
+                Write-Host "Change of Device Ownership for the device $ID was cancelled..." -ForegroundColor Yellow
+                Write-Host
+
+                }
 
             }
-
-        }
 
     }
 
@@ -420,30 +414,35 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+# Filter for the Managed Device of your choice
+$ManagedDevice = Get-ManagedDevices | Where-Object { $_.deviceName -eq "IPADMINI4" }
 
-if($ManagedDevices){
+if($ManagedDevice){
 
-    foreach($Device in $ManagedDevices){
+    if(@($ManagedDevice.count) -gt 1){
 
-    $DeviceID = $Device.id
-
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
+    Write-Host "More than 1 device was found, script supports single deviceID..." -ForegroundColor Red
     Write-Host
-    $Device
+    break
 
-        if($Device.deviceRegistrationState -eq "registered"){
+    }
 
-        $UserId = Get-ManagedDeviceUser -DeviceID $DeviceID
+    else {
 
-        $User = Get-AADUser $userId
+    write-host "Device Name:"$ManagedDevice.deviceName -ForegroundColor Cyan
+    write-host "Management State:"$ManagedDevice.managementState
+    write-host "Operating System:"$ManagedDevice.operatingSystem
+    write-host "Device Type:"$ManagedDevice.deviceType
+    write-host "Last Sync Date Time:"$ManagedDevice.lastSyncDateTime
+    write-host "Jail Broken:"$ManagedDevice.jailBroken
+    write-host "Compliance State:"$ManagedDevice.complianceState
+    write-host "Enrollment Type:"$ManagedDevice.enrollmentType
+    write-host "AAD Registered:"$ManagedDevice.aadRegistered
+    write-host "Management Agent:"$ManagedDevice.managementAgent
+    Write-Host "User Principal Name:"$ManagedDevice.userPrincipalName
+    Write-Host "Owner Type:"$ManagedDevice.ownerType -ForegroundColor Yellow
 
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
-
-        }
-
-    Write-Host
+    Set-ManagedDevice -id $ManagedDevice.id -ownertype personal
 
     }
 
@@ -451,8 +450,7 @@ if($ManagedDevices){
 
 else {
 
-Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
+Write-Host "No Managed Device found..." -ForegroundColor Red
 Write-Host
 
 }
