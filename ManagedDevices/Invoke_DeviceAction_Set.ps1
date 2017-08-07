@@ -581,7 +581,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $Devices.id -RemoteLock -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
-        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Delete -Verbose
+        #Invoke-DeviceAction -DeviceID $Devices.id -Delete -Verbose
 
     }
 
