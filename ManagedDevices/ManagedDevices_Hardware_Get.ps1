@@ -337,7 +337,7 @@ if($Devices){
     $Hardware = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).hardwareInformation
 
     $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber
-    $HardwareExcludes = $Hardware | select * -ExcludeProperty sharedDeviceCachedUsers
+    $HardwareExcludes = $Hardware | select * -ExcludeProperty sharedDeviceCachedUsers,phoneNumber
 
         $Object = New-Object System.Object
 

@@ -304,6 +304,7 @@ param
     [switch]$Wipe,
     [switch]$Retire,
     [switch]$Delete,
+    [switch]$Sync,
     [Parameter(Mandatory=$true,HelpMessage="DeviceId (guid) for the Device you want to take action on must be specified:")]
     $DeviceID
 )
@@ -319,16 +320,17 @@ $graphApiVersion = "Beta"
         if($Wipe.IsPresent){ $Count_Params++ }
         if($Retire.IsPresent){ $Count_Params++ }
         if($Delete.IsPresent){ $Count_Params++ }
+        if($Sync.IsPresent){ $Count_Params++ }
 
         if($Count_Params -eq 0){
 
-        write-host "No parameter set, specify -RemoteLock -ResetPasscode or -Wipe against the function" -f Red
+        write-host "No parameter set, specify -RemoteLock -ResetPasscode -Wipe -Delete or -Sync against the function" -f Red
 
         }
 
         elseif($Count_Params -gt 1){
 
-        write-host "Multiple parameters set, specify a single parameter -RemoteLock -ResetPasscode or -Wipe against the function" -f Red
+        write-host "Multiple parameters set, specify a single parameter -RemoteLock -ResetPasscode -Wipe -Delete or -Sync against the function" -f Red
 
         }
 
@@ -435,6 +437,30 @@ $graphApiVersion = "Beta"
             else {
 
             Write-Host "Deletion of the device $DeviceID was cancelled..."
+
+            }
+
+        }
+        
+        elseif($Sync){
+
+        write-host
+        write-host "Are you sure you want to sync this device? Y or N?"
+        $Confirm = read-host
+
+            if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+            $Resource = "managedDevices('$DeviceID')/syncDevice"
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+            write-verbose $uri
+            Write-Verbose "Sending sync command to $DeviceID"
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post
+
+            }
+
+            else {
+
+            Write-Host "Sync of the device $DeviceID was cancelled..."
 
             }
 
@@ -570,6 +596,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Retire -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Wipe -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Delete -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Sync -Verbose
 
         }
 
@@ -582,6 +609,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $Devices.id -Retire -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Delete -Verbose
+        #Invoke-DeviceAction -DeviceID $Devices.id -Sync -Verbose
 
     }
 
