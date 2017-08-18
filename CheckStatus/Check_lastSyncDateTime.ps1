@@ -94,7 +94,7 @@ $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
  
 $resourceAppIdURI = "https://graph.microsoft.com"
  
-$authority = "https://login.windows.net/$Tenant"
+$authority = "https://login.microsoftonline.com/$Tenant"
  
     try {
 

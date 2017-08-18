@@ -1,5 +1,5 @@
-﻿<#
- 
+<#
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -7,7 +7,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
-$authority = "https://login.windows.net/$Tenant"
- 
+
+$authority = "https://login.microsoftonline.com/$Tenant"
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -197,7 +197,7 @@ $JSON
     }
 
 }
- 
+
 ####################################################
 
 Function Assign-ProfileToDevices(){
@@ -240,7 +240,7 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
         }
         elseif ($Devices -eq $null -or $Devices.Count -eq 0){
-            
+
             write-host "No devices specified, please specify a list of devices to assign..." -f Red
         }
         else {
@@ -253,7 +253,7 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
             Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
-            
+
             Write-Host "Devices assigned!" -f Green
         }
 
@@ -316,18 +316,18 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=disc
 
             foreach($device in $response)
             {
-                if ([string]::IsNullOrEmpty($device.Value.RequestedEnrollmentProfileId)) 
+                if ([string]::IsNullOrEmpty($device.Value.RequestedEnrollmentProfileId))
                 {
                     $unAssignedDevices += $device.Value.SerialNumber
                 }
 
-                if ($unAssignedDevices.Count -ge 1000) 
-                { 
+                if ($unAssignedDevices.Count -ge 1000)
+                {
                    $devicesNextLink = ''
                    break
                 }
             }
-        }While(![string]::IsNullOrEmpty($devicesNextLink))   
+        }While(![string]::IsNullOrEmpty($devicesNextLink))
 
         Write-Host $unAssignedDevices -f Yellow
 
@@ -398,7 +398,7 @@ else {
     }
 
 # Getting the authorization token
- $global:authToken = Get-AuthToken -User $User 
+ $global:authToken = Get-AuthToken -User $User
 
 }
 
