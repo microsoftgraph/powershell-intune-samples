@@ -12,21 +12,12 @@ Within this section there are the following scripts with the explanation of usag
 ### 1. CompanyPortal_Get.ps1
 This script gets all the company portal branding from the Intune Service that you have authenticated with.
 
-#### Get-Organization Function
-This function is used to get information about the tenant organization from the Intune Service.
-
-```PowerShell
-# Returns organization information configured in Intune
-Get-Organization
-```
 #### Get-IntuneBrand Function
 This function is used to return and company portal branding from the Intune Service.
 
-It requires a single parameter as an input to the function which is the organization id from the Get-Organization function to pull data from the service.
-
 ```PowerShell
 # Returns company portal branding configured in Intune
-Get-IntuneBrand -id a118295c-d5bf-4c82-bf2f-65ef172dd627
+Get-IntuneBrand
 ```
 ### 2. CompanyPortal_Set_Brand.ps1
 This script sets the company portal branding in the Intune Service that you have authenticated with. The branding created by the script are shown below in the JSON section below.
@@ -35,7 +26,7 @@ This script sets the company portal branding in the Intune Service that you have
 This function is used to set the company portal branding in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
 
 ```
-Set-IntuneBrand -id a118295c-d5bf-4c82-bf2f-65ef172dd627 -JSON $JSON
+Set-IntuneBrand -JSON $JSON
 ```
 
 #### Test-JSON Function

@@ -157,7 +157,7 @@ This function is used to get the Company Intune Branding resources from the Grap
 .DESCRIPTION
 The function connects to the Graph API Interface and gets the Intune Branding Resource
 .EXAMPLE
-Get-IntuneBrand -id $id
+Get-IntuneBrand
 Returns the Company Intune Branding configured in Intune
 .NOTES
 NAME: Get-IntuneBrand
@@ -165,75 +165,13 @@ NAME: Get-IntuneBrand
 
 [cmdletbinding()]
 
-param
-(
-    $id
-
-)
-
 $graphApiVersion = "Beta"
-$Resource = "organization/$id/intuneBrand"
-
-    try {
-
-        if(!$id){
-
-        write-host "Organization Id hasn't been specified, please specify Id..." -f Red
-        break
-
-        }
-
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-        Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
-
-        }
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-Organization(){
-
-<#
-.SYNOPSIS
-This function is used to get the Organization intune resource from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets the Organization Intune Resource
-.EXAMPLE
-Get-Organization
-Returns the Organization resource configured in Intune
-.NOTES
-NAME: Get-Organization
-#>
-
-[cmdletbinding()]
-
-$graphApiVersion = "Beta"
-$resource = "organization"
+$Resource = "deviceManagement/intuneBrand"
 
     try {
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+    Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
 
     }
 
@@ -308,8 +246,4 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$Org = Get-Organization
-
-$id = $Org.id
-
-Get-IntuneBrand -id $id
+Get-IntuneBrand
