@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -91,11 +91,11 @@ Write-Host "Checking for AzureAD module..."
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+ï¿½
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+ï¿½
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+ï¿½
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -219,7 +219,7 @@ param
     }
 
 }
- 
+
 ####################################################
 
 Function Add-iOSApplication(){
@@ -299,7 +299,7 @@ $Resource = "deviceAppManagement/mobileApps"
 
     # Step 2 - Create the Hashtable Object of the application
 
-    $description = $app.description.Replace('','"').Replace('', '"')
+    $description = $app.description.Replace('â€','"').Replace('â€', '"')
 
     $graphApp = @{
         "@odata.type"="#microsoft.graph.iosStoreApp";
