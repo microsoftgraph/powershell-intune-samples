@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+ï¿½
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+ï¿½
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+ï¿½
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -219,7 +219,7 @@ param
     }
 
 }
- 
+
 ####################################################
 
 Function Add-iOSApplication(){
@@ -257,7 +257,7 @@ $Resource = "deviceAppManagement/mobileApps"
     Write-Host "Publishing $($app.trackName)" -f Yellow
 
     # Step 1 - Downloading the icon for the application
-    $iconUrl = $app.artworkUrk60
+    $iconUrl = $app.artworkUrl60
 
         if ($iconUrl -eq $null){
 
@@ -299,7 +299,7 @@ $Resource = "deviceAppManagement/mobileApps"
 
     # Step 2 - Create the Hashtable Object of the application
 
-    $description = $app.description.Replace('“','"').Replace('”', '"')
+    $description = $app.description.Replace('â€','"').Replace('â€', '"')
 
     $graphApp = @{
         "@odata.type"="#microsoft.graph.iosStoreApp";

@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -217,7 +217,7 @@ param
     }
 
 }
- 
+
 ####################################################
 
 Function Add-iOSApplication(){
@@ -255,7 +255,7 @@ $Resource = "deviceAppManagement/mobileApps"
     Write-Host "Publishing $($app.trackName)" -f Yellow
 
     # Step 1 - Downloading the icon for the application
-    $iconUrl = $app.artworkUrk60
+    $iconUrl = $app.artworkUrl60
 
         if ($iconUrl -eq $null){
 
@@ -297,7 +297,7 @@ $Resource = "deviceAppManagement/mobileApps"
 
     # Step 2 - Create the Hashtable Object of the application
 
-    $description = $app.description.Replace('“','"').Replace('”', '"')
+    $description = $app.description.Replace('â€œ','"').Replace('â€œ', '"')
 
     $graphApp = @{
         "@odata.type"="#microsoft.graph.iosStoreApp";
@@ -473,14 +473,14 @@ $Group_resource = "groups"
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
         }
         
         elseif($GroupName -eq "" -or $GroupName -eq $null){
         
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
         
         }
 
@@ -489,14 +489,14 @@ $Group_resource = "groups"
             if(!$Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
             
             }
             
             elseif($Members){
             
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            $Group = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
             
                 if($Group){
 
@@ -506,7 +506,7 @@ $Group_resource = "groups"
                 write-host
 
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
                 }
 
