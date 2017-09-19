@@ -297,7 +297,7 @@ $Resource = "deviceAppManagement/mobileApps"
 
     # Step 2 - Create the Hashtable Object of the application
 
-    $description = $app.description.Replace('“','"').Replace('“', '"')
+    $description = $app.description -replace "[^\x00-\x7F]+",""
 
     $graphApp = @{
         "@odata.type"="#microsoft.graph.iosStoreApp";
