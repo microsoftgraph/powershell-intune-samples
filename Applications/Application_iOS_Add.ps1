@@ -91,11 +91,11 @@ Write-Host "Checking for AzureAD module..."
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-�
+
 $resourceAppIdURI = "https://graph.microsoft.com"
-�
+
 $authority = "https://login.microsoftonline.com/$Tenant"
-�
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -223,133 +223,136 @@ param
 ####################################################
 
 Function Add-iOSApplication(){
-
-<#
-.SYNOPSIS
-This function is used to add an iOS application using the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and adds an iOS application from the itunes store
-.EXAMPLE
-Add-iOSApplication -AuthHeader $AuthHeader
-Adds an iOS application into Intune from itunes store
-.NOTES
-NAME: Add-iOSApplication
-#>
-
-[cmdletbinding()]
-
-param
-(
-    $itunesApp
-)
-
-$graphApiVersion = "Beta"
-$Resource = "deviceAppManagement/mobileApps"
-
-    try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-
-    $app = $itunesApp
-
-    Write-Verbose $app
-
-    Write-Host "Publishing $($app.trackName)" -f Yellow
-
-    # Step 1 - Downloading the icon for the application
-    $iconUrl = $app.artworkUrl60
-
-        if ($iconUrl -eq $null){
-
-        Write-Host "60x60 icon not found, using 100x100 icon"
-        $iconUrl = $app.artworkUrl100
-
-        }
-
-        if ($iconUrl -eq $null){
-
-        Write-Host "60x60 icon not found, using 512x512 icon"
-        $iconUrl = $app.artworkUrl512
-
-        }
-
-    $iconResponse = Invoke-WebRequest $iconUrl
-    $base64icon = [System.Convert]::ToBase64String($iconResponse.Content)
-    $iconType = $iconResponse.Headers["Content-Type"]
-
-        if(($app.minimumOsVersion.Split(".")).Count -gt 2){
-
-        $Split = $app.minimumOsVersion.Split(".")
-
-        $MOV = $Split[0] + "." + $Split[1]
-
-        $osVersion = [Convert]::ToDouble($MOV)
-
-        }
-
-        else {
-
-        $osVersion = [Convert]::ToDouble($app.minimumOsVersion)
-
-        }
-
-    # Setting support Operating System Devices
-    if($app.supportedDevices -match "iPadMini"){ $iPad = $true } else { $iPad = $false }
-    if($app.supportedDevices -match "iPhone6"){ $iPhone = $true } else { $iPhone = $false }
-
-    # Step 2 - Create the Hashtable Object of the application
-
-    $description = $app.description.Replace('”','"').Replace('”', '"')
-
-    $graphApp = @{
-        "@odata.type"="#microsoft.graph.iosStoreApp";
-        displayName=$app.trackName;
-        publisher=$app.artistName;
-        description=$description;
-        largeIcon= @{
-            type=$iconType;
-            value=$base64icon;
+    
+    <#
+    .SYNOPSIS
+    This function is used to add an iOS application using the Graph API REST interface
+    .DESCRIPTION
+    The function connects to the Graph API Interface and adds an iOS application from the itunes store
+    .EXAMPLE
+    Add-iOSApplication -AuthHeader $AuthHeader
+    Adds an iOS application into Intune from itunes store
+    .NOTES
+    NAME: Add-iOSApplication
+    #>
+    
+    [cmdletbinding()]
+    
+    param
+    (
+        $itunesApp
+    )
+    
+    $graphApiVersion = "Beta"
+    $Resource = "deviceAppManagement/mobileApps"
+        
+        try {
+        
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            
+        $app = $itunesApp
+    
+        Write-Verbose $app
+                
+        Write-Host "Publishing $($app.trackName)" -f Yellow
+    
+        # Step 1 - Downloading the icon for the application
+        $iconUrl = $app.artworkUrl60
+    
+            if ($iconUrl -eq $null){
+    
+            Write-Host "60x60 icon not found, using 100x100 icon"
+            $iconUrl = $app.artworkUrl100
+            
+            }
+            
+            if ($iconUrl -eq $null){
+            
+            Write-Host "60x60 icon not found, using 512x512 icon"
+            $iconUrl = $app.artworkUrl512
+            
+            }
+    
+        $iconResponse = Invoke-WebRequest $iconUrl
+        $base64icon = [System.Convert]::ToBase64String($iconResponse.Content)
+        $iconType = $iconResponse.Headers["Content-Type"]
+    
+            if(($app.minimumOsVersion.Split(".")).Count -gt 2){
+    
+            $Split = $app.minimumOsVersion.Split(".")
+    
+            $MOV = $Split[0] + "." + $Split[1]
+    
+            $osVersion = [Convert]::ToDouble($MOV)
+    
+            }
+    
+            else {
+    
+            $osVersion = [Convert]::ToDouble($app.minimumOsVersion)
+    
+            }
+    
+        # Setting support Operating System Devices
+        if($app.supportedDevices -match "iPadMini"){ $iPad = $true } else { $iPad = $false }
+        if($app.supportedDevices -match "iPhone6"){ $iPhone = $true } else { $iPhone = $false }
+    
+        # Step 2 - Create the Hashtable Object of the application
+        $description = $app.description -replace "[^\x00-\x7F]+",""
+    
+        $graphApp = @{
+            "@odata.type"="#microsoft.graph.iosStoreApp";
+            displayName=$app.trackName;
+            publisher=$app.artistName;
+            description=$description;
+            largeIcon= @{
+                type=$iconType;
+                value=$base64icon;
+            };
+            isFeatured=$false;
+            appStoreUrl=$app.trackViewUrl;
+            applicableDeviceType=@{
+                iPad=$iPad;
+                iPhoneAndIPod=$iPhone;
+            };
+            minimumSupportedOperatingSystem=@{
+                v8_0=$osVersion -lt 9.0;
+                v9_0=$osVersion -eq 9.0;
+                v10_0=$osVersion -gt 9.0;
+            };
         };
-        isFeatured=$false;
-        appStoreUrl=$app.trackViewUrl;
-        applicableDeviceType=@{
-            iPad=$iPad;
-            iPhoneAndIPod=$iPhone;
-        };
-        minimumSupportedOperatingSystem=@{
-            v8_0=$osVersion -lt 9.0;
-            v9_0=$osVersion -eq 9.0;
-            v10_0=$osVersion -gt 9.0;
-        };
-    };
-
-    $JSON = ConvertTo-Json $graphApp
-
-    # Step 3 - Publish the application to Graph
-    Write-Host "Creating application via Graph"
-    $createResult = Invoke-RestMethod -Uri $uri -Method Post -ContentType "application/json" -Body (ConvertTo-Json $graphApp) -Headers $authToken
-    Write-Host "Application created as $uri/$($createResult.id)"
-    write-host
-
+    
+        $JSON = ConvertTo-Json $graphApp
+    
+        # Step 3 - Publish the application to Graph
+        Write-Host "Creating application via Graph"
+        $createResult = Invoke-RestMethod -Uri $uri -Method Post -ContentType "application/json" -Body (ConvertTo-Json $graphApp) -Headers $authToken
+        Write-Host "Application created as $uri/$($createResult.id)"
+        write-host
+        
+        }
+        
+        catch {
+    
+        $ex = $_.Exception
+        Write-Host "Request to $Uri failed with HTTP Status $([int]$ex.Response.StatusCode) $($ex.Response.StatusDescription)" -f Red
+    
+        $errorResponse = $ex.Response.GetResponseStream()
+        
+        $ex.Response.GetResponseStream()
+    
+        $reader = New-Object System.IO.StreamReader($errorResponse)
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $responseBody = $reader.ReadToEnd();
+        Write-Host "Response content:`n$responseBody" -f Red
+        Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+        write-host
+        break
+    
+        }
+    
     }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
 
 ####################################################
 
