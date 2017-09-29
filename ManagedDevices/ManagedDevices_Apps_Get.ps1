@@ -146,7 +146,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
-�
+
 ####################################################
 
 Function Get-AADUser(){

@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -81,13 +81,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -138,7 +138,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
 Function Get-AADUser(){
@@ -175,7 +175,7 @@ $User_resource = "users"
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
         
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
         
         }
 
@@ -185,7 +185,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
 
             }
 
@@ -193,7 +193,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
             }
 
@@ -252,14 +252,14 @@ $Group_resource = "groups"
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
         }
         
         elseif($GroupName -eq "" -or $GroupName -eq $null){
         
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
         
         }
 
@@ -268,14 +268,14 @@ $Group_resource = "groups"
             if(!$Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
             
             }
             
             elseif($Members){
             
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            $Group = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
             
                 if($Group){
 
@@ -285,7 +285,7 @@ $Group_resource = "groups"
                 write-host
 
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
                 }
 
@@ -343,7 +343,7 @@ $Resource = "devices"
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$filter=deviceId eq '$DeviceID'"
 
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value 
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value 
 
     }
 
@@ -491,7 +491,7 @@ try {
 
         }
 
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
     
     }
 
