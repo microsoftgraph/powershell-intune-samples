@@ -247,7 +247,7 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
             $Resource = "deviceManagement/enrollmentProfiles('$ProfileId')/updateDeviceProfileAssignment"
 
-            $DevicesArray = $Devices -split ","
+            $DevicesArray = $Devices -split "," 
 
             $JSON = @{ "deviceIds" = $DevicesArray } | ConvertTo-Json
 
