@@ -1,6 +1,6 @@
-﻿
+
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
-$authority = "https://login.windows.net/$Tenant"
- 
+
+$authority = "https://login.microsoftonline.com/$Tenant"
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,34 +146,75 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
 Function Get-ManagedDevices(){
 
 <#
 .SYNOPSIS
-This function is used to get Managed Devices from the Graph API REST interface
+This function is used to get Intune Managed Devices from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets Managed Devices
+The function connects to the Graph API Interface and gets any Intune Managed Device
 .EXAMPLE
 Get-ManagedDevices
-Returns Managed Devices configured in Intune
+Returns all managed devices but excludes EAS devices registered within the Intune Service
+.EXAMPLE
+Get-ManagedDevices -IncludeEAS
+Returns all managed devices including EAS devices registered within the Intune Service
 .NOTES
 NAME: Get-ManagedDevices
 #>
 
 [cmdletbinding()]
 
+param
+(
+    [switch]$IncludeEAS,
+    [switch]$ExcludeMDM
+)
 
-$graphApiVersion = "Beta"
+# Defining Variables
+$graphApiVersion = "beta"
 $Resource = "managedDevices"
 
-    try {
+try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+    $Count_Params = 0
 
+    if($IncludeEAS.IsPresent){ $Count_Params++ }
+    if($ExcludeMDM.IsPresent){ $Count_Params++ }
+        
+        if($Count_Params -gt 1){
+
+        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
+        Write-Host
+        break
+
+        }
+        
+        elseif($IncludeEAS){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
+
+        }
+
+        elseif($ExcludeMDM){
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
+
+        }
+        
+        else {
+    
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
+        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
+        Write-Host
+
+        }
+
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    
     }
 
     catch {
@@ -225,7 +266,7 @@ $Resource = "manageddevices('$DeviceID')?`$select=userId"
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
     Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).userId
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).userId
 
     }
 
@@ -282,7 +323,7 @@ $User_resource = "users"
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
         }
 
@@ -292,7 +333,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
             Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
 
             }
 
@@ -300,7 +341,7 @@ $User_resource = "users"
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
             Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
             }
 

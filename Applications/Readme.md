@@ -153,7 +153,67 @@ $Applications = 'Microsoft Outlook','Microsoft Excel','OneDrive','Microsoft Word
 ```
 If you no applications are specified then all application JSON found in returned data will be added to the Intune Service.
 
-### 7. Application_MAM_Get.ps1
+### 7. Application_iOS_Add_Assign.ps1
+This script adds and Assigns an iOS application from the itunes store to the Intune Service that you have authenticated with.
+
+To query the itunes store the following resource is used to complete the web search. https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
+
+#### Get-itunesApplication Function
+This function is used to query the itunes REST API to search the itunes store for an application. There is a single required field which is the -SearchString parameter which is used to search the store for an application or company with that name. There is also a -Limit parameter which is used to limit the amount of application which are returned.
+
+```PowerShell
+# Returns applications in the itunes store with the Microsoft Corporation in the name or company and is limited to 50 responses.
+Get-itunesApplication -SearchString "Microsoft Corporation" -Limit 50
+```
+
+#### Add-iOSApplication Function
+This function is used to add an iOS application from the itunes store into the Intune Service. It has a required parameter of -itunesApp which is the JSON data returned from the itunes store.
+
+```PowerShell
+Add-iOSApplication -itunesApp $iApp
+```
+The script shows a sample of how you can specify the applications you want to add in specifically rather than adding all applications with "Microsoft Corporation" in the name. To specify a list the following PowerShell is used to create an array of application names that you wish to add. If any of these names are found within the returned data of the "Get-itunesApplication" function then they will be added in specifically.
+
+```PowerShell
+#region Office Example
+$Applications = 'Microsoft Outlook','Microsoft Excel','OneDrive','Microsoft Word',"Microsoft PowerPoint"
+#endregion
+```
+If you no applications are specified then all application JSON found in returned data will be added to the Intune Service.
+
+#### Add-ApplicationAssignment Function
+This function is used to add an application assignment to a specified application added to the Intune Service. It has the following required parameters -ApplicationId, -TargetGroupId and -InstallIntent.
+
++ ApplicationId - The ID of the application in the Intune Service
++ TargetGroupId - The AAD Group ID (guid) where the application will be assigned
++ InstallIntent - The intent of installation e.g. Available, Required, Uninstall
+
+```PowerShell
+Add-ApplicationAssignment -ApplicationId $ApplicationId -TargetGroupId $TargetGroupId -InstallIntent $InstallIntent
+```
+
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName to be used to assign an application to.
+
+```PowerShell
+# Setting application AAD Group to assign application
+
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where applications will be assigned"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+
+Write-Host
+```
+
+### 8. Application_MAM_Get.ps1
 This script gets all MAM applications configured in the Intune Service that you have authenticated with.
 
 #### Get-IntuneMAMApplication Function
@@ -167,7 +227,7 @@ Get-IntuneMAMApplication
 Get-IntuneMAMApplication | select displayName,id,'@odata.type' | sort displayName
 ```
 
-### 8. Application_MDM_Get.ps1
+### 9. Application_MDM_Get.ps1
 This script gets all MDM applications configured in the Intune Service that you have authenticated with.
 
 #### Get-IntuneApplication Function
@@ -193,7 +253,7 @@ This function is used to get an application assignment from the Intune Service. 
 Get-ApplicationAssignment -ApplicationId 506c3995-251c-438b-8c68-174fae30e83a
 ```
 
-### 9. Application_MDM_Remove.ps1
+### 10. Application_MDM_Remove.ps1
 This script adds an iOS application from the itunes store to the Intune Service that you have authenticated with.
 
 #### Get-IntuneApplication Function
@@ -221,13 +281,13 @@ $App = Get-IntuneApplication -Name "Microsoft Excel"
 Remove-IntuneApplication -id $App.id
 ```
 
-### 10. Application_Web_Add_No_Icon.ps1
+### 11. Application_Web_Add_No_Icon.ps1
 This script adds a Web application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Web Application JSON section below.
 
 #### Add-WebApplication Function
 This function is used to add a Web Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
-```
+```PowerShell
 Add-WebApplication -JSON $JSON
 ```
 
@@ -249,13 +309,13 @@ The sample JSON file is shown below:
     "useManagedBrowser":false
 }
 ```
-### 11. Application_Web_Add_With_Icon.ps1
+### 12. Application_Web_Add_With_Icon.ps1
 This script adds a Web application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Web Application JSON section below.
 
 #### Add-WebApplication Function
 This function is used to add a Web Application to the Intune Service. It supports multiple parameters -JSON and -IconURL as an input to the function to pass the JSON data to the service.
 
-```
+```PowerShell
 Add-WebApplication -JSON $JSON -IconURL "C:\IntuneIcons\bing.png"
 ```
 

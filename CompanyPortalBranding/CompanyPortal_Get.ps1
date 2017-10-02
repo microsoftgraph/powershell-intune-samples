@@ -1,6 +1,6 @@
-ï»¿
+
 <#
-Â 
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+ 
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
-$authority = "https://login.windows.net/$Tenant"
-Â 
+ 
+$authority = "https://login.microsoftonline.com/$Tenant"
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
+ 
 ####################################################
 
 Function Get-IntuneBrand(){
@@ -157,7 +157,7 @@ This function is used to get the Company Intune Branding resources from the Grap
 .DESCRIPTION
 The function connects to the Graph API Interface and gets the Intune Branding Resource
 .EXAMPLE
-Get-IntuneBrand -id $id
+Get-IntuneBrand
 Returns the Company Intune Branding configured in Intune
 .NOTES
 NAME: Get-IntuneBrand
@@ -165,75 +165,13 @@ NAME: Get-IntuneBrand
 
 [cmdletbinding()]
 
-param
-(
-    $id
-
-)
-
 $graphApiVersion = "Beta"
-$Resource = "organization/$id/intuneBrand"
-
-    try {
-
-        if(!$id){
-
-        write-host "Organization Id hasn't been specified, please specify Id..." -f Red
-        break
-
-        }
-
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-        Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get
-
-        }
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-Organization(){
-
-<#
-.SYNOPSIS
-This function is used to get the Organization intune resource from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets the Organization Intune Resource
-.EXAMPLE
-Get-Organization
-Returns the Organization resource configured in Intune
-.NOTES
-NAME: Get-Organization
-#>
-
-[cmdletbinding()]
-
-$graphApiVersion = "Beta"
-$resource = "organization"
+$Resource = "deviceManagement/intuneBrand"
 
     try {
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+    Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
 
     }
 
@@ -308,8 +246,4 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$Org = Get-Organization
-
-$id = $Org.id
-
-Get-IntuneBrand -id $id
+Get-IntuneBrand

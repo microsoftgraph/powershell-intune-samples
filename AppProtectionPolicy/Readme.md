@@ -116,8 +116,43 @@ The sample JSON files are shown below:
     ]
 }
 ```
+### 2. ManagedAppPolicy_Add_Assign.ps1
+This script adds and Assigns an App Protection policy to an AAD Group into the Intune Service that you have authenticated with. The policies created by the script are shown below in the Android and iOS JSON sections below.
 
-### 2. ManagedAppPolicy_Get.ps1
+#### Add-ManagedAppPolicy Function
+This function is used to add an App Protection policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-ManagedAppPolicy -JSON $JSON
+```
+#### Assign-ManagedAppPolicy Function
+This function is used to assign an App Protection Policy to an AAD Group. There are three required parameters.
+
++ ID - The ID of the App Protection policy configured in the Intune Service
++ TargetGroupId - The ID of the AAD Group where you want to assign the policy
++ OS - The operating system of the policy your applying. There are two choices here, Android or iOS.
+
+```PowerShell
+Assign-ManagedAppPolicy -Id $MAM_PolicyID -TargetGroupId $TargetGroupId -OS iOS
+```
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName to be used to assign a policy to.
+
+```PowerShell
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where the policy will be assigned"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+```
+
+### 3. ManagedAppPolicy_Get.ps1
 This script gets all the App Protection policies from the Intune Service that you have authenticated with.
 
 #### Get-ManagedAppPolicy Function
@@ -134,7 +169,7 @@ Get-ManagedAppPolicy -Name "Android"
 
 ```
 
-### 3. ManagedAppPolicy_Remove.ps1
+### 4. ManagedAppPolicy_Remove.ps1
 This script removes an App Protection policy configured in the Intune Service that you have authenticated with.
 
 #### Remove-ManagedAppPolicy Function
@@ -147,4 +182,28 @@ It supports a single parameter -id as an input to the function to specify the id
 $MAM = Get-ManagedAppPolicy -Name "Test Policy"
 
 Remove-ManagedAppPolicy -id $MAM.id
+```
+### 5. ManagedAppPolicy_Wipe.ps1
+This script wipes a users application data where an App Protection policy has been applied. It will prompt the administrator to confirm wipe of the application data and if there are more than one device associated to the user that has an App Protection Policy application applied, the script will show a menu system of devices.
+
+This script uses the following function to complete the wipe action.
+
+#### Get-AADUser - Function
+This function is used to get users from the Azure Active Directory. It supports multiple parameters to get specific data about the user.
+
+```PowerShell
+# Gets all users in AAD
+Get-AADUser
+
+# Gets a specific user by user Principle Name
+Get-AADUser -userPrincipalName "user@tenant.onmicrosoft.com"
+
+# Gets a specific user property from AAD
+Get-AADUser -userPrincipalName "user@tenant.onmicrosoft.com" -Property MemberOf
+```
+
+#### Get-AADUserManagedAppRegistrations Function
+This function is used to get an App Protection application registrations found for the user. It has a mandatory parameter of -id for the users AAD ID.
+```PowerShell
+Get-AADUserManagedAppRegistrations -id $UserID
 ```

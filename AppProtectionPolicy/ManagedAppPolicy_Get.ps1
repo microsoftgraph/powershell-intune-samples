@@ -1,6 +1,6 @@
-ï»¿
+
 <#
-Â 
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
-Â 
+ 
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-Â 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
-Â 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
-Â 
-$authority = "https://login.windows.net/$Tenant"
-Â 
+ 
+$authority = "https://login.microsoftonline.com/$Tenant"
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +146,7 @@ $authority = "https://login.windows.net/$Tenant"
     }
 
 }
-Â 
+ 
 ####################################################
 
 Function Get-ManagedAppPolicy(){
@@ -171,21 +171,21 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "managedAppPolicies"
+$Resource = "deviceAppManagement/managedAppPolicies"
 
     try {
 
         if($Name){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
 
         }
 
         else {
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
 
@@ -228,12 +228,12 @@ NAME: Get-ManagedAppPolicyMobileApps
 
 param
 (
-    $id
+    $id,
+    $OS
 
 )
 
 $graphApiVersion = "Beta"
-$Resource = "managedAppPolicies/$id/?`$Expand=mobileAppIdentifierDeployments"
 
     try {
 
@@ -246,8 +246,32 @@ $Resource = "managedAppPolicies/$id/?`$Expand=mobileAppIdentifierDeployments"
 
         else {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get | select mobileAppIdentifierDeployments
+            if($OS -eq "" -or $OS -eq $null){
+
+            write-host "No OS parameter specified, please provide an OS. Supported value Android or iOS..." -f Red
+            Write-Host
+            break
+
+            }
+
+            elseif($OS -eq "Android"){
+
+            $Resource = "deviceAppManagement/androidManagedAppProtections('$id')/?`$Expand=mobileAppIdentifierDeployments"
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get | select mobileAppIdentifierDeployments
+
+            }
+
+            elseif($OS -eq "iOS"){
+
+            $Resource = "deviceAppManagement/iosManagedAppProtections('$id')/?`$Expand=mobileAppIdentifierDeployments"
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get | select mobileAppIdentifierDeployments
+
+
+            }
 
         }
 
@@ -304,14 +328,14 @@ $Group_resource = "groups"
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
 
         elseif($GroupName -eq "" -or $GroupName -eq $null){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
 
@@ -320,14 +344,14 @@ $Group_resource = "groups"
             if(!$Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
             }
 
             elseif($Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
                 if($Group){
 
@@ -337,7 +361,7 @@ $Group_resource = "groups"
                 write-host
 
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri â€“Headers $authToken â€“Method Get).Value
+                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
                 }
 
@@ -456,7 +480,17 @@ $ManagedAppPolicy
 
     write-host "Managed App Policy - Mobile Apps" -f Cyan
 
-    Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id | select mobileAppIdentifierDeployments
+        if($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.androidManagedAppProtection"){
+
+            Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id -OS "Android" | select mobileAppIdentifierDeployments
+
+        }
+
+        elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.iosManagedAppProtection"){
+
+            Get-ManagedAppPolicyMobileApps -id $ManagedAppPolicy.id -OS "iOS" | select mobileAppIdentifierDeployments
+
+        }
 
     }
 

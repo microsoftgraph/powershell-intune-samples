@@ -37,8 +37,42 @@ The sample JSON files are shown below:
     "version":1
 }
 ```
+### 2. TermsAndConditions_Add_Assign.ps1
+This script adds a terms and conditions policy into the Intune Service that you have authenticated with. The policy created by the script is shown below in the Sample JSON section below.
 
-### 2. TermsAndConditions_Get.ps1
+#### Add-TermsAndConditions Function
+This function is used to add a terms and conditions policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-TermsAndConditions -JSON $JSON
+```
+#### Assign-TermsAndConditions Function
+This function is used to assign terms and conditions to an AAD Group. There are two required parameters.
+
++ id - The ID of the terms and conditions in the Intune Service
++ TargetGroupId - The ID of the AAD Group you want to assign the policy to
+
+```PowerShell
+Assign-TermsAndConditions -id $id -TargetGroupId $TargetGroupId
+```
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName to be used to assign an application to.
+
+```PowerShell
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where terms and conditions will be assigned"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+```
+
+### 3. TermsAndConditions_Get.ps1
 This script gets all terms and conditions policies from the Intune Service that you have authenticated with.
 
 #### Get-TermsAndConditions Function
@@ -54,7 +88,7 @@ Get-TermsAndConditions
 Get-TermsAndConditions -Name "Test Policy"
 ```
 
-### 3. TermsAndConditions_Remove.ps1
+### 4. TermsAndConditions_Remove.ps1
 This script removes a terms and conditions policy configured in the Intune Service that you have authenticated with.
 
 ####  Remove-TermsAndCondition Function

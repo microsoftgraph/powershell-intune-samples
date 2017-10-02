@@ -50,8 +50,62 @@ The sample JSON files are shown below:
   "isBuiltInRoleDefinition": false
 }
 ```
+### 2. RBAC_Add_Assign.ps1
+This script adds and Assigns an RBAC Intune Role into the Intune Service that you have authenticated with.
 
-### 2. RBAC_Get.ps1
+#### Add-RBACRole Function
+This function is used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-RBACRole -JSON $JSON
+```
+#### Assign-RBACRole Function
+This function is used to create an Intune Role Assignment with Members and a Scope Group. There are four required parameters to this function.
+
++ Id - The ID of the Intune Role you want to create an Assignment
++ DisplayName - The display name of the Assignment
++ MemberGroupId - The AAD Group who has the members that can use the effective permissions assigned
++ TargetGroupId - The AAD Group which is used as the Scope Group for which the MemberGroupId can manage
+
+```PowerShell
+Assign-RBACRole -Id $IntuneRoleID -DisplayName "Assignment" -MemberGroupId $MemberGroupId -TargetGroupId $TargetGroupId
+```
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName to be used to assign an Intune Role Member or Scope Group.
+
+```PowerShell
+$MemberAADGroup = Read-Host -Prompt "Enter the Azure AD Group name for Intune Role Members"
+
+$MemberGroupId = (get-AADGroup -GroupName "$MemberAADGroup").id
+
+    if($MemberGroupId -eq $null -or $MemberGroupId -eq ""){
+
+    Write-Host "AAD Group - '$MemberAADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+
+Write-Host
+
+####################################################
+
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name for Intune Role Scope"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+
+Write-Host
+```
+
+### 3. RBAC_Get.ps1
 This script gets all the RBAC Intune Roles from the Intune Service that you have authenticated with.
 
 #### Get-RBACRole Function
@@ -67,7 +121,7 @@ Get-RBACRole
 Get-RBACRole -Name "Graph RBAC"
 ```
 
-### 3. RBAC_Remove.ps1
+### 4. RBAC_Remove.ps1
 This script removes an RBAC Intune Role configured in the Intune Service that you have authenticated with.
 
 #### Remove-RBACRole Function
@@ -80,4 +134,97 @@ It supports a single parameter -roleDefinitionId as an input to the function to 
 $RBAC_Role = Get-RBACRole -Name "Graph"
 
 Remove-RBACRole -roleDefinitionId $RBAC_Role.id
+```
+### 5. RBAC_UserStatus.ps1
+This script can be used to find a users effective permissions in the Intune console / Graph. The script prompts for a user principal name and if its valid will find which Intune role assignments the user is a Member of which in effect with shown the users permissions.
+
+```
+-------------------------------------------------------------------
+
+Display Name: User
+User ID: 815f48e9-c108-4524-b9fc-66cf6bbe7b0d
+User Principal Name: user@tenant.onmicrosoft.com
+
+Directory Role:
+User
+
+AAD Group Membership:
+Helpdesk Support
+UK Employees
+
+-------------------------------------------------------------------
+
+RBAC Role Assigned - Graph RBAC Role
+
+Assignment Display Name: Assignment
+
+Assignment - Members:
+Helpdesk Support
+
+Assignment - Scope (Groups):
+UK Employees
+
+-------------------------------------------------------------------
+
+RBAC Role Assigned - All Area Read Only Access
+
+Assignment Display Name: UK Employees
+
+Assignment - Members:
+Helpdesk Support
+
+Assignment - Scope (Groups):
+UK Employees
+
+-------------------------------------------------------------------
+
+Effective Permissions for user:
+Microsoft.Intune_DeviceCompliancePolices_Read
+Microsoft.Intune_DeviceConfigurations_Read
+Microsoft.Intune_EndpointProtection_Read
+Microsoft.Intune_ManagedApps_Read
+Microsoft.Intune_ManagedDevices_Read
+Microsoft.Intune_MobileApps_Read
+Microsoft.Intune_Organization_Read
+Microsoft.Intune_RemoteTasks_RebootNow
+Microsoft.Intune_RemoteTasks_RemoteLock
+Microsoft.Intune_Roles_Read
+Microsoft.Intune_TelecomExpenses_Read
+Microsoft.Intune_TermsAndConditions_Read
+```
+The following functions are used within the script with there usage.
+
+#### Get-AADUser Function
+This function is used to get a Users properties from Azure Active Directory.
+```PowerShell
+Get-AADUser -userPrincipalName $UPN
+
+# Gets all the AAD Groups a user is a member of
+Get-AADUser -userPrincipalName $UPN -Property MemberOf
+```
+
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName where the user is a member of.
+
+#### Get-RBACRole Function
+This function is used to get all RBAC Intune Roles from the Intune Service.
+
+It supports a single parameter as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all RBAC Intune Roles configured in Intune
+Get-RBACRole
+
+# Returns a RBAC Intune Role that contains the Name configured in Intune
+Get-RBACRole -Name "Graph RBAC"
+```
+#### Get-RBACRoleDefinition Function
+This function is used to get an Intune Role definition by specifying the required parameter -id. It will expand roleassignments to see if there are any assignments configured on the role.
+```PowerShell
+Get-RBACRoleDefinition -id $RBAC_id
+```
+#### Get-RBACRoleAssignment Function
+This function is used to get an assignment from an Intune Role. It will return the Members, Scope Groups and displayName of the assignment.
+```PowerShell
+Get-RBACRoleAssignment -id $RBAC_Role_Assignments
 ```

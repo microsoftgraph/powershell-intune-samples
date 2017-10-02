@@ -210,8 +210,103 @@ The sample JSON files are shown below:
     "wallpaperBlockModification": false
 }
 ```
+### 2. DeviceConfiguration_Add_Assign.ps1
+This script adds and Assigns an iOS and Android device configuration policy into the Intune Service that you have authenticated with. The policies created by the script are shown below in the Android and iOS JSON sections below.
 
-### 2. DeviceConfiguration_Get.ps1
+#### Add-DeviceConfigurationPolicy Function
+This function is used to add a device configuration policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Add-DeviceConfigurationPolicy -JSON $JSON
+```
+
+#### Add-DeviceConfigurationPolicyAssignment Function
+This function is used to assign a policy to an AAD Group. This function has two required parameters.
+
++ ConfigurationPolicyId - The policy ID defined in the Intune Service
++ TargetGroupId - The AAD Group ID where the policy should be assigned
+
+```PowerShell
+Add-DeviceConfigurationPolicyAssignment -ConfigurationPolicyId $CreateResult_Android.id -TargetGroupId $TargetGroupId
+```
+
+#### Get-AADGroup Function
+This function is used to get an AAD Group by -GroupName to be used to assign to the policy.
+
+```PowerShell
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name for Policy assignment"
+
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
+
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
+
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
+    Write-Host
+    exit
+
+    }
+
+Write-Host
+```
+### 3. DeviceConfiguration_Export.ps1
+This script gets all the device configuration policies from the Intune Service that you have authenticated with. The script will then export the policy to .json format in the directory of your choice.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+```
+
+#### Get-DeviceConfigurationPolicy Function
+This function is used to get all device configuration policies from the Intune Service.
+
+It supports a single parameters as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all device configuration policies configured in Intune
+Get-DeviceConfigurationPolicy
+
+# Returns a device configuration policy that contains the Name configured in Intune
+Get-DeviceConfigurationPolicy -Name "Android"
+
+```
+
+#### Export-JSONData Function
+This function is used to export the policy information. It has two required parameters -JSON and -ExportPath.
+
++ JSON - The JSON data
++ ExportPath - The path where the .json should be exported to
+
+```PowerShell
+Export-JSONData -JSON $JSON -ExportPath "$ExportPath"
+```
+
+
+### 4. DeviceConfiguration_Get.ps1
 This script gets all the device configuration policies from the Intune Service that you have authenticated with.
 
 #### Get-DeviceConfigurationPolicy Function
@@ -228,7 +323,36 @@ Get-DeviceConfigurationPolicy -Name "Android"
 
 ```
 
-### 3. DeviceConfiguration_Remove.ps1
+### 5. DeviceConfiguration_Import_FromJSON.ps1
+This script imports from a JSON file a device configuration policy into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Add-DeviceConfigurationPolicy function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Add-DeviceConfigurationPolicy Function
+This function is used to add a device configuration policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Add-DeviceConfigurationPolicy -JSON $JSON
+```
+
+
+### 6. DeviceConfiguration_Remove.ps1
 This script removes a device configuration policy configured in the Intune Service that you have authenticated with.
 
 #### Remove-DeviceConfigurationPolicy Function
