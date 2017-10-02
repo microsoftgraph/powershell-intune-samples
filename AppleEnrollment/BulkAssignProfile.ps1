@@ -247,7 +247,9 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
             $Resource = "deviceManagement/enrollmentProfiles('$ProfileId')/updateDeviceProfileAssignment"
 
-            $JSON = @{ "deviceIds" = $Devices } | ConvertTo-Json
+            $DevicesArray = $Devices -split ","
+
+            $JSON = @{ "deviceIds" = $DevicesArray } | ConvertTo-Json
 
             Test-JSON -JSON $JSON
 
@@ -314,11 +316,13 @@ $ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=disc
             $devicesNextLink = $response."@odata.nextLink"
             $uri = $devicesNextLink
 
-            foreach($device in $response)
+            foreach($device in $response.value)
             {
-                if ([string]::IsNullOrEmpty($device.Value.RequestedEnrollmentProfileId)) 
+                write-host "SerialNumber: " $device.SerialNumber "RequestedEnrollmentProfileId: " $device.RequestedEnrollmentProfileId "`n"
+
+                if ([string]::IsNullOrEmpty($device.RequestedEnrollmentProfileId)) 
                 {
-                    $unAssignedDevices += $device.Value.SerialNumber
+                    $unAssignedDevices += $device.SerialNumber
                 }
 
                 if ($unAssignedDevices.Count -ge 1000) 
