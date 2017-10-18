@@ -10,7 +10,9 @@ Some script samples retrieve information from your Intune tenant, and others cre
 Within this section there are the following scripts with the explanation of usage.
 
 #### Admin Consent
-When you first run any of the sample scripts against Microsoft Graph an Application is created in your tenant called "Microsoft Intune PowerShell". When a Global Admin of the tenant runs this script then permissions are set for the Global Admin only, it doesn't set delegated admin. To set delegated admin for the tenant the following script will set it.
+When you first run any of the sample scripts against Microsoft Graph an Application is created in your tenant called "Microsoft Intune PowerShell". When a Global Admin of the tenant runs this script then permissions are set for the Global Admin only, it doesn't set delegated admin. To enable delegated admin functionality, i.e. allowing users who are not Global Admins the possibility to run Intune Graph scripts in the tenant, please execute the following script.
+
+Note: Users who make use of the delegated admin actions will still require appropriate permissions to be granted to them by either being assigned to "Intune Service administrator" in AAD directory role (Limited Administrator) OR through the more granular Intune roles. If you assign a user to the "Intune Service Administrator" role then they have full permission to the Intune service, if this isn't required then leverage "Intune Roles" within the Intune console.
 
 To view the Enterprise Application in the Azure Console navigate to the following path:
 
