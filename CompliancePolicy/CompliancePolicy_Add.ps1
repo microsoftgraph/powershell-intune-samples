@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -316,6 +316,7 @@ $JSON_Android = @"
     "requireAppVerify":  true,
     "securityPreventInstallAppsFromUnknownSources":  true,
     "@odata.type":  "microsoft.graph.androidCompliancePolicy",
+    "scheduledActionsForRule":[{"ruleName":"PasswordRequired","scheduledActionConfigurations":[{"actionType":"block","gracePeriodHours":0,"notificationTemplateId":""}]}],
     "passwordRequiredType":  "numeric",
     "storageRequireEncryption":  true,
     "storageRequireRemovableStorageEncryption":  true,
@@ -341,6 +342,7 @@ $JSON_iOS = @"
   "@odata.type": "microsoft.graph.iosCompliancePolicy",
   "description": "iOS Compliance Policy",
   "displayName": "iOS Compliance Policy",
+  "scheduledActionsForRule":[{"ruleName":"PasswordRequired","scheduledActionConfigurations":[{"actionType":"block","gracePeriodHours":0,"notificationTemplateId":""}]}],
   "passcodeBlockSimple": true,
   "passcodeExpirationDays": null,
   "passcodeMinimumLength": 4,
