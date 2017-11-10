@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,58 +146,37 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
-Function Set-DeviceEnrollmentRestrictions(){
-
+Function Get-DeviceEnrollmentConfigurations(){
+    
 <#
 .SYNOPSIS
-This function is used to set Device Enrollment Restrictions resource from the Graph API REST interface
+This function is used to get Deivce Enrollment Configurations from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and sets Device Enrollment Restrictions Resource
+The function connects to the Graph API Interface and gets Device Enrollment Configurations
 .EXAMPLE
-Set-DeviceEnrollmentRestrictions -id $id -JSON $JSON
-Sets device enrollment restrictions configured in Intune
+Get-DeviceEnrollmentConfigurations
+Returns Device Enrollment Configurations configured in Intune
 .NOTES
-NAME: Set-DeviceEnrollmentRestrictions
+NAME: Get-DeviceEnrollmentConfigurations
 #>
-
+    
 [cmdletbinding()]
-
-param
-(
-    $id,
-    $JSON
-)
-
+    
 $graphApiVersion = "Beta"
-$Resource = "organization('$id')"
-
+$Resource = "deviceManagement/deviceEnrollmentConfigurations"
+        
     try {
-
-        if(!$id){
-        write-host "Organization Id hasn't been specified, please specify Id..." -f Red
-        break
-        }
-
-        elseif(!$JSON){
-        write-host "No JSON has been passed to the function, please specify JSON metadata..." -f Red
-        break
-        }
-
-        else {
-
-        Test-JSON -JSON $JSON
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $Json -ContentType "application/json"
-        }
-
+            
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    
     }
-
+        
     catch {
-
+    
     $ex = $_.Exception
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
@@ -208,41 +187,67 @@ $Resource = "organization('$id')"
     Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
     write-host
     break
-
+    
     }
-
+    
 }
 
 ####################################################
-
-Function Get-Organization(){
-
+    
+Function Set-DeviceEnrollmentConfiguration(){
+    
 <#
 .SYNOPSIS
-This function is used to get the Organization intune resource from the Graph API REST interface
+This function is used to set the Device Enrollment Configuration resource using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets the Organization Intune Resource
+The function connects to the Graph API Interface and sets the Device Enrollment Configuration Resource
 .EXAMPLE
-Get-Organization
-Returns the Organization resource configured in Intune
+Set-DeviceEnrollmentConfiguration -DEC_Id $DEC_Id -JSON $JSON
+Sets the Device Enrollment Configuration using Graph API
 .NOTES
-NAME: Get-Organization
+NAME: Set-DeviceEnrollmentConfiguration
 #>
-
+    
 [cmdletbinding()]
-
+    
+param
+(
+    $JSON,
+    $DEC_Id
+)
+    
 $graphApiVersion = "Beta"
-$resource = "organization"
-
+$App_resource = "deviceManagement/deviceEnrollmentConfigurations"
+        
     try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-
+    
+        if(!$JSON){
+    
+        write-host "No JSON was passed to the function, provide a JSON variable" -f Red
+        break
+    
+        }
+    
+        elseif(!$DEC_Id){
+    
+        write-host "No Device Enrollment Configuration ID was passed to the function, provide a Device Enrollment Configuration ID" -f Red
+        break
+    
+        }
+    
+        else {
+    
+        Test-JSON -JSON $JSON
+        
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($App_resource)/$DEC_Id"
+        Invoke-RestMethod -Uri $uri -Method Patch -ContentType "application/json" -Body $JSON -Headers $authToken
+    
+        }
+        
     }
-
+        
     catch {
-
+    
     $ex = $_.Exception
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
@@ -253,9 +258,9 @@ $resource = "organization"
     Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
     write-host
     break
-
+    
     }
-
+    
 }
 
 ####################################################
@@ -360,36 +365,55 @@ $global:authToken = Get-AuthToken -User $User
 $JSON = @"
 
 {
-    "defaultDeviceEnrollmentRestrictions":{
-        "androidRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "iosRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "macRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "windowsRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "windowsMobileRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        }
+    "@odata.type":"#microsoft.graph.deviceEnrollmentPlatformRestrictionsConfiguration",
+    "displayName":"All Users",
+    "description":"This is the default Device Type Restriction applied with the lowest priority to all users regardless of group membership.",
+
+    "androidRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "androidForWorkRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":null,
+    "osMaximumVersion":null
+    },
+    "iosRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "macRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":null,
+    "osMaximumVersion":null
+    },
+    "windowsRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "windowsMobileRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
     }
+
 }
 
 "@
 
 ####################################################
 
-$Org = Get-Organization
+$DeviceEnrollmentConfigurations = Get-DeviceEnrollmentConfigurations
 
-$id = $Org.id
+$PlatformRestrictions = ($DeviceEnrollmentConfigurations | Where-Object { ($_.id).contains("DefaultPlatformRestrictions") }).id
 
-Set-DeviceEnrollmentRestrictions -id $id -JSON $JSON
+Set-DeviceEnrollmentConfiguration -DEC_Id $PlatformRestrictions -JSON $JSON

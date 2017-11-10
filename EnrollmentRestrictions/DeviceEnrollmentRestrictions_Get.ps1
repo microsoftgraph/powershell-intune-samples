@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,108 +146,51 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
-Function Get-DeviceEnrollmentRestrictions(){
-
+Function Get-DeviceEnrollmentConfigurations(){
+    
 <#
 .SYNOPSIS
-This function is used to get device enrollment restrictions resource from the Graph API REST interface
+This function is used to get Deivce Enrollment Configurations from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets the device enrollment restrictions Resource
+The function connects to the Graph API Interface and gets Device Enrollment Configurations
 .EXAMPLE
-Get-DeviceEnrollmentRestrictions -id $id
-Returns device enrollment restrictions configured in Intune
+Get-DeviceEnrollmentConfigurations
+Returns Device Enrollment Configurations configured in Intune
 .NOTES
-NAME: Get-DeviceEnrollmentRestrictions
+NAME: Get-DeviceEnrollmentConfigurations
 #>
-
-[cmdletbinding()]
-
-param
-(
-    $id
-)
-
-$graphApiVersion = "Beta"
-$Resource = "organization/$id/defaultDeviceEnrollmentRestrictions"
-
-    try {
-
-        if(!$id){
-        write-host "Organization Id hasn't been specified, please specify Id..." -f Red
+    
+    [cmdletbinding()]
+    
+    $graphApiVersion = "Beta"
+    $Resource = "deviceManagement/deviceEnrollmentConfigurations"
+        
+        try {
+            
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    
+        }
+        
+        catch {
+    
+        $ex = $_.Exception
+        $errorResponse = $ex.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($errorResponse)
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $responseBody = $reader.ReadToEnd();
+        Write-Host "Response content:`n$responseBody" -f Red
+        Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+        write-host
         break
+    
         }
-
-        else {
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-        Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get
-        }
-
+    
     }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-Organization(){
-
-<#
-.SYNOPSIS
-This function is used to get the Organization intune resource from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets the Organization Intune Resource
-.EXAMPLE
-Get-Organization
-Returns the Organization resource configured in Intune
-.NOTES
-NAME: Get-Organization
-#>
-
-[cmdletbinding()]
-
-$graphApiVersion = "Beta"
-$resource = "organization"
-
-    try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
-
-    }
-
-    catch {
-
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
 
 ####################################################
 
@@ -303,8 +246,6 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$Org = Get-Organization
+$DECs = Get-DeviceEnrollmentConfigurations
 
-$id = $Org.id
-
-Get-DeviceEnrollmentRestrictions -id $id
+$DECs | Where-Object { ($_.id).contains("DefaultPlatformRestrictions") }
