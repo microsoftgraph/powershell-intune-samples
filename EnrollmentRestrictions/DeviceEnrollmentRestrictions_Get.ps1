@@ -246,6 +246,6 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$DECs = Get-DeviceEnrollmentConfigurations
+$DeviceEnrollmentConfigurations = Get-DeviceEnrollmentConfigurations
 
-$DECs | Where-Object { ($_.id).contains("DefaultPlatformRestrictions") }
+$DeviceEnrollmentConfigurations | Where-Object { ($_.id).contains("DefaultPlatformRestrictions") }

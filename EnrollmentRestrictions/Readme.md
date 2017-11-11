@@ -12,34 +12,37 @@ Within this section there are the following scripts with the explanation of usag
 ### 1. DeviceEnrollmentRestrictions_Get.ps1
 This script gets the device enrollment restrictions from the Intune Service that you have authenticated with.
 
-#### Get-Organization Function
-This function is used to get information about the tenant organization from the Intune Service.
+#### Get-DeviceEnrollmentConfigurations Function
+This function is used to return the device enrollment configuration from the Intune Service.
 
 ```PowerShell
-# Returns organization information configured in Intune
-Get-Organization
-```
-#### Get-DeviceEnrollmentRestrictions Function
-This function is used to return the device enrollment restrictions from the Intune Service.
-
-It requires a single parameter as an input to the function which is the organization id from the Get-Organization function to pull data from the service.
-
-```PowerShell
-# Returns device enrollment restrictions configured in Intune
-Get-DeviceEnrollmentRestrictions -id 928bf66b-df3a-460d-8203-70a3e4b0a067
+# Returns all device enrollment configurations configured in Intune
+Get-DeviceEnrollmentConfigurations
 ```
 ### 2. DeviceEnrollmentRestrictions_Set.ps1
 This script sets the device enrollment restrictions in the Intune Service that you have authenticated with. The settings created by the script are shown below in the JSON section below.
 
-#### Set-DeviceEnrollmentRestrictions Function
-This function is used to set the device enrollment restrictions in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
+#### Get-DeviceEnrollmentConfigurations Function
+This function is used to return the device enrollment configuration from the Intune Service.
+
+It requires a filter on the returned data to get the DefaultPlatformRestrictions which is done by using the PowerShell Where-Object filter.
 
 ```PowerShell
-Set-DeviceEnrollmentRestrictions -id 2981ad5f-d7c5-4422-834c-4381c3a33079 -JSON $JSON
+# Returns all device enrollment configurations configured in Intune and then filters on Default Platform Restrictions
+$DeviceEnrollmentConfigurations = Get-DeviceEnrollmentConfigurations
+
+$PlatformRestrictions = ($DeviceEnrollmentConfigurations | Where-Object { ($_.id).contains("DefaultPlatformRestrictions") }).id
+```
+
+#### Set-DeviceEnrollmentRestrictions Function
+This function is used to set the device enrollment restrictions in the Intune Service. It requires multiple parameter -DEC_Id and -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Set-DeviceEnrollmentConfiguration -DEC_Id $PlatformRestrictions -JSON $JSON
 ```
 
 #### Test-JSON Function
-This function is used to test if the JSON passed to the Set-DeviceEnrollmentRestrictions function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
+This function is used to test if the JSON passed to the Set-DeviceEnrollmentConfiguration function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
 
 The sample JSON file are shown below:
 
@@ -47,27 +50,46 @@ The sample JSON file are shown below:
 
 ```JSON
 {
-    "defaultDeviceEnrollmentRestrictions":{
-        "androidRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "iosRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "macRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "windowsRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        },
-        "windowsMobileRestrictions":{
-        "platformBlocked":false,
-        "personalDeviceEnrollmentBlocked":false
-        }
+    "@odata.type":"#microsoft.graph.deviceEnrollmentPlatformRestrictionsConfiguration",
+    "displayName":"All Users",
+    "description":"This is the default Device Type Restriction applied with the lowest priority to all users regardless of group membership.",
+
+    "androidRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "androidForWorkRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":null,
+    "osMaximumVersion":null
+    },
+    "iosRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "macRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":null,
+    "osMaximumVersion":null
+    },
+    "windowsRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
+    },
+    "windowsMobileRestriction":{
+    "platformBlocked":false,
+    "personalDeviceEnrollmentBlocked":false,
+    "osMinimumVersion":"",
+    "osMaximumVersion":""
     }
+
 }
 ```
