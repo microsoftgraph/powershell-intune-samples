@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +146,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
 Function Get-DeviceConfigurationPolicy(){
@@ -171,7 +171,7 @@ $DCP_resource = "deviceManagement/deviceConfigurations"
     try {
     
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
-    (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
     
     }
     
@@ -260,8 +260,8 @@ $ExportPath
 
             write-host "Export Path:" "$ExportPath"
 
-            $Object | Export-Csv "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
-            $JSON1 | Out-File "$ExportPath\$FileName_JSON"
+            $Object | Export-Csv -LiteralPath "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
+            $JSON1 | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
             write-host "CSV created in $ExportPath\$FileName_CSV..." -f cyan
             write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
             

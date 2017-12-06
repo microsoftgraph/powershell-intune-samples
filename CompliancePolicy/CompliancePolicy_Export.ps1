@@ -310,8 +310,8 @@ $ExportPath
 
             write-host "Export Path:" "$ExportPath"
 
-            $Object | Export-Csv "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
-            $JSON1 | Out-File "$ExportPath\$FileName_JSON"
+            $Object | Export-Csv -LiteralPath "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
+            $JSON1 | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
             write-host "CSV created in $ExportPath\$FileName_CSV..." -f cyan
             write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
             
