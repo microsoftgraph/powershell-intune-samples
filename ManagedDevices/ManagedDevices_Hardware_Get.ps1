@@ -176,7 +176,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
 try {
 
@@ -333,10 +333,10 @@ if($Devices){
     Write-Host "Device found:" $Device.deviceName -ForegroundColor Yellow
     Write-Host
 
-    $uri = "https://graph.microsoft.com/beta/manageddevices('$DeviceID')?`$select=hardwareInformation"
+    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$select=hardwareInformation"
     $Hardware = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).hardwareInformation
 
-    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber
+    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber,meid,subscriberCarrier
     $HardwareExcludes = $Hardware | select * -ExcludeProperty sharedDeviceCachedUsers,phoneNumber
 
         $Object = New-Object System.Object

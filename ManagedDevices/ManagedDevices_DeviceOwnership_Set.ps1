@@ -176,7 +176,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
 try {
 
@@ -260,7 +260,7 @@ param
 
 
 $graphApiVersion = "Beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
     try {
 
@@ -296,7 +296,7 @@ $JSON = @"
                 if($Confirm -eq "y" -or $Confirm -eq "Y"){
             
                 # Send Patch command to Graph to change the ownertype
-                $uri = "https://graph.microsoft.com/beta/managedDevices('$ID')"
+                $uri = "https://graph.microsoft.com/beta/deviceManagement/managedDevices('$ID')"
                 Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $Json -ContentType "application/json"
 
                 }
@@ -327,7 +327,7 @@ $JSON = @"
                 if($Confirm -eq "y" -or $Confirm -eq "Y"){
             
                 # Send Patch command to Graph to change the ownertype
-                $uri = "https://graph.microsoft.com/beta/managedDevices('$ID')"
+                $uri = "https://graph.microsoft.com/beta/deviceManagement/managedDevices('$ID')"
                 Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $Json -ContentType "application/json"
 
                 }

@@ -176,7 +176,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
 try {
 
@@ -260,7 +260,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "manageddevices('$DeviceID')?`$select=userId"
+$Resource = "deviceManagement/manageddevices('$DeviceID')?`$select=userId"
 
     try {
 

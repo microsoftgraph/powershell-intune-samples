@@ -454,7 +454,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
 try {
 

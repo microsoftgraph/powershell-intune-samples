@@ -255,7 +255,7 @@ param
 
 # Defining Variables
 $graphApiVersion = "beta"
-$Resource = "managedDevices"
+$Resource = "deviceManagement/managedDevices"
 
 try {
 
@@ -393,7 +393,7 @@ if($Devices){
 
         }
 
-    $uri = "https://graph.microsoft.com/beta/manageddevices('$DeviceID')?`$expand=detectedApps"
+    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$expand=detectedApps"
     $DetectedApps = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).detectedApps
 
     $DetectedApps | select displayName,version | ft

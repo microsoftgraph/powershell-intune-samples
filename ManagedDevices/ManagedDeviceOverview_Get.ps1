@@ -167,7 +167,7 @@ NAME: Get-ManagedDeviceOverview
 
 
 $graphApiVersion = "Beta"
-$Resource = "managedDeviceOverview"
+$Resource = "deviceManagement/managedDeviceOverview"
 
     try {
 
