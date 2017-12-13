@@ -296,7 +296,7 @@ Write-Host
 
     try {
 
-    $uri = "https://graph.microsoft.com/beta/managedDevices?`$filter=enrolledDateTime ge $minutesago"
+    $uri = "https://graph.microsoft.com/beta/deviceManagement/managedDevices?`$filter=enrolledDateTime ge $minutesago"
 
     $Devices = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | sort deviceName
 
