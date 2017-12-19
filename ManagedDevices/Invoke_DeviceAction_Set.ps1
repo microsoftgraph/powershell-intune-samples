@@ -336,7 +336,7 @@ $graphApiVersion = "Beta"
 
         elseif($RemoteLock){
 
-        $Resource = "managedDevices/$DeviceID/remoteLock"
+        $Resource = "deviceManagement/managedDevices/$DeviceID/remoteLock"
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
         write-verbose $uri
         Write-Verbose "Sending remoteLock command to $DeviceID"
@@ -352,7 +352,7 @@ $graphApiVersion = "Beta"
 
             if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-            $Resource = "managedDevices/$DeviceID/resetPasscode"
+            $Resource = "deviceManagement/managedDevices/$DeviceID/resetPasscode"
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
             write-verbose $uri
             Write-Verbose "Sending remotePasscode command to $DeviceID"
@@ -376,7 +376,7 @@ $graphApiVersion = "Beta"
 
             if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-            $Resource = "managedDevices/$DeviceID/wipe"
+            $Resource = "deviceManagement/managedDevices/$DeviceID/wipe"
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
             write-verbose $uri
             Write-Verbose "Sending wipe command to $DeviceID"
@@ -400,7 +400,7 @@ $graphApiVersion = "Beta"
 
             if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-            $Resource = "managedDevices/$DeviceID/retire"
+            $Resource = "deviceManagement/managedDevices/$DeviceID/retire"
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
             write-verbose $uri
             Write-Verbose "Sending retire command to $DeviceID"
@@ -426,7 +426,7 @@ $graphApiVersion = "Beta"
 
             if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-            $Resource = "managedDevices('$DeviceID')"
+            $Resource = "deviceManagement/managedDevices('$DeviceID')"
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
             write-verbose $uri
             Write-Verbose "Sending delete command to $DeviceID"
@@ -450,7 +450,7 @@ $graphApiVersion = "Beta"
 
             if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-            $Resource = "managedDevices('$DeviceID')/syncDevice"
+            $Resource = "deviceManagement/managedDevices('$DeviceID')/syncDevice"
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
             write-verbose $uri
             Write-Verbose "Sending sync command to $DeviceID"
