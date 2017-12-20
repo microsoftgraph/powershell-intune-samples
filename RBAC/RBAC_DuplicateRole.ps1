@@ -149,126 +149,30 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Test-JSON(){
+Function Get-RBACRole(){
 
 <#
 .SYNOPSIS
-This function is used to test if the JSON passed to a REST Post request is valid
+This function is used to get RBAC Role Definitions from the Graph API REST interface
 .DESCRIPTION
-The function tests if the JSON passed to the REST Post is valid
+The function connects to the Graph API Interface and gets any RBAC Role Definitions
 .EXAMPLE
-Test-JSON -JSON $JSON
-Test if the JSON is valid before calling the Graph REST interface
+Get-RBACRole
+Returns any RBAC Role Definitions configured in Intune
 .NOTES
-NAME: Test-JSON
+NAME: Get-RBACRole
 #>
 
-param (
-
-$JSON
-
-)
-
-    try {
-
-    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
-    $validJson = $true
-
-    }
-
-    catch {
-
-    $validJson = $false
-    $_.Exception
-
-    }
-
-    if (!$validJson){
-    
-    Write-Host "Provided JSON isn't in valid JSON format" -f Red
-    break
-
-    }
-
-}
-
-####################################################
-
-Function Get-AADGroup(){
-
-<#
-.SYNOPSIS
-This function is used to get AAD Groups from the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets any Groups registered with AAD
-.EXAMPLE
-Get-AADGroup
-Returns all users registered with Azure AD
-.NOTES
-NAME: Get-AADGroup
-#>
-
-[cmdletbinding()]
-
-param
-(
-    $GroupName,
-    $id,
-    [switch]$Members
-)
-
-# Defining Variables
-$graphApiVersion = "v1.0"
-$Group_resource = "groups"
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/roleDefinitions"
     
     try {
-
-        if($id){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
-        }
-        
-        elseif($GroupName -eq "" -or $GroupName -eq $null){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-        
-        }
-
-        else {
-            
-            if(!$Members){
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-            
-            }
-            
-            elseif($Members){
-            
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-            
-                if($Group){
-
-                $GID = $Group.id
-
-                $Group.displayName
-                write-host
-
-                $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
-                }
-
-            }
-        
-        }
-
+    
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -346,93 +250,43 @@ $Resource = "deviceManagement/roleDefinitions"
 
 ####################################################
 
-Function Assign-RBACRole(){
+Function Test-JSON(){
 
 <#
 .SYNOPSIS
-This function is used to set an assignment for an RBAC Role using the Graph API REST interface
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-The function connects to the Graph API Interface and sets and assignment for an RBAC Role
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Assign-RBACRole -Id $IntuneRoleID -DisplayName "Assignment" -MemberGroupId $MemberGroupId -TargetGroupId $TargetGroupId
-Creates and Assigns and Intune Role assignment to an Intune Role in Intune
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Assign-RBACRole
+NAME: Test-JSON
 #>
 
-[cmdletbinding()]
+param (
 
-param
-(
-    $Id,
-    $DisplayName,
-    $MemberGroupId,
-    $TargetGroupId
+$JSON
+
 )
 
-$graphApiVersion = "Beta"
-$Resource = "deviceManagement/roleAssignments"
-    
     try {
 
-        if(!$Id){
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
 
-        write-host "No Policy Id specified, specify a valid Application Id" -f Red
-        break
-
-        }
-
-        if(!$DisplayName){
-
-        write-host "No Display Name specified, specify a Display Name" -f Red
-        break
-
-        }
-
-        if(!$MemberGroupId){
-
-        write-host "No Member Group Id specified, specify a valid Target Group Id" -f Red
-        break
-
-        }
-
-        if(!$TargetGroupId){
-
-        write-host "No Target Group Id specified, specify a valid Target Group Id" -f Red
-        break
-
-        }
-
-
-$JSON = @"
-
-    {
-    "id":"",
-    "description":"",
-    "displayName":"$DisplayName",
-    "members":["$MemberGroupId"],
-    "scopeMembers":["$TargetGroupId"],
-    "roleDefinition@odata.bind":"https://graph.microsoft.com/beta/deviceManagement/roleDefinitions('$ID')"
     }
 
-"@
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-    Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
-    
-    }
-    
     catch {
 
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
+    $validJson = $false
+    $_.Exception
+
+    }
+
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
     break
 
     }
@@ -459,7 +313,7 @@ if($global:authToken){
         write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
         write-host
 
-            # Defining User Principal Name if not present
+            # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
 
             if($User -eq $null -or $User -eq ""){
 
@@ -493,83 +347,74 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-# Setting Member AAD Group
-
-$MemberAADGroup = Read-Host -Prompt "Enter the Azure AD Group name for Intune Role Members"
-
-$MemberGroupId = (get-AADGroup -GroupName "$MemberAADGroup").id
-
-    if($MemberGroupId -eq $null -or $MemberGroupId -eq ""){
-
-    Write-Host "AAD Group - '$MemberAADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
-    Write-Host
-    exit
-
-    }
-
 Write-Host
 
-####################################################
+$RBAC_Roles = (Get-RBACRole | ? { $_.isBuiltInRoleDefinition -eq $true } | select displayName).displayName
 
-# Setting Scope AAD Group
+$menu = @{}
 
-$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name for Intune Role Scope"
-
-$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
-
-    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
-
-    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
-    Write-Host
-    exit
-
-    }
+for ($i=1;$i -le $RBAC_Roles.count; $i++) 
+{ Write-Host "$i. $($RBAC_Roles[$i-1])" 
+$menu.Add($i,($RBAC_Roles[$i-1]))}
 
 Write-Host
+[int]$ans = Read-Host 'Enter Intune Role to Duplicate (Numerical value)'
+$selection = $menu.Item($ans)
 
-####################################################
+    if($selection){
+
+    Write-Host
+    Write-Host $selection -f Cyan
+    Write-Host
+
+    $RBAC_Role = (Get-RBACRole | ? { $_.displayName -eq "$Selection" -and $_.isBuiltInRoleDefinition -eq $true })
+    $RBAC_Actions = $RBAC_Role.permissions.actions | ConvertTo-Json
+    $RBAC_DN = $RBAC_Role.displayName
 
 $JSON = @"
-
-{
-  "@odata.type": "#microsoft.graph.roleDefinition",
-  "displayName": "Graph RBAC Role Assigned",
-  "description": "New RBAC Role Description",
-  "permissions": [
     {
-      "actions": [
-        "Microsoft.Intune/MobileApps/Read",
-        "Microsoft.Intune/TermsAndConditions/Read",
-        "Microsoft.Intune/ManagedApps/Read",
-        "Microsoft.Intune/ManagedDevices/Read",
-        "Microsoft.Intune/DeviceConfigurations/Read",
-        "Microsoft.Intune/TelecomExpenses/Read",
-        "Microsoft.Intune/Organization/Read",
-        "Microsoft.Intune/RemoteTasks/RebootNow",
-        "Microsoft.Intune/RemoteTasks/RemoteLock"
-      ]
+    "@odata.type": "#microsoft.graph.roleDefinition",
+    "displayName": "$RBAC_DN",
+    "description": "$RBAC_DN",
+    "permissions": [
+            {   
+            "actions": $RBAC_Actions
+            }
+        
+        ],
+        "isBuiltInRoleDefinition": false  
     }
-  ],
-  "isBuiltInRoleDefinition": false
-}
-
 "@
 
-####################################################
+    $JSON
 
-Write-Host "Adding Intune Role from JSON..." -ForegroundColor Yellow
-Write-Host "Creating Intune Role via Graph"
-$CreateResult = Add-RBACRole -JSON $JSON
-write-host "Intune Role created with id" $CreateResult.id
+    Write-Host
 
-$IntuneRoleID = $CreateResult.id
+        if(Get-RBACRole | ? { $_.isBuiltInRoleDefinition -eq $false -and $_.displayName -eq "$RBAC_DN" }){
 
-Write-Host
+        Write-Host "A Custom Intune role with the name '$RBAC_DN' already exists..." -ForegroundColor Red 
 
-Write-Host "Creating Intune Role Assignment..." -ForegroundColor Yellow
-Write-Host "Creating Intune Role Assignment via Graph"
+        }
 
-$AssignmentIntuneRole = Assign-RBACRole -Id $IntuneRoleID -DisplayName "Assignment" -MemberGroupId $MemberGroupId -TargetGroupId $TargetGroupId
-write-host "Intune Role Assigment created with id" $AssignmentIntuneRole.id
+        else {
+
+        Write-Host "Duplicating Intune Role and Adding to the Intune Service..." -ForegroundColor Yellow
+
+        Add-RBACRole -JSON $JSON
+
+        }
+
+    }
+
+    else {
+
+    Write-Host
+    Write-Host "Intune Role specified is invalid..." -f Red
+    Write-Host "Please specify a valid Intune Role..." -f Red
+    Write-Host
+    break
+
+    }
+
 
 Write-Host
