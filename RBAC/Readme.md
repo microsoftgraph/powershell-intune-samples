@@ -33,7 +33,6 @@ The sample JSON files are shown below:
   "description": "New RBAC Role Description",
   "permissions": [
     {
-      "@odata.type": "microsoft.graph.permission",
       "actions": [
         "Microsoft.Intune/MobileApps/Read",
         "Microsoft.Intune/TermsAndConditions/Read",
@@ -105,7 +104,39 @@ $TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
 Write-Host
 ```
 
-### 3. RBAC_Get.ps1
+### 3. RBAC_DuplicateRole.ps1
+This script duplicates an inbuilt role as a custom role into the Intune Service that you have authenticated with.
+
+You will be presented with a menu of the Built-in Roles configured in the Intune Service.
+
+```
+Please specify which Intune Role you want to duplicate:
+
+1. Policy and Profile manager
+2. School Administrator
+3. Help Desk Operator
+4. Application Manager
+5. Read Only Operator
+6.  Intune Role Administrator
+```
+
+#### Get-RBACRole Function
+This function is used to get all RBAC Intune Roles from the Intune Service.
+
+It supports a single parameter as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all RBAC Intune Roles configured in Intune
+Get-RBACRole
+
+# Returns a RBAC Intune Role that contains the Name configured in Intune
+Get-RBACRole -Name "Graph RBAC"
+```
+
+#### Add-RBACRole Function
+This function is used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+### 4. RBAC_Get.ps1
 This script gets all the RBAC Intune Roles from the Intune Service that you have authenticated with.
 
 #### Get-RBACRole Function
@@ -121,7 +152,7 @@ Get-RBACRole
 Get-RBACRole -Name "Graph RBAC"
 ```
 
-### 4. RBAC_Remove.ps1
+### 5. RBAC_Remove.ps1
 This script removes an RBAC Intune Role configured in the Intune Service that you have authenticated with.
 
 #### Remove-RBACRole Function
@@ -135,7 +166,7 @@ $RBAC_Role = Get-RBACRole -Name "Graph"
 
 Remove-RBACRole -roleDefinitionId $RBAC_Role.id
 ```
-### 5. RBAC_UserStatus.ps1
+### 6. RBAC_UserStatus.ps1
 This script can be used to find a users effective permissions in the Intune console / Graph. The script prompts for a user principal name and if its valid will find which Intune role assignments the user is a Member of which in effect with shown the users permissions.
 
 ```

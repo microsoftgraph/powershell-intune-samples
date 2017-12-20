@@ -347,6 +347,7 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
+Write-Host "Please specify which Intune Role you want to duplicate:" -ForegroundColor Yellow
 Write-Host
 
 $RBAC_Roles = (Get-RBACRole | ? { $_.isBuiltInRoleDefinition -eq $true } | select displayName).displayName
