@@ -39,7 +39,17 @@ Get-AuditCategories
 This function is used to get all audit events in the past month from the Intune Service.
 
 ```PowerShell
-# Returns all audit events for the "Application" category configured in Intune
+# Returns all audit events for the "Application" category configured in Intune in the past 30 days (30 is the default value)
 Get-AuditEvents -Category "Application"
 
+# Returns all audit events for the "Application" category configured in Intune in the past 7 days
+Get-AuditEvents -Category "Application" -days 7
+
+```
+### 2. Auditing_User_Report_Get.ps1
+This script returns all audit events that apply to a specified user from the Intune Service that you have authenticated with.
+
+The script requests an input of a users principal name and then will check the each audit log in the Intune Service and returns what actions the user has taken. The sample pulls data from the previous day, this can be changed to a value from 1 - 30 days.
+```
+$AuditEvents = Get-AuditEvents -Category "Application" -days 1
 ```
