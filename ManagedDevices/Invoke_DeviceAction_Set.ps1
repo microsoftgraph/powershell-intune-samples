@@ -565,7 +565,7 @@ $Devices = Get-AADUserDevices -UserID $id
 
 if($Devices){
 
-$DeviceCount = $Devices.count
+$DeviceCount = @($Devices).count
 
 Write-Host
 Write-Host "User has $DeviceCount devices added to Intune..."
