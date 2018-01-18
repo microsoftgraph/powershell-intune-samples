@@ -202,7 +202,7 @@ $MAM = Get-ManagedAppPolicy -Name "Test Policy"
 
 Remove-ManagedAppPolicy -id $MAM.id
 ```
-### 5. ManagedAppPolicy_Wipe.ps1
+### 6. ManagedAppPolicy_Wipe.ps1
 This script wipes a users application data where an App Protection policy has been applied. It will prompt the administrator to confirm wipe of the application data and if there are more than one device associated to the user that has an App Protection Policy application applied, the script will show a menu system of devices.
 
 This script uses the following function to complete the wipe action.
