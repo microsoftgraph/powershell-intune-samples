@@ -168,8 +168,27 @@ Get-ManagedAppPolicy
 Get-ManagedAppPolicy -Name "Android"
 
 ```
+### 4. ManagedAppPolicy_MobileAppIdentifier_Get.ps1
+This script gets all the App Protection policy Managed Applications from the Intune Service that you have authenticated with.
 
-### 4. ManagedAppPolicy_Remove.ps1
+#### Get-IntuneMAMApplication Function
+This function is used to get all App Protection policy Managed Applications from the Intune Service.
+
+It supports multiple parameters as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all MAM / APP applications configured in Intune
+Get-IntuneMAMApplication
+
+# Returns all Android MAM / APP applications configured in Intune
+Get-IntuneMAMApplication -Android
+
+# Returns all iOS MAM / APP applications configured in Intune
+Get-IntuneMAMApplication -iOS
+
+```
+
+### 5. ManagedAppPolicy_Remove.ps1
 This script removes an App Protection policy configured in the Intune Service that you have authenticated with.
 
 #### Remove-ManagedAppPolicy Function
