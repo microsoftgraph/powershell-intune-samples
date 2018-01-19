@@ -1,4 +1,4 @@
-
+﻿
 <#
 
 .COPYRIGHT
@@ -149,52 +149,49 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Get-IntuneApplication(){
+Function Add-MDMApplication(){
 
 <#
 .SYNOPSIS
-This function is used to get applications from the Graph API REST interface
+This function is used to add an MDM application using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any applications added
+The function connects to the Graph API Interface and adds an MDM application from the itunes store
 .EXAMPLE
-Get-IntuneApplication
-Returns any applications configured in Intune
+Add-MDMApplication -JSON $JSON
+Adds an application into Intune
 .NOTES
-NAME: Get-IntuneApplication
+NAME: Add-MDMApplication
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $Name
+    $JSON
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceAppManagement/mobileApps"
+$App_resource = "deviceAppManagement/mobileApps"
 
     try {
 
-        if($Name){
+        if(!$JSON){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
-
-        }
-
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { (!($_.'@odata.type').Contains("managed")) -and (!($_.'@odata.type').Contains("#microsoft.graph.iosVppApp")) }
+        write-host "No JSON was passed to the function, provide a JSON variable" -f Red
+        break
 
         }
+
+        Test-JSON -JSON $JSON
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($App_resource)"
+        Invoke-RestMethod -Uri $uri -Method Post -ContentType "application/json" -Body $JSON -Headers $authToken
 
     }
 
     catch {
 
     $ex = $_.Exception
-    Write-Host "Request to $Uri failed with HTTP Status $([int]$ex.Response.StatusCode) $($ex.Response.StatusDescription)" -f Red
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
     $reader.BaseStream.Position = 0
@@ -211,30 +208,32 @@ $Resource = "deviceAppManagement/mobileApps"
 
 ####################################################
 
-Function Get-ApplicationAssignment(){
+Function Add-ApplicationAssignment(){
 
 <#
 .SYNOPSIS
-This function is used to get an application assignment from the Graph API REST interface
+This function is used to add an application assignment using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets an application assignment
+The function connects to the Graph API Interface and adds a application assignment
 .EXAMPLE
-Get-ApplicationAssignment
-Returns an Application Assignment configured in Intune
+Add-ApplicationAssignment -ApplicationId $ApplicationId -TargetGroupId $TargetGroupId -InstallIntent $InstallIntent
+Adds an application assignment in Intune
 .NOTES
-NAME: Get-ApplicationAssignment
+NAME: Add-ApplicationAssignment
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $ApplicationId
+    $ApplicationId,
+    $TargetGroupId,
+    $InstallIntent
 )
 
 $graphApiVersion = "Beta"
 $Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
-
+    
     try {
 
         if(!$ApplicationId){
@@ -244,15 +243,36 @@ $Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
 
         }
 
-        else {
+        if(!$TargetGroupId){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        write-host "No Target Group Id specified, specify a valid Target Group Id" -f Red
+        break
 
         }
 
-    }
+        
+        if(!$InstallIntent){
 
+        write-host "No Install Intent specified, specify a valid Install Intent - available, notApplicable, required, uninstall, availableWithoutEnrollment" -f Red
+        break
+
+        }
+
+$JSON = @"
+
+{
+  "@odata.type": "#microsoft.graph.mobileAppGroupAssignment",
+  "targetGroupId": "$TargetGroupId",
+  "installIntent": "$InstallIntent"
+}
+
+"@
+
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+    Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
+
+    }
+    
     catch {
 
     $ex = $_.Exception
@@ -264,6 +284,51 @@ $Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
     Write-Host "Response content:`n$responseBody" -f Red
     Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
     write-host
+    break
+
+    }
+
+}
+
+####################################################
+
+Function Test-JSON(){
+
+<#
+.SYNOPSIS
+This function is used to test if the JSON passed to a REST Post request is valid
+.DESCRIPTION
+The function tests if the JSON passed to the REST Post is valid
+.EXAMPLE
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
+.NOTES
+NAME: Test-AuthHeader
+#>
+
+param (
+
+$JSON
+
+)
+
+    try {
+
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
+
+    }
+
+    catch {
+
+    $validJson = $false
+    $_.Exception
+
+    }
+
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
     break
 
     }
@@ -298,37 +363,37 @@ param
 # Defining Variables
 $graphApiVersion = "v1.0"
 $Group_resource = "groups"
-
+    
     try {
 
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
         }
-
+        
         elseif($GroupName -eq "" -or $GroupName -eq $null){
-
+        
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        
         }
 
         else {
-
+            
             if(!$Members){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
+            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            
             }
-
+            
             elseif($Members){
-
+            
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
+            $Group = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+            
                 if($Group){
 
                 $GID = $Group.id
@@ -337,12 +402,12 @@ $Group_resource = "groups"
                 write-host
 
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
 
                 }
 
             }
-
+        
         }
 
     }
@@ -418,33 +483,58 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$Intune_Apps = Get-IntuneApplication | select displayName,id,'@odata.type'
+# Setting application AAD Group to assign application
 
-$Intune_Apps | foreach {
+Write-Host
 
-write-host $_.displayName -ForegroundColor Yellow
-write-host $_.id
-write-host $_.'@odata.type'
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where applications will be assigned"
 
-$App_Assignment = Get-ApplicationAssignment -ApplicationId $_.id
+$TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
 
-    if($App_Assignment){
+    if($TargetGroupId -eq $null -or $TargetGroupId -eq ""){
 
-    Write-Host "Application Assigned" -ForegroundColor Green
-
-        foreach($Assignment in $App_Assignment) {
-
-        write-host "AAD Group:"(Get-AADGroup -id $Assignment.targetGroupId).displayName "- Install Intent:"$Assignment.installIntent
-
-        }
-
-    }
-    else {
-
-    write-host "No Application Assignment" -ForegroundColor Red
-
-    }
-
+    Write-Host "AAD Group - '$AADGroup' doesn't exist, please specify a valid AAD Group..." -ForegroundColor Red
     Write-Host
+    exit
 
+    }
+
+Write-Host
+
+##################################################
+
+$JSON = @"
+
+{
+  "@odata.type": "#microsoft.graph.macOSOfficeSuiteApp",
+  "description": "MacOS Office 365 - Assigned",
+  "developer": "Microsoft",
+  "displayName": "Mac Office 365 - Assigned",
+  "informationUrl": "",
+  "isFeatured": false,
+  "largeIcon": {
+    "type": "image/png",
+    "value": "iVBORw0KGgoAAAANSUhEUgAAAF0AAAAeCAMAAAEOZNKlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJhUExURf////7z7/i9qfF1S/KCW/i+qv3q5P/9/PrQwfOMae1RG+s8AOxGDfBtQPWhhPvUx/759/zg1vWgg+9fLu5WIvKFX/rSxP728/nCr/FyR+tBBvOMaO1UH+1RHOs+AvSScP3u6f/+/v3s5vzg1+xFDO9kNPOOa/i7pvzj2/vWyes9Af76+Pzh2PrTxf/6+f7y7vOGYexHDv3t5+1SHfi8qPOIZPvb0O1NFuxDCe9hMPSVdPnFs/3q4/vaz/STcu5VIe5YJPWcfv718v/9/e1MFfF4T/F4TvF2TP3o4exECvF0SexIEPONavzn3/vZze1QGvF3Te5dK+5cKvrPwPrQwvKAWe1OGPexmexKEveulfezm/BxRfamiuxLE/apj/zf1e5YJfSXd/OHYv3r5feznPakiPze1P7x7f739f3w6+xJEfnEsvWdf/Wfge1LFPe1nu9iMvnDsfBqPOs/BPOIY/WZevJ/V/zl3fnIt/vTxuxHD+xEC+9mN+5ZJv749vBpO/KBWvBwRP/8+/SUc/etlPjArP/7+vOLZ/F7UvWae/708e1OF/aihvSWdvi8p+tABfSZefvVyPWihfSVde9lNvami+9jM/zi2fKEXvBuQvOKZvalifF5UPJ/WPSPbe9eLfrKuvvd0uxBB/7w7Pzj2vrRw/rOv+1PGfi/q/eymu5bKf3n4PnJuPBrPf3t6PWfgvWegOxCCO9nOO9oOfaskvSYePi5pPi2oPnGtO5eLPevlvKDXfrNvv739Pzd0/708O9gL+9lNfJ9VfrLu/OPbPnDsPBrPus+A/nArfarkQAAAGr5HKgAAADLdFJOU/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AvuakogAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAz5JREFUOE+tVTtu4zAQHQjppmWzwIJbEVCzpTpjbxD3grQHSOXKRXgCAT6EC7UBVAmp3KwBnmvfzNCyZTmxgeTZJsXx43B+HBHRE34ZkXgkerXFTheeiCkRrbB4UXmp4wSWz5raaQEMTM5TZwuiXoaKgV+6FsmkZQcSy0kA71yMTMGHanX+AzMMGLAQCxU1F/ZwjULPugazl82GM0NEKm/U8EqFwEkO3/EAT4grgl0nucwlk9pcpTTJ4VPA4g/Rb3yIRhhp507e9nTQmZ1OS5RO4sS7nIRPEeHXCHdkw9ZEW2yVE5oIS7peD58Avs7CN+PVCmHh21oOqBdjDzIs+FldPJ74TFESUSJEfVzy9U/dhu+AuOT6eBp6gGKyXEx8euO450ZE4CMfstMFT44broWw/itkYErWXRx+fFArt9Ca9os78TFed0LVIUsmIHrwbwaw3BEOnOk94qVpQ6Ka2HjxewJnfyd6jUtGDQLdWlzmYNYLeKbbGOucJsNabCq1Yub0o92rtR+i30V2dapxYVEePXcOjeCKPnYyit7BtKeNlZqHbr+gt7i+AChWA9RsRs03pxTQc67ouWpxyESvjK5Vs3DVSy3IpkxPm5X+wZoBi+MFHWW69/w8FRhc7VBe6HAhMB2b8Q0XqDzTNZtXUMnKMjwKVaCrB/CSUL7WSx/HsdJC86lFGXwnioTeOMPjV+szlFvrZLA5VMVK4y+41l4e1xfx7Z88o4hkilRUH/qKqwNVlgDgpvYCpH3XwAy5eMCRnezIUxffVXoDql2rTHFDO+pjWnTWzAfrYXn6BFECblUpWGrvPZvBipETjS5ydM7tdXpH41ZCEbBNy/+wFZu71QO2t9pgT+iZEf657Q1vpN94PQNDxUHeKR103LV9nPVOtDikcNKO+2naCw7yKBhOe9Hm79pe8C4/CfC2wDjXnqC94kEeBU3WwN7dt/2UScXas7zDl5GpkY+M8WKv2J7fd4Ib2rGTk+jsC2cleEM7jI9veF7B0MBJrsZqfKd/81q9pR2NZfwJK2JzsmIT1Ns8jUH0UusQBpU8d2JzsHiXg1zXGLqxfitUNTDT/nUUeqDBp2HZVr+Ocqi/Ty3Rf4Jn82xxfSNtAAAAAElFTkSuQmCC"
+  },
+  "notes": "",
+  "owner": "Microsoft",
+  "privacyInformationUrl": "",
+  "publisher": "Microsoft"
 }
+
+"@
+
+##################################################
+
+write-host "Publishing" ($JSON | ConvertFrom-Json).displayName -ForegroundColor Yellow
+
+$Create_Application = Add-MDMApplication -JSON $JSON
+
+Write-Host "Application created as $($Create_Application.displayName)/$($create_Application.id)"
+
+$ApplicationId = $Create_Application.id
+
+$Assign_Application = Add-ApplicationAssignment -ApplicationId $ApplicationId -TargetGroupId $TargetGroupId -InstallIntent "required"
+Write-Host "Assigned '$AADGroup' to $($Create_Application.displayName)/$($Create_Application.id) with" $Assign_Application.InstallIntent "install Intent"
+
+Write-Host

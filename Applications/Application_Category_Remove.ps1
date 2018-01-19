@@ -1,6 +1,6 @@
 
 <#
- 
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +8,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +89,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +146,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
 Function Get-ApplicationCategory(){
@@ -178,14 +178,14 @@ $Resource = "deviceAppManagement/mobileAppCategories"
         if($Name){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") }
 
         }
 
         else {
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
         }
 
@@ -248,7 +248,7 @@ $Resource = "deviceAppManagement/mobileAppCategories"
         else {
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)/$id"
-        Invoke-RestMethod -Uri $uri –Headers $authToken –Method Delete
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Delete
 
         }
 
@@ -257,7 +257,6 @@ $Resource = "deviceAppManagement/mobileAppCategories"
     catch {
 
     $ex = $_.Exception
-    Write-Host "Request to $Uri failed with HTTP Status $([int]$ex.Response.StatusCode) $($ex.Response.StatusDescription)" -f Red
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
     $reader.BaseStream.Position = 0

@@ -13,7 +13,7 @@ Within this section there are the following scripts with the explanation of usag
 This script adds an Android application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Android Application JSON section below.
 
 #### Add-AndroidApplication Function
-This function is used to add a compliance policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+This function is used to add an Android Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
 ```
 Add-AndroidApplication -JSON $JSON
@@ -45,7 +45,7 @@ The sample JSON file is shown below:
 This script adds an Android application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Android Application JSON section below.
 
 #### Add-AndroidApplication Function
-This function is used to add a Web Application to the Intune Service. It supports multiple parameters -JSON and -IconURL as an input to the function to pass the JSON data to the service.
+This function is used to add an Android Application to the Intune Service. It supports multiple parameters -JSON and -IconURL as an input to the function to pass the JSON data to the service.
 
 ```
 Add-AndroidApplication -JSON $JSON -IconURL "C:\IntuneIcons\Outlook.png"
@@ -212,8 +212,89 @@ $TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
 
 Write-Host
 ```
+### 8. Application_MacOSOffice365_Add.ps1
+This script adds a MacOS Office 365 application to the Intune Service that you have authenticated with.
 
-### 8. Application_MAM_Get.ps1
+#### Add-MDMApplication Function
+This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-MDMApplication -JSON $JSON
+```
+
+#### Test-JSON Function
+This function is used to test if the JSON passed to the Add-MDMApplication function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
+
+The sample JSON file is shown below:
+
+#### MacOS Office 365 Application JSON
+
+```JSON
+{
+  "@odata.type": "#microsoft.graph.macOSOfficeSuiteApp",
+  "description": "MacOS Office 365",
+  "developer": "Microsoft",
+  "displayName": "Mac Office 365",
+  "informationUrl": "",
+  "isFeatured": false,
+  "largeIcon": {
+    "type": "image/png",
+    "value": "iVBORw0KGgoAAAANSUhEUgAAAF0AAAAeCAMAAAEOZNKlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJhUExURf////7z7/i9qfF1S/KCW/i+qv3q5P/9/PrQwfOMae1RG+s8AOxGDfBtQPWhhPvUx/759/zg1vWgg+9fLu5WIvKFX/rSxP728/nCr/FyR+tBBvOMaO1UH+1RHOs+AvSScP3u6f/+/v3s5vzg1+xFDO9kNPOOa/i7pvzj2/vWyes9Af76+Pzh2PrTxf/6+f7y7vOGYexHDv3t5+1SHfi8qPOIZPvb0O1NFuxDCe9hMPSVdPnFs/3q4/vaz/STcu5VIe5YJPWcfv718v/9/e1MFfF4T/F4TvF2TP3o4exECvF0SexIEPONavzn3/vZze1QGvF3Te5dK+5cKvrPwPrQwvKAWe1OGPexmexKEveulfezm/BxRfamiuxLE/apj/zf1e5YJfSXd/OHYv3r5feznPakiPze1P7x7f739f3w6+xJEfnEsvWdf/Wfge1LFPe1nu9iMvnDsfBqPOs/BPOIY/WZevJ/V/zl3fnIt/vTxuxHD+xEC+9mN+5ZJv749vBpO/KBWvBwRP/8+/SUc/etlPjArP/7+vOLZ/F7UvWae/708e1OF/aihvSWdvi8p+tABfSZefvVyPWihfSVde9lNvami+9jM/zi2fKEXvBuQvOKZvalifF5UPJ/WPSPbe9eLfrKuvvd0uxBB/7w7Pzj2vrRw/rOv+1PGfi/q/eymu5bKf3n4PnJuPBrPf3t6PWfgvWegOxCCO9nOO9oOfaskvSYePi5pPi2oPnGtO5eLPevlvKDXfrNvv739Pzd0/708O9gL+9lNfJ9VfrLu/OPbPnDsPBrPus+A/nArfarkQAAAGr5HKgAAADLdFJOU/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AvuakogAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAz5JREFUOE+tVTtu4zAQHQjppmWzwIJbEVCzpTpjbxD3grQHSOXKRXgCAT6EC7UBVAmp3KwBnmvfzNCyZTmxgeTZJsXx43B+HBHRE34ZkXgkerXFTheeiCkRrbB4UXmp4wSWz5raaQEMTM5TZwuiXoaKgV+6FsmkZQcSy0kA71yMTMGHanX+AzMMGLAQCxU1F/ZwjULPugazl82GM0NEKm/U8EqFwEkO3/EAT4grgl0nucwlk9pcpTTJ4VPA4g/Rb3yIRhhp507e9nTQmZ1OS5RO4sS7nIRPEeHXCHdkw9ZEW2yVE5oIS7peD58Avs7CN+PVCmHh21oOqBdjDzIs+FldPJ74TFESUSJEfVzy9U/dhu+AuOT6eBp6gGKyXEx8euO450ZE4CMfstMFT44broWw/itkYErWXRx+fFArt9Ca9os78TFed0LVIUsmIHrwbwaw3BEOnOk94qVpQ6Ka2HjxewJnfyd6jUtGDQLdWlzmYNYLeKbbGOucJsNabCq1Yub0o92rtR+i30V2dapxYVEePXcOjeCKPnYyit7BtKeNlZqHbr+gt7i+AChWA9RsRs03pxTQc67ouWpxyESvjK5Vs3DVSy3IpkxPm5X+wZoBi+MFHWW69/w8FRhc7VBe6HAhMB2b8Q0XqDzTNZtXUMnKMjwKVaCrB/CSUL7WSx/HsdJC86lFGXwnioTeOMPjV+szlFvrZLA5VMVK4y+41l4e1xfx7Z88o4hkilRUH/qKqwNVlgDgpvYCpH3XwAy5eMCRnezIUxffVXoDql2rTHFDO+pjWnTWzAfrYXn6BFECblUpWGrvPZvBipETjS5ydM7tdXpH41ZCEbBNy/+wFZu71QO2t9pgT+iZEf657Q1vpN94PQNDxUHeKR103LV9nPVOtDikcNKO+2naCw7yKBhOe9Hm79pe8C4/CfC2wDjXnqC94kEeBU3WwN7dt/2UScXas7zDl5GpkY+M8WKv2J7fd4Ib2rGTk+jsC2cleEM7jI9veF7B0MBJrsZqfKd/81q9pR2NZfwJK2JzsmIT1Ns8jUH0UusQBpU8d2JzsHiXg1zXGLqxfitUNTDT/nUUeqDBp2HZVr+Ocqi/Ty3Rf4Jn82xxfSNtAAAAAElFTkSuQmCC"
+  },
+  "notes": "",
+  "owner": "Microsoft",
+  "privacyInformationUrl": "",
+  "publisher": "Microsoft"
+}
+```
+
+### 9. Application_MacOSOffice365_Add_Assign.ps1
+This script adds and Assigns a MacOS Office 365 application to the Intune Service that you have authenticated with.
+
+#### Add-MDMApplication Function
+This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-MDMApplication -JSON $JSON
+```
+#### Test-JSON Function
+This function is used to test if the JSON passed to the Add-MDMApplication function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
+
+The sample JSON file is shown below:
+
+#### MacOS Office 365 Application JSON
+
+```JSON
+{
+  "@odata.type": "#microsoft.graph.macOSOfficeSuiteApp",
+  "description": "MacOS Office 365 - Assigned",
+  "developer": "Microsoft",
+  "displayName": "Mac Office 365 - Assigned",
+  "informationUrl": "",
+  "isFeatured": false,
+  "largeIcon": {
+    "type": "image/png",
+    "value": "iVBORw0KGgoAAAANSUhEUgAAAF0AAAAeCAMAAAEOZNKlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJhUExURf////7z7/i9qfF1S/KCW/i+qv3q5P/9/PrQwfOMae1RG+s8AOxGDfBtQPWhhPvUx/759/zg1vWgg+9fLu5WIvKFX/rSxP728/nCr/FyR+tBBvOMaO1UH+1RHOs+AvSScP3u6f/+/v3s5vzg1+xFDO9kNPOOa/i7pvzj2/vWyes9Af76+Pzh2PrTxf/6+f7y7vOGYexHDv3t5+1SHfi8qPOIZPvb0O1NFuxDCe9hMPSVdPnFs/3q4/vaz/STcu5VIe5YJPWcfv718v/9/e1MFfF4T/F4TvF2TP3o4exECvF0SexIEPONavzn3/vZze1QGvF3Te5dK+5cKvrPwPrQwvKAWe1OGPexmexKEveulfezm/BxRfamiuxLE/apj/zf1e5YJfSXd/OHYv3r5feznPakiPze1P7x7f739f3w6+xJEfnEsvWdf/Wfge1LFPe1nu9iMvnDsfBqPOs/BPOIY/WZevJ/V/zl3fnIt/vTxuxHD+xEC+9mN+5ZJv749vBpO/KBWvBwRP/8+/SUc/etlPjArP/7+vOLZ/F7UvWae/708e1OF/aihvSWdvi8p+tABfSZefvVyPWihfSVde9lNvami+9jM/zi2fKEXvBuQvOKZvalifF5UPJ/WPSPbe9eLfrKuvvd0uxBB/7w7Pzj2vrRw/rOv+1PGfi/q/eymu5bKf3n4PnJuPBrPf3t6PWfgvWegOxCCO9nOO9oOfaskvSYePi5pPi2oPnGtO5eLPevlvKDXfrNvv739Pzd0/708O9gL+9lNfJ9VfrLu/OPbPnDsPBrPus+A/nArfarkQAAAGr5HKgAAADLdFJOU/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AvuakogAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAz5JREFUOE+tVTtu4zAQHQjppmWzwIJbEVCzpTpjbxD3grQHSOXKRXgCAT6EC7UBVAmp3KwBnmvfzNCyZTmxgeTZJsXx43B+HBHRE34ZkXgkerXFTheeiCkRrbB4UXmp4wSWz5raaQEMTM5TZwuiXoaKgV+6FsmkZQcSy0kA71yMTMGHanX+AzMMGLAQCxU1F/ZwjULPugazl82GM0NEKm/U8EqFwEkO3/EAT4grgl0nucwlk9pcpTTJ4VPA4g/Rb3yIRhhp507e9nTQmZ1OS5RO4sS7nIRPEeHXCHdkw9ZEW2yVE5oIS7peD58Avs7CN+PVCmHh21oOqBdjDzIs+FldPJ74TFESUSJEfVzy9U/dhu+AuOT6eBp6gGKyXEx8euO450ZE4CMfstMFT44broWw/itkYErWXRx+fFArt9Ca9os78TFed0LVIUsmIHrwbwaw3BEOnOk94qVpQ6Ka2HjxewJnfyd6jUtGDQLdWlzmYNYLeKbbGOucJsNabCq1Yub0o92rtR+i30V2dapxYVEePXcOjeCKPnYyit7BtKeNlZqHbr+gt7i+AChWA9RsRs03pxTQc67ouWpxyESvjK5Vs3DVSy3IpkxPm5X+wZoBi+MFHWW69/w8FRhc7VBe6HAhMB2b8Q0XqDzTNZtXUMnKMjwKVaCrB/CSUL7WSx/HsdJC86lFGXwnioTeOMPjV+szlFvrZLA5VMVK4y+41l4e1xfx7Z88o4hkilRUH/qKqwNVlgDgpvYCpH3XwAy5eMCRnezIUxffVXoDql2rTHFDO+pjWnTWzAfrYXn6BFECblUpWGrvPZvBipETjS5ydM7tdXpH41ZCEbBNy/+wFZu71QO2t9pgT+iZEf657Q1vpN94PQNDxUHeKR103LV9nPVOtDikcNKO+2naCw7yKBhOe9Hm79pe8C4/CfC2wDjXnqC94kEeBU3WwN7dt/2UScXas7zDl5GpkY+M8WKv2J7fd4Ib2rGTk+jsC2cleEM7jI9veF7B0MBJrsZqfKd/81q9pR2NZfwJK2JzsmIT1Ns8jUH0UusQBpU8d2JzsHiXg1zXGLqxfitUNTDT/nUUeqDBp2HZVr+Ocqi/Ty3Rf4Jn82xxfSNtAAAAAElFTkSuQmCC"
+  },
+  "notes": "",
+  "owner": "Microsoft",
+  "privacyInformationUrl": "",
+  "publisher": "Microsoft"
+}
+```
+
+#### Add-ApplicationAssignment Function
+This function is used to add an application assignment to a specified application added to the Intune Service. It has the following required parameters -ApplicationId, -TargetGroupId and -InstallIntent.
+
++ ApplicationId - The ID of the application in the Intune Service
++ TargetGroupId - The AAD Group ID (guid) where the application will be assigned
++ InstallIntent - The intent of installation e.g. Available, Required, Uninstall
+
+```PowerShell
+Add-ApplicationAssignment -ApplicationId $ApplicationId -TargetGroupId $TargetGroupId -InstallIntent $InstallIntent
+```
+
+### 10. Application_MAM_Get.ps1
 This script gets all MAM applications configured in the Intune Service that you have authenticated with.
 
 #### Get-IntuneMAMApplication Function
@@ -227,7 +308,7 @@ Get-IntuneMAMApplication
 Get-IntuneMAMApplication | select displayName,id,'@odata.type' | sort displayName
 ```
 
-### 9. Application_MDM_Get.ps1
+### 11. Application_MDM_Get.ps1
 This script gets all MDM applications configured in the Intune Service that you have authenticated with.
 
 #### Get-IntuneApplication Function
@@ -253,7 +334,7 @@ This function is used to get an application assignment from the Intune Service. 
 Get-ApplicationAssignment -ApplicationId 506c3995-251c-438b-8c68-174fae30e83a
 ```
 
-### 10. Application_MDM_Remove.ps1
+### 12. Application_MDM_Remove.ps1
 This script adds an iOS application from the itunes store to the Intune Service that you have authenticated with.
 
 #### Get-IntuneApplication Function
@@ -281,7 +362,123 @@ $App = Get-IntuneApplication -Name "Microsoft Excel"
 Remove-IntuneApplication -id $App.id
 ```
 
-### 11. Application_Web_Add_No_Icon.ps1
+### 13. Application_Office365_Add.ps1
+This script adds a Windows 10 Office 365 application to the Intune Service that you have authenticated with.
+
+#### Add-MDMApplication Function
+This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-MDMApplication -JSON $JSON
+```
+
+#### Test-JSON Function
+This function is used to test if the JSON passed to the Add-MDMApplication function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
+
+The sample JSON file is shown below:
+
+#### Windows 10 Office 365 Application JSON
+
+```JSON
+{
+  "@odata.type": "#microsoft.graph.officeSuiteApp",
+  "autoAcceptEula": true,
+  "description": "Office 365 ProPlus",
+  "developer": "Microsoft",
+  "displayName": "Office 365 ProPlus",
+  "excludedApps": {
+    "groove": true,
+    "infoPath": true,
+    "sharePointDesigner": true
+  },
+  "informationUrl": "",
+  "isFeatured": false,
+  "largeIcon": {
+    "type": "image/png",
+    "value": "iVBORw0KGgoAAAANSUhEUgAAAF0AAAAeCAMAAAEOZNKlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJhUExURf////7z7/i9qfF1S/KCW/i+qv3q5P/9/PrQwfOMae1RG+s8AOxGDfBtQPWhhPvUx/759/zg1vWgg+9fLu5WIvKFX/rSxP728/nCr/FyR+tBBvOMaO1UH+1RHOs+AvSScP3u6f/+/v3s5vzg1+xFDO9kNPOOa/i7pvzj2/vWyes9Af76+Pzh2PrTxf/6+f7y7vOGYexHDv3t5+1SHfi8qPOIZPvb0O1NFuxDCe9hMPSVdPnFs/3q4/vaz/STcu5VIe5YJPWcfv718v/9/e1MFfF4T/F4TvF2TP3o4exECvF0SexIEPONavzn3/vZze1QGvF3Te5dK+5cKvrPwPrQwvKAWe1OGPexmexKEveulfezm/BxRfamiuxLE/apj/zf1e5YJfSXd/OHYv3r5feznPakiPze1P7x7f739f3w6+xJEfnEsvWdf/Wfge1LFPe1nu9iMvnDsfBqPOs/BPOIY/WZevJ/V/zl3fnIt/vTxuxHD+xEC+9mN+5ZJv749vBpO/KBWvBwRP/8+/SUc/etlPjArP/7+vOLZ/F7UvWae/708e1OF/aihvSWdvi8p+tABfSZefvVyPWihfSVde9lNvami+9jM/zi2fKEXvBuQvOKZvalifF5UPJ/WPSPbe9eLfrKuvvd0uxBB/7w7Pzj2vrRw/rOv+1PGfi/q/eymu5bKf3n4PnJuPBrPf3t6PWfgvWegOxCCO9nOO9oOfaskvSYePi5pPi2oPnGtO5eLPevlvKDXfrNvv739Pzd0/708O9gL+9lNfJ9VfrLu/OPbPnDsPBrPus+A/nArfarkQAAAGr5HKgAAADLdFJOU/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AvuakogAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAz5JREFUOE+tVTtu4zAQHQjppmWzwIJbEVCzpTpjbxD3grQHSOXKRXgCAT6EC7UBVAmp3KwBnmvfzNCyZTmxgeTZJsXx43B+HBHRE34ZkXgkerXFTheeiCkRrbB4UXmp4wSWz5raaQEMTM5TZwuiXoaKgV+6FsmkZQcSy0kA71yMTMGHanX+AzMMGLAQCxU1F/ZwjULPugazl82GM0NEKm/U8EqFwEkO3/EAT4grgl0nucwlk9pcpTTJ4VPA4g/Rb3yIRhhp507e9nTQmZ1OS5RO4sS7nIRPEeHXCHdkw9ZEW2yVE5oIS7peD58Avs7CN+PVCmHh21oOqBdjDzIs+FldPJ74TFESUSJEfVzy9U/dhu+AuOT6eBp6gGKyXEx8euO450ZE4CMfstMFT44broWw/itkYErWXRx+fFArt9Ca9os78TFed0LVIUsmIHrwbwaw3BEOnOk94qVpQ6Ka2HjxewJnfyd6jUtGDQLdWlzmYNYLeKbbGOucJsNabCq1Yub0o92rtR+i30V2dapxYVEePXcOjeCKPnYyit7BtKeNlZqHbr+gt7i+AChWA9RsRs03pxTQc67ouWpxyESvjK5Vs3DVSy3IpkxPm5X+wZoBi+MFHWW69/w8FRhc7VBe6HAhMB2b8Q0XqDzTNZtXUMnKMjwKVaCrB/CSUL7WSx/HsdJC86lFGXwnioTeOMPjV+szlFvrZLA5VMVK4y+41l4e1xfx7Z88o4hkilRUH/qKqwNVlgDgpvYCpH3XwAy5eMCRnezIUxffVXoDql2rTHFDO+pjWnTWzAfrYXn6BFECblUpWGrvPZvBipETjS5ydM7tdXpH41ZCEbBNy/+wFZu71QO2t9pgT+iZEf657Q1vpN94PQNDxUHeKR103LV9nPVOtDikcNKO+2naCw7yKBhOe9Hm79pe8C4/CfC2wDjXnqC94kEeBU3WwN7dt/2UScXas7zDl5GpkY+M8WKv2J7fd4Ib2rGTk+jsC2cleEM7jI9veF7B0MBJrsZqfKd/81q9pR2NZfwJK2JzsmIT1Ns8jUH0UusQBpU8d2JzsHiXg1zXGLqxfitUNTDT/nUUeqDBp2HZVr+Ocqi/Ty3Rf4Jn82xxfSNtAAAAAElFTkSuQmCC"
+  },
+  "localesToInstall": [
+    "en-us"
+  ],
+  "notes": "",
+  "officePlatformArchitecture": "x86",
+  "owner": "Microsoft",
+  "privacyInformationUrl": "",
+  "productIds": [
+    "o365ProPlusRetail",
+    "projectProRetail",
+    "visioProRetail"
+  ],
+  "publisher": "Microsoft",
+  "updateChannel": "firstReleaseCurrent",
+  "useSharedComputerActivation": false
+}
+```
+
+### 14. Application_Office365_Add_Assign.ps1
+This script adds and Assigns a Windows 10 Office 365 application to the Intune Service that you have authenticated with.
+
+#### Add-MDMApplication Function
+This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Add-MDMApplication -JSON $JSON
+```
+#### Test-JSON Function
+This function is used to test if the JSON passed to the Add-MDMApplication function is valid, if the JSON isn't valid then it will return a failure otherwise it will run a POST request to the Graph Service.
+
+The sample JSON file is shown below:
+
+#### Windows 10 Office 365 Application JSON
+
+```JSON
+{
+  "@odata.type": "#microsoft.graph.officeSuiteApp",
+  "autoAcceptEula": true,
+  "description": "Office 365 ProPlus - Assigned",
+  "developer": "Microsoft",
+  "displayName": "Office 365 ProPlus - Assigned",
+  "excludedApps": {
+    "groove": true,
+    "infoPath": true,
+    "sharePointDesigner": true
+  },
+  "informationUrl": "",
+  "isFeatured": false,
+  "largeIcon": {
+    "type": "image/png",
+    "value": "iVBORw0KGgoAAAANSUhEUgAAAF0AAAAeCAMAAAEOZNKlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJhUExURf////7z7/i9qfF1S/KCW/i+qv3q5P/9/PrQwfOMae1RG+s8AOxGDfBtQPWhhPvUx/759/zg1vWgg+9fLu5WIvKFX/rSxP728/nCr/FyR+tBBvOMaO1UH+1RHOs+AvSScP3u6f/+/v3s5vzg1+xFDO9kNPOOa/i7pvzj2/vWyes9Af76+Pzh2PrTxf/6+f7y7vOGYexHDv3t5+1SHfi8qPOIZPvb0O1NFuxDCe9hMPSVdPnFs/3q4/vaz/STcu5VIe5YJPWcfv718v/9/e1MFfF4T/F4TvF2TP3o4exECvF0SexIEPONavzn3/vZze1QGvF3Te5dK+5cKvrPwPrQwvKAWe1OGPexmexKEveulfezm/BxRfamiuxLE/apj/zf1e5YJfSXd/OHYv3r5feznPakiPze1P7x7f739f3w6+xJEfnEsvWdf/Wfge1LFPe1nu9iMvnDsfBqPOs/BPOIY/WZevJ/V/zl3fnIt/vTxuxHD+xEC+9mN+5ZJv749vBpO/KBWvBwRP/8+/SUc/etlPjArP/7+vOLZ/F7UvWae/708e1OF/aihvSWdvi8p+tABfSZefvVyPWihfSVde9lNvami+9jM/zi2fKEXvBuQvOKZvalifF5UPJ/WPSPbe9eLfrKuvvd0uxBB/7w7Pzj2vrRw/rOv+1PGfi/q/eymu5bKf3n4PnJuPBrPf3t6PWfgvWegOxCCO9nOO9oOfaskvSYePi5pPi2oPnGtO5eLPevlvKDXfrNvv739Pzd0/708O9gL+9lNfJ9VfrLu/OPbPnDsPBrPus+A/nArfarkQAAAGr5HKgAAADLdFJOU/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AvuakogAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAz5JREFUOE+tVTtu4zAQHQjppmWzwIJbEVCzpTpjbxD3grQHSOXKRXgCAT6EC7UBVAmp3KwBnmvfzNCyZTmxgeTZJsXx43B+HBHRE34ZkXgkerXFTheeiCkRrbB4UXmp4wSWz5raaQEMTM5TZwuiXoaKgV+6FsmkZQcSy0kA71yMTMGHanX+AzMMGLAQCxU1F/ZwjULPugazl82GM0NEKm/U8EqFwEkO3/EAT4grgl0nucwlk9pcpTTJ4VPA4g/Rb3yIRhhp507e9nTQmZ1OS5RO4sS7nIRPEeHXCHdkw9ZEW2yVE5oIS7peD58Avs7CN+PVCmHh21oOqBdjDzIs+FldPJ74TFESUSJEfVzy9U/dhu+AuOT6eBp6gGKyXEx8euO450ZE4CMfstMFT44broWw/itkYErWXRx+fFArt9Ca9os78TFed0LVIUsmIHrwbwaw3BEOnOk94qVpQ6Ka2HjxewJnfyd6jUtGDQLdWlzmYNYLeKbbGOucJsNabCq1Yub0o92rtR+i30V2dapxYVEePXcOjeCKPnYyit7BtKeNlZqHbr+gt7i+AChWA9RsRs03pxTQc67ouWpxyESvjK5Vs3DVSy3IpkxPm5X+wZoBi+MFHWW69/w8FRhc7VBe6HAhMB2b8Q0XqDzTNZtXUMnKMjwKVaCrB/CSUL7WSx/HsdJC86lFGXwnioTeOMPjV+szlFvrZLA5VMVK4y+41l4e1xfx7Z88o4hkilRUH/qKqwNVlgDgpvYCpH3XwAy5eMCRnezIUxffVXoDql2rTHFDO+pjWnTWzAfrYXn6BFECblUpWGrvPZvBipETjS5ydM7tdXpH41ZCEbBNy/+wFZu71QO2t9pgT+iZEf657Q1vpN94PQNDxUHeKR103LV9nPVOtDikcNKO+2naCw7yKBhOe9Hm79pe8C4/CfC2wDjXnqC94kEeBU3WwN7dt/2UScXas7zDl5GpkY+M8WKv2J7fd4Ib2rGTk+jsC2cleEM7jI9veF7B0MBJrsZqfKd/81q9pR2NZfwJK2JzsmIT1Ns8jUH0UusQBpU8d2JzsHiXg1zXGLqxfitUNTDT/nUUeqDBp2HZVr+Ocqi/Ty3Rf4Jn82xxfSNtAAAAAElFTkSuQmCC"
+  },
+  "localesToInstall": [
+    "en-us"
+  ],
+  "notes": "",
+  "officePlatformArchitecture": "x86",
+  "owner": "Microsoft",
+  "privacyInformationUrl": "",
+  "productIds": [
+    "o365ProPlusRetail",
+    "projectProRetail",
+    "visioProRetail"
+  ],
+  "publisher": "Microsoft",
+  "updateChannel": "firstReleaseCurrent",
+  "useSharedComputerActivation": false
+}
+```
+
+#### Add-ApplicationAssignment Function
+This function is used to add an application assignment to a specified application added to the Intune Service. It has the following required parameters -ApplicationId, -TargetGroupId and -InstallIntent.
+
++ ApplicationId - The ID of the application in the Intune Service
++ TargetGroupId - The AAD Group ID (guid) where the application will be assigned
++ InstallIntent - The intent of installation e.g. Available, Required, Uninstall
+
+```PowerShell
+Add-ApplicationAssignment -ApplicationId $ApplicationId -TargetGroupId $TargetGroupId -InstallIntent $InstallIntent
+```
+
+### 15. Application_Web_Add_No_Icon.ps1
 This script adds a Web application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Web Application JSON section below.
 
 #### Add-WebApplication Function
@@ -309,7 +506,7 @@ The sample JSON file is shown below:
     "useManagedBrowser":false
 }
 ```
-### 12. Application_Web_Add_With_Icon.ps1
+### 16. Application_Web_Add_With_Icon.ps1
 This script adds a Web application into the Intune Service that you have authenticated with. The application created by the script is shown below in the Web Application JSON section below.
 
 #### Add-WebApplication Function
