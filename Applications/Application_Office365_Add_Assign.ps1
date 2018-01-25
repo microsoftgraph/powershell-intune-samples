@@ -232,7 +232,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
+$Resource = "deviceAppManagement/mobileApps/$ApplicationId/assign"
     
     try {
 
@@ -261,9 +261,16 @@ $Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
 $JSON = @"
 
 {
-  "@odata.type": "#microsoft.graph.mobileAppGroupAssignment",
-  "targetGroupId": "$TargetGroupId",
-  "installIntent": "$InstallIntent"
+    "mobileAppAssignments": [
+    {
+        "@odata.type": "#microsoft.graph.mobileAppAssignment",
+        "target": {
+        "@odata.type": "#microsoft.graph.groupAssignmentTarget",
+        "groupId": "$TargetGroupId"
+        },
+        "intent": "$InstallIntent"
+    }
+    ]
 }
 
 "@
