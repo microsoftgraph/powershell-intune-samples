@@ -366,3 +366,20 @@ $CP = Get-DeviceConfigurationPolicy -Name "Test Policy"
 
 Remove-DeviceConfigurationPolicy -id $CP.id
 ```
+
+### 7. DeviceManagementScripts_Get.ps1
+This script gets all device management scripts configured in the Intune Service that you have authenticated with.
+
+#### Get-DeviceManagementScripts Function
+This function is used to get all device management scripts from the Intune Service.
+
+It supports a single parameters as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all device management scripts configured in Intune
+Get-DeviceManagementScripts
+
+# Returns a device management script that contains the Script Id configured in Intune
+Get-DeviceManagementScripts -ScriptId "$ScriptId"
+
+```
