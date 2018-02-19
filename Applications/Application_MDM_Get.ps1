@@ -233,7 +233,7 @@ param
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceAppManagement/mobileApps/$ApplicationId/groupAssignments"
+$Resource = "deviceAppManagement/mobileApps/$ApplicationId/assignments"
 
     try {
 
@@ -418,9 +418,9 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$Intune_Apps = Get-IntuneApplication | select displayName,id,'@odata.type'
+$Intune_Apps = Get-IntuneApplication | Select-Object displayName,id,'@odata.type'
 
-$Intune_Apps | foreach {
+$Intune_Apps | ForEach-Object {
 
 write-host $_.displayName -ForegroundColor Yellow
 write-host $_.id
@@ -432,9 +432,9 @@ $App_Assignment = Get-ApplicationAssignment -ApplicationId $_.id
 
     Write-Host "Application Assigned" -ForegroundColor Green
 
-        foreach($Assignment in $App_Assignment) {
+        foreach($Assignment in $App_Assignment){
 
-        write-host "AAD Group:"(Get-AADGroup -id $Assignment.targetGroupId).displayName "- Install Intent:"$Assignment.installIntent
+        write-host "AAD Group:"(Get-AADGroup -id $Assignment.target.GroupId).displayName "- Install Intent:"$Assignment.intent
 
         }
 
