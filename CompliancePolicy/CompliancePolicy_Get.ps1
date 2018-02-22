@@ -280,7 +280,7 @@ $DCP_resource = "deviceManagement/deviceCompliancePolicies"
 
     try {
 
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)/$id/groupAssignments"
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)/$id/assignments"
     (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
     }
@@ -471,7 +471,7 @@ $DCPA = Get-DeviceCompliancePolicyAssignment -id $id
 
             foreach($group in $DCPA){
 
-            (Get-AADGroup -id $group.targetGroupId).displayName
+            (Get-AADGroup -id $group.target.GroupId).displayName
 
             }
 
@@ -479,7 +479,7 @@ $DCPA = Get-DeviceCompliancePolicyAssignment -id $id
 
         else {
 
-        (Get-AADGroup -id $DCPA.targetGroupId).displayName
+        (Get-AADGroup -id $DCPA.target.GroupId).displayName
 
         }
 
