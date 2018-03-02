@@ -215,7 +215,7 @@ param
     $JSON
 )
 
-$graphApiVersion = "Beta"
+$graphApiVersion = "v1.0"
 $Resource = "deviceManagement/deviceCompliancePolicies"
     
     try {
@@ -279,7 +279,7 @@ param
     $TargetGroupId
 )
 
-$graphApiVersion = "Beta"
+$graphApiVersion = "v1.0"
 $Resource = "deviceManagement/deviceCompliancePolicies/$CompliancePolicyId/assign"
     
     try {
@@ -298,20 +298,19 @@ $Resource = "deviceManagement/deviceCompliancePolicies/$CompliancePolicyId/assig
 
         }
 
-        $ComPolAssign = "$CompliancePolicyId" + "_" + "$TargetGroupId"
-
 $JSON = @"
 
-{
-  "deviceCompliancePolicyGroupAssignments": [
     {
-      "@odata.type": "#microsoft.graph.deviceCompliancePolicyGroupAssignment",
-      "id": "$ComPolAssign",
-      "targetGroupId": "$TargetGroupId"
+        "assignments": [
+        {
+            "target": {
+            "@odata.type": "#microsoft.graph.groupAssignmentTarget",
+            "groupId": "$TargetGroupId"
+            }
+        }
+        ]
     }
-  ]
-}
-
+    
 "@
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"

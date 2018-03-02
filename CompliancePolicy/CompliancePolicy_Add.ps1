@@ -215,7 +215,7 @@ param
     $JSON
 )
 
-$graphApiVersion = "Beta"
+$graphApiVersion = "v1.0"
 $Resource = "deviceManagement/deviceCompliancePolicies"
 
     try {
