@@ -520,7 +520,7 @@ function WaitForFileProcessing($fileUri, $stage){
 
 ####################################################
 
-function GetAndroidAppBody($displayName, $publisher, $description, $filename, $identityName, $identityVersion, $minimumSupportedOperatingSystem){
+function GetAndroidAppBody($displayName, $publisher, $description, $filename, $identityName, $identityVersion, $versionName, $minimumSupportedOperatingSystem){
 
 	$body = @{ "@odata.type" = "#microsoft.graph.androidLOBApp" };
 	$body.categories = @();
@@ -549,13 +549,15 @@ function GetAndroidAppBody($displayName, $publisher, $description, $filename, $i
 	$body.developer = "";
 	$body.notes = "";
 	$body.owner = "";
+    $body.versionCode = $identityVersion;
+    $body.versionName = $versionName;
 
 	$body;
 }
 
 ####################################################
 
-function GetiOSAppBody($displayName, $publisher, $description, $filename, $bundleId, $identityVersion, $expirationDateTime){
+function GetiOSAppBody($displayName, $publisher, $description, $filename, $bundleId, $identityVersion, $versionNumber, $expirationDateTime){
 
 	$body = @{ "@odata.type" = "#microsoft.graph.iosLOBApp" };
     $body.applicableDeviceType = @{ "iPad" = $true; "iPhoneAndIPod" = $true }
@@ -582,6 +584,7 @@ function GetiOSAppBody($displayName, $publisher, $description, $filename, $bundl
 	$body.notes = "";
 	$body.owner = "";
     $body.expirationDateTime = $expirationDateTime;
+    $body.versionNumber = $versionNumber;
 
 	$body;
 }
@@ -603,6 +606,7 @@ function GetMSIAppBody($displayName, $publisher, $description, $filename, $ident
 	$body.notes = "";
 	$body.owner = "";
     $body.productCode = "$ProductCode";
+    $body.productVersion = "$identityVersion";
 
 	$body;
 }
@@ -756,13 +760,13 @@ param
 
     if(((gci $AndroidSDK | select name).Name).count -gt 1){
 
-    	$BuildTools = ((gci $AndroidSDK | select name).Name | sort -Descending)[0]
+    $BuildTools = ((gci $AndroidSDK | select name).Name | sort -Descending)[0]
 
     }
 
     else {
 
-    	$BuildTools = ((gci $AndroidSDK | select name).Name)
+    $BuildTools = ((gci $AndroidSDK | select name).Name)
 
     }
 
@@ -781,9 +785,11 @@ $AndroidPackage = $aaptRun | ? { ($_).startswith("package") }
 $PackageInfo = $AndroidPackage.split(" ")
 
 $PackageInfo[1].Split("'")[1]
+$PackageInfo[2].Split("'")[1]
 $PackageInfo[3].Split("'")[1]
 
 if ($logContent) { Write-Host -ForegroundColor Gray $PackageInfo[1].Split("'")[1]; }
+if ($logContent) { Write-Host -ForegroundColor Gray $PackageInfo[2].Split("'")[1]; }
 if ($logContent) { Write-Host -ForegroundColor Gray $PackageInfo[3].Split("'")[1]; }
 
 }
@@ -798,7 +804,7 @@ This function is used to upload an Android LOB Application to the Intune Service
 .DESCRIPTION
 This function is used to upload an Android LOB Application to the Intune Service
 .EXAMPLE
-Upload-AndroidLob -sourceFile "C:\Software\package.apk" -publisher "Publisher Name" -description "Description of Application" -identityName "com.package" -identityVersion "1"
+Upload-AndroidLob -sourceFile "C:\Software\package.apk" -publisher "Publisher Name" -description "Description of Application" -identityName "com.package" -identityVersion "1" -versionName "10.1.1"
 This example uses all parameters required to add an Android Application into the Intune Service
 Upload-AndroidLob -sourceFile "C:\Software\package.apk" -publisher "Publisher Name" -description "Description of Application"
 This example uses the required parameters to add an Android Application into the Intune Service. This example will require the Android SDK to get identityName and identityVersion
@@ -829,7 +835,10 @@ param
     [string]$identityName,
 
     [parameter(Mandatory=$false)]
-    [string]$identityVersion
+    [string]$identityVersion,
+
+    [parameter(Mandatory=$false)]
+    [string]$versionName
 
 )
 
@@ -863,6 +872,18 @@ param
 
             }
 
+            if(!$versionName){
+
+            Write-Host
+            Write-Host "Opening APK file to get versionName to pass to the service..." -ForegroundColor Yellow
+
+            $APKInformation = Get-ApkInformation -AndroidSDK $AndroidSDKLocation -sourceFile "$SourceFile"
+
+            $versionName = $APKInformation[2]
+
+            }
+
+
         # Creating temp file name from Source File path
         $tempFile = [System.IO.Path]::GetDirectoryName("$SourceFile") + "\" + [System.IO.Path]::GetFileNameWithoutExtension("$SourceFile") + "_temp.bin"
 
@@ -878,7 +899,7 @@ param
         # Create a new Android LOB app.
         Write-Host
         Write-Host "Creating JSON data to pass to the service..." -ForegroundColor Yellow
-		$mobileAppBody = GetAndroidAppBody "$displayName" "$Publisher" "$Description" "$filename" "$identityName" "$identityVersion";
+		$mobileAppBody = GetAndroidAppBody "$displayName" "$Publisher" "$Description" "$filename" "$identityName" "$identityVersion" "$versionName";
 		
         Write-Host
         Write-Host "Creating application in Intune..." -ForegroundColor Yellow
@@ -901,7 +922,7 @@ param
         Write-Host
         Write-Host "Creating the manifest file used to install the application on the device..." -ForegroundColor Yellow
 
-        [xml]$manifestXML = '<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>com.test.app</Package><PackageVersionCode>1</PackageVersionCode><PackageVersionName>1.0</PackageVersionName><ApplicationName>FileName.apk</ApplicationName><MinSdkVersion>3</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
+        [xml]$manifestXML = '<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>com.leadapps.android.radio.ncp</Package><PackageVersionCode>10</PackageVersionCode><PackageVersionName>1.0.5.4</PackageVersionName><ApplicationName>A_Online_Radio_1.0.5.4.apk</ApplicationName><MinSdkVersion>3</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
 
         $manifestXML.AndroidManifestProperties.Package = "$identityName" # com.application.test
         $manifestXML.AndroidManifestProperties.PackageVersionCode = "$identityVersion" # 10
@@ -979,7 +1000,7 @@ This function is used to upload an iOS LOB Application to the Intune Service
 .DESCRIPTION
 This function is used to upload an iOS LOB Application to the Intune Service
 .EXAMPLE
-Upload-iOSLob -sourceFile "C:\Software\package.ipa" -displayName "package.ipa" -publisher "Publisher Name" -description "Description of Application" -bundleId "com.package" -identityVersion "1" -expirationDateTime "2018-02-14T20:53:52Z"
+Upload-iOSLob -sourceFile "C:\Software\package.ipa" -displayName "package.ipa" -publisher "Publisher Name" -description "Description of Application" -bundleId "com.package" -identityVersion "1" -versionNumber "3.0.0" -expirationDateTime "2018-02-14T20:53:52Z"
 This example uses all parameters required to add an iOS Application into the Intune Service
 .NOTES
 NAME: Upload-iOSLOB
@@ -1015,6 +1036,10 @@ param
 
     [parameter(Mandatory=$true,Position=7)]
     [ValidateNotNullOrEmpty()]
+    [string]$versionNumber,
+
+    [parameter(Mandatory=$true,Position=8)]
+    [ValidateNotNullOrEmpty()]
     [string]$expirationDateTime
 )
 
@@ -1047,7 +1072,7 @@ param
         # Create a new iOS LOB app.
         Write-Host
         Write-Host "Creating JSON data to pass to the service..." -ForegroundColor Yellow
-		$mobileAppBody = GetiOSAppBody "$displayName" "$Publisher" "$Description" "$filename" "$bundleId" "$identityVersion" "$expirationDateTime";
+		$mobileAppBody = GetiOSAppBody "$displayName" "$Publisher" "$Description" "$filename" "$bundleId" "$identityVersion" "$versionNumber" "$expirationDateTime";
 
         Write-Host
         Write-Host "Creating application in Intune..." -ForegroundColor Yellow
@@ -1149,7 +1174,7 @@ This function is used to upload an MSI LOB Application to the Intune Service
 Upload-MSILob "C:\Software\Orca\Orca.Msi" -publisher "Microsoft" -description "Orca"
 This example uses all parameters required to add an MSI Application into the Intune Service
 .NOTES
-NAME: Upload-MSILob
+NAME: Upload-MSILOB
 #>
 
 [cmdletbinding()]
@@ -1352,7 +1377,7 @@ $sleep = 30
 ####################################################
 
 #### Without Android SDK - All parameters are specified
-# Upload-AndroidLob -sourceFile "C:\Software\OnlineRadio\A_Online_Radio_1.0.5.4.apk" -publisher "A Online Radio" -description "A Online Radio 1.0.5.4" -identityName "com.leadapps.android.radio.ncp" -identityVersion "10"
+# Upload-AndroidLob -sourceFile "C:\Software\OnlineRadio\A_Online_Radio_1.0.5.4.apk" -publisher "A Online Radio" -description "A Online Radio 1.0.5.4" -identityName "com.leadapps.android.radio.ncp" -identityVersion "10" -versionName "1.0.5.4"
 
 #### With Android SDK:
 # Upload-AndroidLob -sourceFile "C:\Software\OnlineRadio\A_Online_Radio_1.0.5.4.apk" -publisher "A Online Radio" -description "A Online Radio 1.0.5.4"
@@ -1361,4 +1386,4 @@ $sleep = 30
 # Upload-MSILob "C:\Software\Orca\Orca.Msi" -publisher "Microsoft" -description "Orca"
 
 #### iOS
-# Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -expirationDateTime "2018-02-14T20:53:52Z"
+# Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -versionNumber "3.0.0" -expirationDateTime "2018-03-14T20:53:52Z"

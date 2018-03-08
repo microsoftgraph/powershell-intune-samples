@@ -66,7 +66,8 @@ The JSON metadata is constructed from the metadata of the file (IPA, APK, MSI).
     "developer":  "",
     "publisher":  "A Online Radio",
     "identityName":  "com.leadapps.android.radio.ncp",
-    "isFeatured":  false
+    "isFeatured":  false,
+    "VersionName": "1.0.5.4"
 }
 ```
 
@@ -243,7 +244,7 @@ Android
 
 #### Without Android SDK - All parameters are specified
 ```
-Upload-AndroidLob -sourceFile "C:\Software\OnlineRadio\A_Online_Radio_1.0.5.4.apk" -publisher "A Online Radio" -description "A Online Radio 1.0.5.4" -identityName "com.leadapps.android.radio.ncp" -identityVersion "10"
+Upload-AndroidLob -sourceFile "C:\Software\OnlineRadio\A_Online_Radio_1.0.5.4.apk" -publisher "A Online Radio" -description "A Online Radio 1.0.5.4" -identityName "com.leadapps.android.radio.ncp" -identityVersion "10" -versionName "1.0.5.4"
 ```
 
 #### With Android SDK:
@@ -260,5 +261,5 @@ Upload-MSILob "C:\Software\Orca\Orca.Msi" -publisher "Microsoft" -description "O
 
 #### iOS
 ```
-Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -expirationDateTime "2018-02-14T20:53:52Z"
+Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -versionNumber "3.0.0" -expirationDateTime "2018-04-14T20:53:52Z"
 ```
