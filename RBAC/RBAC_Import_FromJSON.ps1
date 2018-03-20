@@ -1,5 +1,4 @@
-
-<#
+﻿<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -149,48 +148,90 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Get-RBACRole(){
+Function Test-JSON(){
 
 <#
 .SYNOPSIS
-This function is used to get RBAC Role Definitions from the Graph API REST interface
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any RBAC Role Definitions
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Get-RBACRole
-Returns any RBAC Role Definitions configured in Intune
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Get-RBACRole
+NAME: Test-JSON
+#>
+
+param (
+
+$JSON
+
+)
+
+    try {
+
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
+
+    }
+
+    catch {
+
+    $validJson = $false
+    $_.Exception
+
+    }
+
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
+    break
+
+    }
+
+}
+
+####################################################
+
+Function Add-RBACRole(){
+
+<#
+.SYNOPSIS
+This function is used to add an RBAC Role Definitions from the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and adds an RBAC Role Definitions
+.EXAMPLE
+Add-RBACRole -JSON $JSON
+.NOTES
+NAME: Add-RBACRole
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $Name
+    $JSON
 )
 
 $graphApiVersion = "v1.0"
 $Resource = "deviceManagement/roleDefinitions"
-
+    
     try {
 
-        if($Name){
+        if(!$JSON){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and $_.isBuiltInRoleDefinition -eq $false }
-
-        }
-
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        write-host "No JSON was passed to the function, provide a JSON variable" -f Red
+        break
 
         }
 
+        Test-JSON -JSON $JSON
+    
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $Json -ContentType "application/json"
+    
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -262,12 +303,39 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$RBAC_Roles = Get-RBACRole
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
 
-foreach($RBAC_Role in $RBAC_Roles){
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
 
-write-host $RBAC_Role.displayName -ForegroundColor Green
-$RBAC_Role.RolePermissions.resourceActions.allowedResourceActions
-Write-Host
+    if(!(Test-Path "$ImportPath")){
 
-}
+        Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+        Write-Host "Script can't continue..." -ForegroundColor Red
+        Write-Host
+        break
+
+    }
+
+####################################################
+
+$JSON_Data = Get-Content "$ImportPath"
+
+# Creating JSON Object
+$RAW_JSON = @"
+
+$JSON_Data
+
+"@
+
+# Converting from JSON to get Intune Role properties
+$JSON_Convert = $JSON_Data | ConvertFrom-Json
+
+$DisplayName = $JSON_Convert.displayName
+            
+write-host
+write-host "RBAC Intune Role '$DisplayName' Found..." -ForegroundColor Cyan
+write-host
+Write-Host "Adding RBAC Intune Role '$DisplayName'" -ForegroundColor Yellow
+Add-RBACRole -JSON $RAW_JSON
+        

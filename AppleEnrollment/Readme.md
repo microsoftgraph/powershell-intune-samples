@@ -9,10 +9,22 @@ Some script samples retrieve information from your Intune tenant, and others cre
 
 Within this section there are the following scripts with the explanation of usage.
 
-### 1. BulkAssignProfile.ps1
-This script reads the first 1000 Apple Dep devices which are not assigned to any profile and assigns the given enrollment profile id to it. If there are more than 1000 devices to assign, simply run the script more than once.
+### 1. APNS_Get.ps1
+This script gets Apple Push Notification Certificate information from the Intune Service that you have authenticated with.
 
-WARNING: Before running the script, get the correct enrollment profile id from Ibiza UI (check the profile url during profile edit) and assign it to the profileId variable as shown below. By default, profile id is empty to keep the script safe. 
+#### Get-ApplePushNotificationCertificate Function
+This function is used to get Apple Push Notification Certificate information from the Intune Service.
+
+```PowerShell
+# Returns Apple Push Notification Certificate information configured in Intune
+Get-ApplePushNotificationCertificate
+
+```
+
+### 2. BulkAssignProfile.ps1
+This script reads the first 1000 Apple DEP devices which are not assigned to any profile and assigns the given enrollment profile id to it. If there are more than 1000 devices to assign, simply run the script more than once.
+
+WARNING: Before running the script, get the correct enrollment profile id from Ibiza UI (check the profile url during profile edit) and assign it to the profileId variable as shown below. By default, profile id is empty to keep the script safe.
 
 ```PowerShell
 

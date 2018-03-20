@@ -1,5 +1,4 @@
-
-<#
+﻿<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -163,34 +162,16 @@ Returns any RBAC Role Definitions configured in Intune
 NAME: Get-RBACRole
 #>
 
-[cmdletbinding()]
-
-param
-(
-    $Name
-)
-
 $graphApiVersion = "v1.0"
 $Resource = "deviceManagement/roleDefinitions"
-
+    
     try {
-
-        if($Name){
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'displayName').contains("$Name") -and $_.isBuiltInRoleDefinition -eq $false }
-
-        }
-
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
-        }
-
+    
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    
     }
-
+    
     catch {
 
     $ex = $_.Exception
@@ -228,7 +209,7 @@ if($global:authToken){
         write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
         write-host
 
-            # Defining User Principal Name if not present
+            # Defining Azure AD tenant name, this is the name of your Azure Active Directory (do not use the verified domain name)
 
             if($User -eq $null -or $User -eq ""){
 
@@ -262,12 +243,71 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$RBAC_Roles = Get-RBACRole
+$ExportPath = Read-Host -Prompt "Please specify a path to export RBAC Intune Roles to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+
+Write-Host
+
+####################################################
+
+$RBAC_Roles = (Get-RBACRole | Where-Object { $_.isBuiltIn -eq $false })
 
 foreach($RBAC_Role in $RBAC_Roles){
 
-write-host $RBAC_Role.displayName -ForegroundColor Green
-$RBAC_Role.RolePermissions.resourceActions.allowedResourceActions
-Write-Host
+    $RBAC_DisplayName = $RBAC_Role.displayName
+    $RBAC_Description = $RBAC_Role.description
+
+    $FileName_JSON = "$RBAC_DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".json"
+
+    $RBAC_Actions = $RBAC_Role.RolePermissions.resourceActions.allowedResourceActions | ConvertTo-Json
+
+$JSON = @"
+{
+    "@odata.type": "#microsoft.graph.deviceAndAppManagementRoleDefinition",
+    "displayName": "$RBAC_DisplayName",
+    "description": "$RBAC_Description",
+    "rolePermissions": [
+        {
+        "resourceActions": [
+        {
+        "allowedResourceActions": $RBAC_Actions,
+        "notAllowedResourceActions": []
+        }
+        ]
+        }
+    ],
+    "isBuiltIn": false  
+}
+"@
+
+    $JSON | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
+    write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
+    Write-Host
+
 
 }

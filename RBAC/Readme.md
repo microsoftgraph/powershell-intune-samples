@@ -136,7 +136,49 @@ Get-RBACRole -Name "Graph RBAC"
 #### Add-RBACRole Function
 This function is used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
-### 4. RBAC_Get.ps1
+### 4. RBAC_Export.ps1
+This script gets all the custom RBAC Intune Roles from the Intune Service that you have authenticated with. The script will then export the Roles to .json format in the directory of your choice.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export RBAC Intune Roles to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+```
+
+#### Get-RBACRole Function
+This function is used to get all RBAC Intune Roles from the Intune Service.
+
+```PowerShell
+# Returns all RBAC Intune Roles configured in Intune
+Get-RBACRole
+
+```
+
+### 5. RBAC_Get.ps1
 This script gets all the RBAC Intune Roles from the Intune Service that you have authenticated with.
 
 #### Get-RBACRole Function
@@ -152,7 +194,35 @@ Get-RBACRole
 Get-RBACRole -Name "Graph RBAC"
 ```
 
-### 5. RBAC_Remove.ps1
+### 6. RBAC_Import_FromJSON.ps1
+This script imports from a JSON file an RBAC Intune Role into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Add-RBACRole function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Add-RBACRole Function
+This function is used to add an RBAC Intune Role to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Add-RBACRole -JSON $JSON
+```
+
+### 7. RBAC_Remove.ps1
 This script removes an RBAC Intune Role configured in the Intune Service that you have authenticated with.
 
 #### Remove-RBACRole Function
@@ -166,7 +236,7 @@ $RBAC_Role = Get-RBACRole -Name "Graph"
 
 Remove-RBACRole -roleDefinitionId $RBAC_Role.id
 ```
-### 6. RBAC_UserStatus.ps1
+### 8. RBAC_UserStatus.ps1
 This script can be used to find a users effective permissions in the Intune console / Graph. The script prompts for a user principal name and if its valid will find which Intune role assignments the user is a Member of which in effect with shown the users permissions.
 
 ```
