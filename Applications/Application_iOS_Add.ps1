@@ -355,17 +355,6 @@ Function Add-iOSApplication(){
     }
 
 ####################################################
-# Set parameter for culture for script execution
-$culture = "EN-US"
-
-# Backup current culture
-$OldCulture = [System.Threading.Thread]::CurrentThread.CurrentCulture
-$OldUICulture = [System.Threading.Thread]::CurrentThread.CurrentUICulture
-
-
-# Set new Culture for script execution 
-[System.Threading.Thread]::CurrentThread.CurrentCulture = $culture
-[System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
 
 #region Authentication
 
@@ -416,6 +405,20 @@ $global:authToken = Get-AuthToken -User $User
 }
 
 #endregion
+
+####################################################
+
+# Set parameter culture for script execution
+$culture = "EN-US"
+
+# Backup current culture
+$OldCulture = [System.Threading.Thread]::CurrentThread.CurrentCulture
+$OldUICulture = [System.Threading.Thread]::CurrentThread.CurrentUICulture
+
+
+# Set new Culture for script execution 
+[System.Threading.Thread]::CurrentThread.CurrentCulture = $culture
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
 
 ####################################################
 
