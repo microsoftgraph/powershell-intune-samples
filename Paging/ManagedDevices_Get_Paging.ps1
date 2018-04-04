@@ -172,7 +172,7 @@ $Resource = "deviceManagement/managedDevices"
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
 
-    $DevicesResponse = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+    $DevicesResponse = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
 
     $Devices = $DevicesResponse.value
 
@@ -180,7 +180,7 @@ $Resource = "deviceManagement/managedDevices"
 
         while ($DevicesNextLink -ne $null){
 
-            $DevicesResponse = (Invoke-RestMethod -Uri $DevicesNextLink –Headers $authToken –Method Get)
+            $DevicesResponse = (Invoke-RestMethod -Uri $DevicesNextLink -Headers $authToken -Method Get)
             $DevicesNextLink = $DevicesResponse."@odata.nextLink"
             $Devices += $DevicesResponse.value
 
