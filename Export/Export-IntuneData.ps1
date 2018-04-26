@@ -14,9 +14,6 @@ param(
     [Parameter(HelpMessage = "User principal name to export data for", Mandatory = $true)]
     [string]
     $Upn,
-    [Parameter(HelpMessage = "Use Azure AD Test environment")]
-    [switch]
-    $UsePPE,
     [Parameter(HelpMessage = "Include AzureAD data in export")]
     [switch]
     $IncludeAzureAD,
@@ -35,9 +32,6 @@ param(
     [Parameter(DontShow = $true)]
     [string]
     $MsGraphHost = "graph.microsoft.com",
-    [Parameter(DontShow = $true)]
-    [string]
-    $AuthToken,
     [Parameter(DontShow = $true)]
     [string]
     $ConfigurationFile
@@ -65,95 +59,154 @@ function Log-FatalError($message) {
     exit
 }
 
-function Get-AuthHeader {
+#region Authentication
+function Get-AuthToken {
+
+    <#
+    .SYNOPSIS
+    This function is used to authenticate with the Graph API REST interface
+    .DESCRIPTION
+    The function authenticate with the Graph API Interface with the tenant name
+    .EXAMPLE
+    Get-AuthToken
+    Authenticates you with the Graph API interface
+    .NOTES
+    NAME: Get-AuthToken
+    #>
+    
+    [cmdletbinding()]
+    
     param
     (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory=$true)]
         $User
     )
-
-    $ClientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
-    $RedirectUri = "urn:ietf:wg:oauth:2.0:oob"
-    $ResourceAppIdURI = "https://$MsGraphHost"
-    $Authority = "login.microsoftonline.com"
-
-    if ($UsePPE) {
-        Write-Host "Connecting to AAD PPE..."
-        $Authority  = "login.windows-ppe.net"
-    } else {
-        Write-Host "Connecting to AAD Production..."
-    }
     
-    Log-Info "Authenticating as user $User"
-
     $userUpn = New-Object "System.Net.Mail.MailAddress" -ArgumentList $User
- 
+    
     $tenant = $userUpn.Host
-
-    Log-Verbose "Checking for AzureAD module"
-    $AadModule =  Get-Module -Name "AzureAD" -ListAvailable | Sort-Object -Descending -Property Version | Select-Object -First 1
-    if ($AadModule -eq $null) {
-        Log-Warning "AzureAD PowerShell module not found, looking for AzureADPreview"
-        $AadModule = Get-Module -Name "AzureADPreview" -ListAvailable | Sort-Object -Descending -Property Version | Select-Object -First 1
-    }    
     
-    if ($AadModule -eq $null) {
-        Log-FatalError "AzureAD Powershell module not installed...`nPlease install it by running 'Install-Module AzureAD -Scope CurrentUser' from a PowerShell prompt"
-    }
-
-    if ($AadModule.Version -lt [System.Version]"2.0.0.131") {
-        Log-Error "Azure AD PowerShell module version ($($AadModule.Version)) is too old."
-        Log-FatalError "Please update the AzureAD PowerShell module by running 'Update-Module -Name AzureAD'"
-    }
-
-   
-
-    Log-Verbose "Using module path $($AadModule.ModuleBase)"
-    $Adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
-    $Adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
-
-    [System.Reflection.Assembly]::LoadFrom($Adal) | Out-Null
- 
-    [System.Reflection.Assembly]::LoadFrom($Adalforms) | Out-Null
- 
-    $AuthContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList ("https://$Authority/common")
-    $PlatformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
- 
-    $UserId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
-
-    $AuthResult = $null
-    # Determine which version of ADAL we are using
+    Write-Host "Checking for AzureAD module..."
     
-    $MethodArguments = [Type[]]@("System.String", "System.String", "System.Uri", "Microsoft.IdentityModel.Clients.ActiveDirectory.PromptBehavior", "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier")
-    $NonAsync = $AuthContext.GetType().GetMethod("AcquireToken", $MethodArguments)
+        $AadModule = Get-Module -Name "AzureAD" -ListAvailable
     
-    try {
-        if ($NonAsync -ne $null) {
-            Log-Verbose "Using AcquireToken method"
-            $AuthResult = $AuthContext.AcquireToken($ResourceAppIdURI, $ClientId, [Uri]$RedirectUri, [Microsoft.IdentityModel.Clients.ActiveDirectory.PromptBehavior]::Auto, $UserId)
-        } else {
-            Log-Verbose "Using AcquireTokenAsync method"
-            $AuthResult = $authContext.AcquireTokenAsync($ResourceAppIdURI, $ClientId, [Uri]$RedirectUri, $PlatformParameters, $UserId).Result 
+        if ($AadModule -eq $null) {
+    
+            Write-Host "AzureAD PowerShell module not found, looking for AzureADPreview"
+            $AadModule = Get-Module -Name "AzureADPreview" -ListAvailable
+    
         }
+    
+        if ($AadModule -eq $null) {
+            write-host
+            write-host "AzureAD Powershell module not installed..." -f Red
+            write-host "Install by running 'Install-Module AzureAD' or 'Install-Module AzureADPreview' from an elevated PowerShell prompt" -f Yellow
+            write-host "Script can't continue..." -f Red
+            write-host
+            exit
+        }
+    
+    # Getting path to ActiveDirectory Assemblies
+    # If the module count is greater than 1 find the latest version
+    
+        if($AadModule.count -gt 1){
+    
+            $Latest_Version = ($AadModule | select version | Sort-Object)[-1]
+    
+            $aadModule = $AadModule | ? { $_.version -eq $Latest_Version.version }
+    
+                # Checking if there are multiple versions of the same module found
+    
+                if($AadModule.count -gt 1){
+    
+                $aadModule = $AadModule | select -Unique
+    
+                }
+    
+            $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+            $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+    
+        }
+    
+        else {
+    
+            $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+            $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+    
+        }
+    
+    [System.Reflection.Assembly]::LoadFrom($adal) | Out-Null
+    
+    [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
+    
+    $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
+    
+    $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
+    
+    $resourceAppIdURI = "https://graph.microsoft.com"
+    
+    $authority = "https://login.microsoftonline.com/$Tenant"
+    
+        try {
+    
+        $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
+    
+        # https://msdn.microsoft.com/en-us/library/azure/microsoft.identitymodel.clients.activedirectory.promptbehavior.aspx
+        # Change the prompt behaviour to force credentials each time: Auto, Always, Never, RefreshSession
+    
+        $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
+    
+        $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
+    
+        $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI,$clientId,$redirectUri,$platformParameters,$userId).Result
+    
+            # If the accesstoken is valid then create the authentication header
+    
+            if($authResult.AccessToken){
+    
+            # Creating header for Authorization token
+    
+            $authHeader = @{
+                'Content-Type'='application/json'
+                'Authorization'="Bearer " + $authResult.AccessToken
+                'ExpiresOn'=$authResult.ExpiresOn
+                }
+    
+            return $authHeader
+    
+            }
+    
+            else {
+    
+            Write-Host
+            Write-Host "Authorization Access Token is null, please re-run authentication..." -ForegroundColor Red
+            Write-Host
+            break
+    
+            }
+    
+        }
+    
+        catch {
+    
+        write-host $_.Exception.Message -f Red
+        write-host $_.Exception.ItemName -f Red
+        write-host
+        break
+    
+        }
+    
     }
-    catch [Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException]{
-        Log-FatalError "Authentication failed with error code: $($_.Exception.ErrorCode)"
-    }
-    if ($AuthResult -eq $null) {
-        Log-FatalError "Authentication failed"
-    }
-    Log-Info "Authenticated succesfully"
-    Log-Verbose "Authenticated as $($AuthResult.UserInfo.DisplayableId) ($($AuthResult.UserInfo.UniqueId))"
-    Log-Verbose "Token expires at $($AuthResult.ExpiresOn)"
-    return $AuthResult.CreateAuthorizationHeader()
-}
+    
+    ####################################################
+#endregion
 
 function Get-MsGraphObject($Path, [switch]$IgnoreNotFound) {
     $FullUri = "https://$MsGraphHost/$MsGraphVersion/$Path"
     Log-Verbose "GET $FullUri"
 
     try {
-        return  Invoke-RestMethod -Method Get -Uri $FullUri -Headers @{ "Authorization" = $AuthHeader }
+        return  Invoke-RestMethod -Method Get -Uri $FullUri -Headers $AuthHeader
     } 
     catch {
         $Response = $_.Exception.Response
@@ -178,7 +231,7 @@ function Get-MsGraphCollection($Path) {
     do {
         try {
             Log-Verbose "GET $NextLink"
-            $Result = Invoke-RestMethod -Method Get -Uri $NextLink -Headers @{ "Authorization" = $AuthHeader }
+            $Result = Invoke-RestMethod -Method Get -Uri $NextLink -Headers $AuthHeader
             $Collection += $Result.value
             $NextLink = $Result.'@odata.nextLink'
         } 
@@ -207,7 +260,7 @@ function Test-IntuneUser {
     Log-Info "Checking if User $UPN is a Microsoft Intune user"
 
     try {
-        Invoke-RestMethod -Method Get -Uri "https://$MsGraphHost/$MsGraphVersion/users/$($UserId)/managedDevices" -Headers @{ "Authorization" = $AuthHeader }
+        Invoke-RestMethod -Method Get -Uri "https://$MsGraphHost/$MsGraphVersion/users/$($UserId)/managedDevices" -Headers $AuthHeader
     } 
     catch {
         $Response = $_.Exception.Response
@@ -742,7 +795,11 @@ if ([string]::IsNullOrWhiteSpace($ConfigurationFile)) {
 }
 
 Log-Verbose "Loading configuration from $ConfigurationFile"
-$ExportConfiguration = (Get-Content $ConfigurationFile | ConvertFrom-Json)
+if (Test-Path $ConfigurationFile) {
+    $ExportConfiguration = (Get-Content $ConfigurationFile | ConvertFrom-Json)
+} else {
+    Log-Warning "Configuration file $ConfigurationFile not found"
+}
 
 $UPN = $Upn.ToLowerInvariant()
 
@@ -753,11 +810,7 @@ if ($All) {
     Log-Info "Including AzureAD data in export"
 } 
 
-if ($AuthToken -eq $null -or $AuthToken -eq "") {
-    $AuthHeader = Get-AuthHeader -User $Username
-} else {
-    $AuthHeader = "Bearer $AuthToken"
-}
+$AuthHeader = Get-AuthToken -User $Username
 
 $User = Get-User
 if ($User -eq $null) {
@@ -789,41 +842,41 @@ if ($IncludeAzureAD -or $All) {
 $ManagedDevices = Get-ManagedDevices
 Export-Collection "ManagedDevices" "ManagedDevice" $ManagedDevices
 
-# $AuditEvents = Get-AuditEvents
-# Export-Collection "AuditEvents" "AuditEvent" $AuditEvents
+$AuditEvents = Get-AuditEvents
+Export-Collection "AuditEvents" "AuditEvent" $AuditEvents
 
-# $ManagedAppRegistrations = Get-ManagedAppRegistrations
-# Export-Collection "ManagedAppRegistrations" "ManagedAppRegistration" $ManagedAppRegistrations
+$ManagedAppRegistrations = Get-ManagedAppRegistrations
+Export-Collection "ManagedAppRegistrations" "ManagedAppRegistration" $ManagedAppRegistrations
 
-# $AppleDepSettings = Get-AppleDepSettings
-# Export-Collection "AppleDEPSettings" "AppleDEPSetting" $AppleDepSettings
+$AppleDepSettings = Get-AppleDepSettings
+Export-Collection "AppleDEPSettings" "AppleDEPSetting" $AppleDepSettings
 
-# $AppInstallStatuses = Get-AppInstallStatuses
-# Export-Collection "AppInstallStatuses" "AppInstallStatus" $AppInstallStatuses
+$AppInstallStatuses = Get-AppInstallStatuses
+Export-Collection "AppInstallStatuses" "AppInstallStatus" $AppInstallStatuses
 
-# $EbookInstallStatuses = Get-EbookInstallStatuses
-# Export-Collection "EbookInstallStatuses" "EbookInstallStatus" $EbookInstallStatuses
+$EbookInstallStatuses = Get-EbookInstallStatuses
+Export-Collection "EbookInstallStatuses" "EbookInstallStatus" $EbookInstallStatuses
 
-# $WindowsManagementAppStatuses = Get-WindowsManagementAppHealthStates $ManagedDevices
-# Export-Collection "WindowsManagementAppHealthStates" "WindowsManagementApp" $WindowsManagementAppStatuses
+$WindowsManagementAppStatuses = Get-WindowsManagementAppHealthStates $ManagedDevices
+Export-Collection "WindowsManagementAppHealthStates" "WindowsManagementApp" $WindowsManagementAppStatuses
 
-# $WindowsProtectionStates = Get-WindowsProtectionStates $ManagedDevices
-# Export-Collection "WindowsProtectionStates" "WindowsProtectionState" $WindowsProtectionStates
+$WindowsProtectionStates = Get-WindowsProtectionStates $ManagedDevices
+Export-Collection "WindowsProtectionStates" "WindowsProtectionState" $WindowsProtectionStates
 
-# $RemoteActionAudits = Get-RemoteActionAudits
-# Export-Collection "RemoteActionAudits" "RemoteActionAudit" $RemoteActionAudits
+$RemoteActionAudits = Get-RemoteActionAudits
+Export-Collection "RemoteActionAudits" "RemoteActionAudit" $RemoteActionAudits
 
-# $DeviceManagementTroubleshootingEvents = Get-DeviceManagementTroubleshootingEvents
-# Export-Collection "DeviceManagementTroubleshootingEvents" "DeviceManagementTroubleshootingEvents" $DeviceManagementTroubleshootingEvents
+$DeviceManagementTroubleshootingEvents = Get-DeviceManagementTroubleshootingEvents
+Export-Collection "DeviceManagementTroubleshootingEvents" "DeviceManagementTroubleshootingEvents" $DeviceManagementTroubleshootingEvents
 
-# $IosUpdateStatues = Get-IosUpdateStatuses
-# Export-Collection "iOSUpdateStatus" "iOSUpdateStatuses" $IosUpdateStatues
+$IosUpdateStatues = Get-IosUpdateStatuses
+Export-Collection "iOSUpdateStatus" "iOSUpdateStatuses" $IosUpdateStatues
 
-# $ManagedDeviceMobileAppConfigurationStatuses = Get-ManagedDeviceMobileAppConfigurationStatuses  $ManagedDevices
-# Export-Collection "MobileAppConfigurationStatuses" "MobileAppConfigurationStatus" $ManagedDeviceMobileAppConfigurationStatuses
+$ManagedDeviceMobileAppConfigurationStatuses = Get-ManagedDeviceMobileAppConfigurationStatuses  $ManagedDevices
+Export-Collection "MobileAppConfigurationStatuses" "MobileAppConfigurationStatus" $ManagedDeviceMobileAppConfigurationStatuses
 
-# $DeviceManagementScriptRunStates = Get-DeviceManagementScriptRunStates 
-# Export-Collection "DeviceManagementScriptRunState" "DeviceManagementScriptRunStates" $DeviceManagementScriptRunStates
+$DeviceManagementScriptRunStates = Get-DeviceManagementScriptRunStates 
+Export-Collection "DeviceManagementScriptRunState" "DeviceManagementScriptRunStates" $DeviceManagementScriptRunStates
 
 $AppProtectionUserStatus = Get-AppProtectionUserStatuses
 Export-Object "ManagedAppProtectionStatusReport" $AppProtectionUserStatus
