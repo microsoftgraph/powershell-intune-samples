@@ -359,7 +359,13 @@ function Has-UserStatus($InstallSummary) {
 function Get-AppInstallStatuses {
     Log-Info "Getting App Install Statuses for User $UPN"
 
-    $Apps = Get-MsGraphCollection "deviceAppManagement/mobileApps?`$expand=installSummary"
+    $Url = "deviceAppManagement/mobileApps?`$expand=installSummary"
+
+    if (-not $All) {
+        $Url += "&`$select=id,displayName,publisher,privacyInformationUrl,informationUrl,owner,developer"
+    }
+
+    $Apps = Get-MsGraphCollection $Url
     # Filter the list of apps to only the apps that have install status
     $AppsWithStatus = $Apps | Where-Object { Has-UserStatus $_.installSummary }
     Log-Verbose "Found $($AppsWithStatus.Count) apps with install statuses"
