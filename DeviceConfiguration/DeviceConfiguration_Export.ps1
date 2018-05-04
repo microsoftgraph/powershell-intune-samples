@@ -334,6 +334,7 @@ $global:authToken = Get-AuthToken -User $User
 $ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
 
     # If the directory path doesn't exist prompt user to create the directory
+    $ExportPath = $ExportPath.replace('"','')
 
     if(!(Test-Path "$ExportPath")){
 
