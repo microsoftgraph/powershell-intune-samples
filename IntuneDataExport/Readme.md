@@ -45,7 +45,7 @@ Here is a description of the parameter you can pass the script:
 4. Run the export script (see example below):
 UserName is the Tenant Admin User Name and UPN is the Target User (Data Subject) for whom you want to export the data
 ```PowerShell
-    .\Export-IntuneData.ps1 -UserName eric@contoso.onmicrosoft.com -UPN peter@contoso.onmicrosoft.com -Outputpath c:\IntuneExport\
+    .\Export-IntuneData.ps1 -UserName eric@contoso.onmicrosoft.com -UPN johndoe@contoso.onmicrosoft.com -Outputpath c:\IntuneExport\
 ```
 
 5. Navigate to export folder to see exported files
@@ -61,36 +61,36 @@ UserName is the Tenant Admin User Name and UPN is the Target User (Data Subject)
 |    PrimarySMTPAddress    |    johndoe@contoso.com    |    SMTP Address    |
 |    UPN    |    johndoe@contoso.exchange.com    |    User Principal Name    |
 |    UserEmail    |    john@contoso.com    |    User’s email id (if available)     |
-|    UserIdentity    |    10037ffea13f0c1c@microsoftonline.com    |    Organizational Personal Identified    |
+|    UserIdentity    |    1234567890abcdef@microsoftonline.com    |    Organizational Personal Identified    |
 |    OnPremisesUpn    |    johndoe@contoso.exchange.com    |    UPN synced from ActiveDirectory to Azure Active Directory. In   most cases this will be the same as the UPN    |
-|    AzureADTenantId    |    39f0dba7-2568-41b1-9640-761c3345d0da    |    Internal Representation of the Tenant the user is associated   with    |
-|    UserId    |    066a110c-3a5f-44b7-9f71-a005b903f5cb    |    The internal representation of the AAD User    |
+|    AzureADTenantId    |    0e987367-3209-4bd5-a728-d0e4f4a4a3b5   |    Internal Representation of the Tenant the user is associated   with    |
+|    UserId    |    f146ab3e-825e-4f22-ab01-983cf8390524    |    The internal representation of the AAD User    |
 
 **ManagedDevices.json**: This file captures the Managed Device Specific information retained in the Service. **Data below is representative of the results of an export operation.
 **Not all possible values are shown. See actual results for full list.**
 
 | Value | Example | Description |
 |-------|---------|-------------|
-|    ID    |    b9abc854-9af6-460f-980e-8bfb4e893014    |    ID of the device configuration policy applied by the Tenant   Admin    |
+|    ID    |    5596f49c-c0bf-4cbb-baf3-dc11090dec05   |    ID of the device configuration policy applied by the Tenant   Admin    |
 |    DeviceName    |    John Doe test device    |    Actual name of the device enrolled in the service    |
 |    UserEmail    |    john@contoso.com    |    User’s email id (if available)     |
-|    HardwareInformation    |    See actual results for full list. Representative examples   include:                                       "serialNumber":  "R52G10GM3FH",                                     "imei":  null,       "manufacturer":  "samsung",       "model":  "SM-T230NU",       "phoneNumber":  425-123-1234,        "wifiMac":  "0C:B3:19:19:84:F9"    |    The available information about the device enrolled in the service    |
+|    HardwareInformation    |    See actual results for full list. Representative examples   include:                                       "serialNumber":  "ABCD1234EFG",                                     "imei":  null,       "manufacturer":  "samsung",       "model":  "SM-T230NU",       "phoneNumber":  555-123-1234,        "wifiMac":  "00:11:22:33:44:55"    |    The available information about the device enrolled in the service    |
 |    OnPremisesUpn    |    johndoe@contoso.exchange.com    |    UPN synced from ActiveDirectory to Azure Active Directory. In   most cases this will be the same as the UPN    |
-|    AzureADTenantId    |    39f0dba7-2568-41b1-9640-761c3345d0da    |    Internal Representation of the Tenant the user is associated   with    |
-|    UserId    |    066a110c-3a5f-44b7-9f71-a005b903f5cb    |    The internal representation of the AAD User    |
-|    DetectedApps    |    See actual results for full list. Representative examples   include:          “id”: “33f17b1e40ac2a9f6efc5550c6ec399a311aba1f060a0ba463e0ca75b63a81ef",    "displayName":  "Company Portal",     "version":  "5.0.3667.0",                                   |    Details of the Apps installed on the Device    |
-|    DeviceConfigurationStates    |    See actual results for full list. Representative examples   include:          id: d50a24bc-fe43-fd3a-072b-135c76d00e30   "setting":    "AndroidWiFiConfiguration"   "state":    "compliant"   "errorDescription":    "No error code"   "sources":        {                                      "id":    "3BEA98AF-2DCB-1FB8-2757-848B099B8D92",                                        "displayName":     "ThunderCreek   Office Guest"                                   }                                                                                                |    Specifics about the Device Configuration and the state against   these configurations.        IDs in this section are internal representations of the Configuration   Setting    |
-|    DeviceCompliancePolicyStates    |    See actual results for full list. Representative examples   include:              "id":    "c0f4911a-7ce6-4804-8563-677a2665d379"   "setting":  "DefaultDeviceCompliancePolicy.RequireUserExistence"   "state":  "compliant"            |    Specifics about the Device Configuration and the state against   these configurations.        IDs in this section are internal representations of the Compliance   Polices     |
+|    AzureADTenantId    |    0e987367-3209-4bd5-a728-d0e4f4a4a3b5   |    Internal Representation of the Tenant the user is associated   with    |
+|    UserId    |    f146ab3e-825e-4f22-ab01-983cf8390524    |    The internal representation of the AAD User    |
+|    DetectedApps    |    See actual results for full list. Representative examples   include:          “id”: “3d413fb3d8ed457982d09d57a1c629283d413fb3d8ed457982d09d57a1c629283d413fb3d8ed457982d09d57a1c62928",    "displayName":  "Company Portal",     "version":  "5.0.3667.0",                                   |    Details of the Apps installed on the Device    |
+|    DeviceConfigurationStates    |    See actual results for full list. Representative examples   include:          id: 585285f6-b26a-4fdf-806b-96d34748ab3f   "setting":    "AndroidWiFiConfiguration"   "state":    "compliant"   "errorDescription":    "No error code"   "sources":        {                                      "id":    "4f7102c7-1a28-44f8-bd3c-51aa2371e38f",                                        "displayName":     "Contoso Office Guest"                                   }                                                                                                |    Specifics about the Device Configuration and the state against   these configurations.        IDs in this section are internal representations of the Configuration   Setting    |
+|    DeviceCompliancePolicyStates    |    See actual results for full list. Representative examples   include:              "id":    "5079ffb4-057a-4b8f-8dc1-66279a2b8244"   "setting":  "DefaultDeviceCompliancePolicy.RequireUserExistence"   "state":  "compliant"            |    Specifics about the Device Configuration and the state against   these configurations.        IDs in this section are internal representations of the Compliance   Polices     |
 
 **AppInstallStatuses.json**: This file captures the information pertaining to the Apps as retained in the Service. **Data below is representative of the results of an export operation.
 **Not all possible values are shown. See actual results for full list.**
 
 | Value | Example | Description |
 |-------|---------|-------------|
-|    ID    |    "id":  "4e39644f-7796-49bb-94e2-aab662d1c02d"        |    Internal ID for the Application    |
+|    ID    |    "id":  "7351edd8-942f-4a6a-abfa-9eedd796b2fa"        |    Internal ID for the Application    |
 |    AutoAcceptEula        |    True    |    Flag to determine whether the EULA is auto accepted or not    |
-|    DeviceStatuses    |    See actual results for full list. Representative examples   include:          "id":  "4e39644f-7796-49bb-94e2-aab662d1c02d1a1f7afa-cd6e-4c38-b5cb-308549db3025",   "deviceName":  "DESKTOP-TGSOHMO",   "deviceId":  "1a1f7afa-cd6e-4c38-b5cb-308549db3025",   userPrincipalName":  "IWUser0@intunegdprtesta06.onmicrosoft.com"        |    IDs in this section represent the internal representations of   Devices, Application IDs etc.     |
-|    UserStatuses    |    See actual results for full list. Representative examples   include:          id":    "4e39644f-7796-49bb-94e2-aab662d1c02d1361ab99-a7f8-479e-9292-6195c369e097"   userPrincipalName":  "IWUser0@intunegdprtesta06.onmicrosoft.com"        |    IDs in this section represent the internal representations of UserIDs   etc.     |
+|    DeviceStatuses    |    See actual results for full list. Representative examples   include:          "id":  "7351edd8-942f-4a6a-abfa-9eedd796b2fa09c7bb08-b7bb-47ca-9c6b-86761df25504",   "deviceName":  "DESKTOP",   "deviceId":  "09c7bb08-b7bb-47ca-9c6b-86761df25504",   userPrincipalName":  "johndoe@contoso.onmicrosoft.com"        |    IDs in this section represent the internal representations of   Devices, Application IDs etc.     |
+|    UserStatuses    |    See actual results for full list. Representative examples   include:          id":    "7351edd8-942f-4a6a-abfa-9eedd796b2fa1361ab99-a7f8-479e-9292-6195c369e097"   userPrincipalName":  "johndoe@contoso.onmicrosoft.com"        |    IDs in this section represent the internal representations of UserIDs   etc.     |
 |    productIDs    |    o365ProPlusRetail    |    Lists the name(s) of the product installed     |
 
 **Devices.json**: This file captures the User Specific information retained in the Service. **Data below is representative of the results of an export operation.
@@ -98,15 +98,15 @@ UserName is the Tenant Admin User Name and UPN is the Target User (Data Subject)
 
 | Value | Example | Description |
 |-------|---------|-------------|
-|    EASID    |    EE66FF085DAE23B0BE50C394774A69C6    |    Internal ID of the mail client matched to this device    |
-|    EthernetMacAddress        |    00155D80830F        |    MacAddress captured     |
-|    NetBiosName        |    DESKTOP-TGSOHMO        |    Device name    |
+|    EASID    |    F91F9EA87EB7425694DBD208A286A22C    |    Internal ID of the mail client matched to this device    |
+|    EthernetMacAddress        |    001122334455        |    MacAddress captured     |
+|    NetBiosName        |    DESKTOP        |    Device name    |
 |    DeviceSettings        |    See actual results for full list. Representative examples   include:      “Key":  "ClientCertificate”:   "MIIDaTCCAlGgAwIBAgIQsEq4uKSYy6VAL”                |    Setting and values of the device    |
-|    DeviceActions    |    See actual results for full list. Representative examples   include:          EnrolledByUser":  "1361ab99-a7f8-479e-9292-6195c369e097",   "ReferenceId":  "25f50212-65f7-4295-9d93-e9f0579c1b21"        |    EnrolledByUser ID is the internal identifier for the user whose   device has been enrolled       ReferenceID is the identifier that is used by AAD to track the history   of the Device    |
+|    DeviceActions    |    See actual results for full list. Representative examples   include:          EnrolledByUser":  "1361ab99-a7f8-479e-9292-6195c369e097",   "ReferenceId":  "2bf669f2-b844-4ee1-bd98-764f0f0172fd"        |    EnrolledByUser ID is the internal identifier for the user whose   device has been enrolled       ReferenceID is the identifier that is used by AAD to track the history   of the Device    |
 |    DevicePhysicalIDs    |    "PurchaseOrderId=ae546f95-cc3c-4eea-8517-b19ced841f88",    "OrderId=fefe5b45-f8de-4cc0-ac2c-c6163c66bd3e",   "ZtdId=a188f0e7-52ff-4bae-bb43-991f92c80add"        |    Identifiers used in Windows 10 April update for devices    |
-|    ExchangeActivationItems    |    See actual results for full list. Representative examples   include:          Source":  "eas",   ReferenceId":  "25f50212-65f7-4295-9d93-e9f0579c1b21",   “EasId":  "EE66FF085DAE23B0BE50C394774A69C6",    "UserId":  "1361ab99-a7f8-479e-9292-6195c369e097            |    The properties in this section are used to link the Device with   the EAS ID (Internal ID of the mail client this device is associated with)    |
-|    SerialNumber        |    "8081-4567-2581-1234-0000-4942-54"        |    Serial no of the device    |
-|    PhoneNumber        |    425-123-1234 or ***-***-1234    |    Ph number associated with the device as per policy applicable   for Corporate vs Personal device    |
+|    ExchangeActivationItems    |    See actual results for full list. Representative examples   include:          Source":  "eas",   ReferenceId":  "2bf669f2-b844-4ee1-bd98-764f0f0172fd",   “EasId":  "EE66FF085DAE23B0BE50C394774A69C6",    "UserId":  "1361ab99-a7f8-479e-9292-6195c369e097            |    The properties in this section are used to link the Device with   the EAS ID (Internal ID of the mail client this device is associated with)    |
+|    SerialNumber        |    "1234-5678-9012-3456-7890-1234-56"        |    Serial no of the device    |
+|    PhoneNumber        |    555-123-1234 or ***-***-1234    |    Ph number associated with the device as per policy applicable   for Corporate vs Personal device    |
 |    MSADeviceId        |    "00000000-0000-0000-0000-000000000000"        |    Internal representation of the Microsoft Account ID    |
-|    ActualEasIdFromActivationItem        |    EE66FF085DAE23B0BE50C394774A69C6        |    The EAS ID from the most recent entry in the   ExchangeActivationItems collection    |
-|    DeviceId        |    1a1f7afa-cd6e-4c38-b5cb-308549db3025        |    Internal representation ID of the Device    |
+|    ActualEasIdFromActivationItem        |    F91F9EA87EB7425694DBD208A286A22C        |    The EAS ID from the most recent entry in the   ExchangeActivationItems collection    |
+|    DeviceId        |    09c7bb08-b7bb-47ca-9c6b-86761df25504        |    Internal representation ID of the Device    |

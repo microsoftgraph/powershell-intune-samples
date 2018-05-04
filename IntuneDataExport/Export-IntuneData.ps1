@@ -1,7 +1,6 @@
 <#
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
-
 See LICENSE in the project root for license information.
 #>
 
@@ -37,21 +36,31 @@ param(
     $ConfigurationFile
 )
 
+####################################################
+
 function Log-Verbose($message) {
     Write-Verbose "[$([System.DateTime]::Now)] - $message"
 }
+
+####################################################
 
 function Log-Info ($message) {
     Write-Information "INFO: [$([System.DateTime]::Now)] - $message" -InformationAction Continue
 }
 
+####################################################
+
 function Log-Warning ($message) {
     Write-Warning "[$([System.DateTime]::Now)] - $message" -WarningAction Continue  
 }
 
+####################################################
+
 function Log-Error ($message) {
     Write-Error "[$([System.DateTime]::Now)] - $message" -WarningAction Continue
 }
+
+####################################################
 
 function Log-FatalError($message) {
     Write-Error "[$([System.DateTime]::Now)] - $message" -WarningAction Continue
@@ -59,7 +68,8 @@ function Log-FatalError($message) {
     exit
 }
 
-#region Authentication
+####################################################
+
 function Get-AuthToken {
 
     <#
@@ -198,8 +208,7 @@ function Get-AuthToken {
     
     }
     
-    ####################################################
-#endregion
+####################################################
 
 function Get-MsGraphObject($Path, [switch]$IgnoreNotFound) {
     $FullUri = "https://$MsGraphHost/$MsGraphVersion/$Path"
@@ -222,6 +231,8 @@ function Get-MsGraphObject($Path, [switch]$IgnoreNotFound) {
         break
     }
 }
+
+####################################################
 
 function Get-MsGraphCollection($Path) {
     $FullUri = "https://$MsGraphHost/$MsGraphVersion/$Path"
@@ -250,11 +261,16 @@ function Get-MsGraphCollection($Path) {
     return $Collection
 }
 
+####################################################
 
 function Get-User {
     Log-Info "Getting Azure AD User data for UPN $UPN"
     return Get-MsGraphObject "users/$Upn" -IgnoreNotFound
 }
+
+####################################################
+
+#region Intune Functions
 
 function Test-IntuneUser {
     Log-Info "Checking if User $UPN is a Microsoft Intune user"
@@ -272,15 +288,21 @@ function Test-IntuneUser {
     return $true
 }
 
+####################################################
+
 function Get-GroupMemberships {
     Log-Info "Getting Azure AD Group memberships for User $UPN"
     return Get-MsGraphCollection "users/$Upn/memberOf/microsoft.graph.group"
 }
 
+####################################################
+
 function Get-RegisteredDevices {
     Log-Info "Getting Azure AD Registered Devices for User $UPN"
     return Get-MsGraphCollection "users/$Upn/registeredDevices"
 }
+
+####################################################
 
 function Get-ManagedDevices {
     Log-Info "Getting managed devices for User $UPN"
@@ -324,11 +346,15 @@ function Get-ManagedDevices {
     return $Devices
 }
 
+####################################################
+
 function Get-AuditEvents {
     Log-Info "Getting audit events for User $UPN"
     
     return Get-MsGraphCollection "`deviceManagement/auditEvents?`$filter=actor/userPrincipalName eq '$UPN'"
 }
+
+####################################################
 
 function Get-ManagedAppRegistrations {
     Log-Info "Getting managed app registrations for User $UPN"
@@ -336,17 +362,23 @@ function Get-ManagedAppRegistrations {
     return Get-MsGraphCollection "`users/$UserId/managedAppRegistrations?`$expand=appliedPolicies,intendedPolicies,operations"
 }
 
+####################################################
+
 function Get-AppleVppEbooks {
     Log-Info "Getting Apple VPP EBooks for User $UPN"
 
     return Get-MsGraphCollection "deviceAppManagement/managedEbooks?`$filter=microsoft.graph.iosVppEBook/appleId eq '$UPN'"
 }
 
+####################################################
+
 function Get-AppleDepSettings {
     Log-Info "Getting Apple DEP Settings for User $UPN"
 
     return Get-MsGraphCollection "deviceManagement/depOnboardingSettings?`$filter=appleIdentifier eq '$UPN'"
 }
+
+####################################################
 
 function Has-UserStatus($InstallSummary) {
     return ($InstallSummary.installedUserCount -gt 0) -or 
@@ -355,6 +387,8 @@ function Has-UserStatus($InstallSummary) {
     ($InstallSummary.notInstalledUserCount -gt 0) -or 
     ($InstallSummary.pendingInstallUserCount -gt 0)
 }
+
+####################################################
 
 function Get-AppInstallStatuses {
     Log-Info "Getting App Install Statuses for User $UPN"
@@ -403,6 +437,8 @@ function Get-AppInstallStatuses {
     return $AppStatuses
 }
 
+####################################################
+
 function Get-EbookInstallStatuses {
     Log-Info "Getting Ebook Install Statuses for User $UPN"
 
@@ -441,6 +477,8 @@ function Get-EbookInstallStatuses {
     return $EbooksStatuses
 }
 
+####################################################
+
 function Get-WindowsManagementAppHealthStates($ManagedDevices) {
     Log-Info "Getting WindowsManagementApp Status for User $UPN"
     $StatesForDevice = @()
@@ -453,6 +491,8 @@ function Get-WindowsManagementAppHealthStates($ManagedDevices) {
     return $StatesForDevice
 }
 
+####################################################
+
 function Get-WindowsProtectionStates($ManagedDevices) {
     Log-Info "Getting Windows Protection States for User $UPN"
     $StatesForDevice = @()
@@ -461,6 +501,8 @@ function Get-WindowsProtectionStates($ManagedDevices) {
     }
 }
 
+####################################################
+
 function Get-RemoteActionAudits {
     Log-Info "Getting Remote Action Audits for User $UPN"
 
@@ -468,16 +510,22 @@ function Get-RemoteActionAudits {
     return $RemoteActionAudits | Where-Object { $_.initiatedByUserPrincipalName -ieq $UPN -or $_.userName -ieq $UPN}
 }
 
+####################################################
+
 function Get-DeviceManagementTroubleshootingEvents {
     Log-Info "Getting Device Management Troubleshooting Events for user $UPN"
     return Get-MsGraphCollection "users/$($User.id)/deviceManagementTroubleshootingEvents"
 }
+
+####################################################
 
 function Get-IosUpdateStatuses {
     Log-Info "Getting iOS Update Statuses for user $UPN"
     $IosUpdateStatuses = @(Get-MsGraphCollection "deviceManagement/iosUpdateStatuses" | Where-Object { $_.userPrincipalName -ieq $UPN })
     return $IosUpdateStatuses
 }
+
+####################################################
 
 function Get-ManagedDeviceMobileAppConfigurationStatuses ($Devices) {
     Log-Info "Getting Mobile App Configurations Statuses for user $UPN"
@@ -514,6 +562,8 @@ function Get-ManagedDeviceMobileAppConfigurationStatuses ($Devices) {
     return $MobileAppConfigurationsStatuses
 }
 
+####################################################
+
 function Get-DeviceManagementScriptRunStates ($ManagedDevices){
     Log-Info "Getting Device Management Script Run States for user $UPN"
     $DeviceManagementScripts = Get-MsGraphCollection "deviceManagement/deviceManagementScripts"
@@ -535,6 +585,8 @@ function Get-DeviceManagementScriptRunStates ($ManagedDevices){
 
     return $DeviceManagementScriptRunStates
 }
+
+####################################################
 
 function Export-RemainingData{
     Log-Info "Getting other data for user $Upn"
@@ -566,6 +618,8 @@ function Export-RemainingData{
     }
 }
 
+####################################################
+
 function Get-AppProtectionUserStatuses {
     Log-Info "Getting Managed App Protection Status Report for user $UPN"
 
@@ -574,12 +628,16 @@ function Get-AppProtectionUserStatuses {
     return $Status
 }
 
+####################################################
+
 function Get-WindowsProtectionSummary {
     Log-Info "Getting Windows Protection Summary for user $UPN"
     $ProtectionSummary = Get-MsGraphObject "deviceAppManagement/managedAppStatuses('windowsprotectionreport')"
 
     return Filter-ManagedAppReport $ProtectionSummary
 }
+
+####################################################
 
 function Get-ManagedAppUsageSummary {
     Log-Info "Getting Managed App Usage Summary for user $UPN"
@@ -602,12 +660,16 @@ function Get-ManagedAppUsageSummary {
     return $UsageSummary
 }
 
+####################################################
+
 function Get-ManagedAppConfigurationStatusReport {
     Log-Info "Getting Managed App Configuration Status for user $UPN"
     $StatusReport = Get-MsGraphObject "deviceAppManagement/managedAppStatuses('userconfigstatus')?userId=$UserId"
 
     return $StatusReport
 }
+
+####################################################
 
 function Filter-ManagedAppReport {
     param($Report)
@@ -639,6 +701,8 @@ function Filter-ManagedAppReport {
     return $Report
 }
 
+####################################################
+
 function Get-TermsAndConditionsAcceptanceStatuses {
     Log-Info "Exporting Terms and Conditions Acceptance Statuses for user $UPN"
 
@@ -654,21 +718,33 @@ function Get-TermsAndConditionsAcceptanceStatuses {
     return $TermsAndConditionsAcceptanceStatuses
 }
 
-#region Export functions
+#endregion
+
+####################################################
+
+#region Export Functions
+
 function Export-ObjectJson($ObjectType, $Object) {
     $ExportPath = $(Join-Path $OutputPath "$ObjectType.json")
     Log-Info "Writing $ObjectType data to $ExportPath"
     $Object | ConvertTo-Json -Depth 20 | Out-File -Encoding utf8 -FilePath $ExportPath
 }
+
+####################################################
+
 function Export-ObjectCSV($ObjectType, $Object) {
     Log-Info "Writing $ObjectType data to $(Join-Path $OutputPath "$ObjectType.csv")"
     $Object | Export-Csv -NoTypeInformation -Path (Join-Path $OutputPath "$ObjectType.csv") -Encoding utf8 
 }
 
+####################################################
+
 function Export-ObjectXML($ObjectType, $Object) {
     Log-Info "Writing $ObjectType data to $(Join-Path $OutputPath "$ObjectType.xml")"
     $Object | ConvertTo-XML -Depth 20 -NoTypeInformation -As String| Out-File -Encoding utf8 -FilePath (Join-Path $OutputPath "$ObjectType.xml")
 }
+
+####################################################
 
 function Export-Object ($ObjectType, $Object){
     Log-Info "Exporting data for $ObjectType ID:$($Object.id)"
@@ -690,6 +766,8 @@ function Export-Object ($ObjectType, $Object){
         Export-ObjectXML $ObjectType $Object
     }
 }
+
+####################################################
 
 function Export-Collection ($CollectionType, $ObjectType, $Collection) {
     if ($Collection.Count -eq 0) {
@@ -720,7 +798,10 @@ function Export-Collection ($CollectionType, $ObjectType, $Collection) {
         Log-Info "Exported $($Collection.Count) $CollectionType to $ExportPath"
     }
 }
+
 #endregion
+
+####################################################
 
 function Filter-Entity {
     param(
@@ -791,34 +872,47 @@ function Filter-Entity {
     }
 }
 
+####################################################
+
 if (-not (Test-Path $OutputPath)) {
     Log-Verbose "Creating Folder $OutputPath"
     New-Item -ItemType Directory -Path $OutputPath | Out-Null
 }
+
+####################################################
 
 if ([string]::IsNullOrWhiteSpace($ConfigurationFile)) {
     $ConfigurationFile = Join-Path $PSScriptRoot "ExportConfiguration.json"
 }
 
 Log-Verbose "Loading configuration from $ConfigurationFile"
+
 if (Test-Path $ConfigurationFile) {
     $ExportConfiguration = (Get-Content $ConfigurationFile | ConvertFrom-Json)
 } else {
     Log-Warning "Configuration file $ConfigurationFile not found"
 }
 
+####################################################
+
 $UPN = $Upn.ToLowerInvariant()
 
 Log-Info "Exporting user data for user $Upn to $OutputPath"
+
 if ($All) {
     Log-Info "All data will be exported"
 } elseif ($IncludeAzureAD) {
     Log-Info "Including AzureAD data in export"
 } 
 
+####################################################
+
 $AuthHeader = Get-AuthToken -User $Username
 
+####################################################
+
 $User = Get-User
+
 if ($User -eq $null) {
     Log-Warning "User with UPN $UPN was not found"
     return
@@ -828,12 +922,16 @@ $UserId = $User.id
 Log-Info "Exporting data for user `"$($User.displayName)`" with UPN $($User.userPrincipalName) and ID $UserId"
 $UserDisplayName = $User.displayName
 
+####################################################
+
 if (-not (Test-IntuneUser)) {
     Log-Warning "User with UPN $UPN is not a Microsoft Intune user"
     return
 }
+
 Log-Info "User is a valid Microsoft Intune user"
 
+####################################################
 
 if ($IncludeAzureAD -or $All) {
     Export-Object "Azure AD User" $User
@@ -844,6 +942,8 @@ if ($IncludeAzureAD -or $All) {
     $Groups = Get-RegisteredDevices
     Export-Collection "Azure AD Registered Devices" "Azure AD Registered Device" $Groups
 }
+
+####################################################
 
 $ManagedDevices = Get-ManagedDevices
 Export-Collection "ManagedDevices" "ManagedDevice" $ManagedDevices
@@ -902,3 +1002,4 @@ Export-Collection "TermsAndConditionsAcceptanceStatus" "TermsAndConditionsAccept
 Export-RemainingData
 
 Log-Info "Export complete, files can be found at $OutputPath"
+Write-Host
