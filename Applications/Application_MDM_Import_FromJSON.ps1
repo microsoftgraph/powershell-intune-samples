@@ -1,5 +1,4 @@
-
-<#
+﻿<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -149,82 +148,46 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Get-DeviceCompliancePolicy(){
+Function Add-MDMApplication(){
 
 <#
 .SYNOPSIS
-This function is used to get device compliance policies from the Graph API REST interface
+This function is used to add an MDM application using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any device compliance policies
+The function connects to the Graph API Interface and adds an MDM application from the itunes store
 .EXAMPLE
-Get-DeviceCompliancePolicy
-Returns any device compliance policies configured in Intune
-.EXAMPLE
-Get-DeviceCompliancePolicy -Android
-Returns any device compliance policies for Android configured in Intune
-.EXAMPLE
-Get-DeviceCompliancePolicy -iOS
-Returns any device compliance policies for iOS configured in Intune
+Add-MDMApplication -JSON $JSON
+Adds an application into Intune
 .NOTES
-NAME: Get-DeviceCompliancePolicy
+NAME: Add-MDMApplication
 #>
 
 [cmdletbinding()]
 
 param
 (
-    [switch]$Android,
-    [switch]$iOS,
-    [switch]$Win10
+    $JSON
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceManagement/deviceCompliancePolicies"
-    
+$App_resource = "deviceAppManagement/mobileApps"
+
     try {
 
-        $Count_Params = 0
+        if(!$JSON){
 
-        if($Android.IsPresent){ $Count_Params++ }
-        if($iOS.IsPresent){ $Count_Params++ }
-        if($Win10.IsPresent){ $Count_Params++ }
-
-        if($Count_Params -gt 1){
-        
-        write-host "Multiple parameters set, specify a single parameter -Android -iOS or -Win10 against the function" -f Red
-        
-        }
-        
-        elseif($Android){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("android") }
-        
-        }
-        
-        elseif($iOS){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("ios") }
-        
-        }
-
-        elseif($Win10){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("windows10CompliancePolicy") }
-        
-        }
-        
-        else {
-
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        write-host "No JSON was passed to the function, provide a JSON variable" -f Red
+        break
 
         }
+
+        Test-JSON -JSON $JSON
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($App_resource)"
+        Invoke-RestMethod -Uri $uri -Method Post -ContentType "application/json" -Body $JSON -Headers $authToken
 
     }
-    
+
     catch {
 
     $ex = $_.Exception
@@ -244,84 +207,44 @@ $Resource = "deviceManagement/deviceCompliancePolicies"
 
 ####################################################
 
-Function Export-JSONData(){
+Function Test-JSON(){
 
 <#
 .SYNOPSIS
-This function is used to export JSON data returned from Graph
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-This function is used to export JSON data returned from Graph
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Export-JSONData -JSON $JSON
-Export the JSON inputted on the function
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Export-JSONData
+NAME: Test-AuthHeader
 #>
 
 param (
 
-$JSON,
-$ExportPath
+$JSON
 
 )
 
     try {
 
-        if($JSON -eq "" -or $JSON -eq $null){
-
-        write-host "No JSON specified, please specify valid JSON..." -f Red
-
-        }
-
-        elseif(!$ExportPath){
-
-        write-host "No export path parameter set, please provide a path to export the file" -f Red
-
-        }
-
-        elseif(!(Test-Path $ExportPath)){
-
-        write-host "$ExportPath doesn't exist, can't export JSON Data" -f Red
-
-        }
-
-        else {
-
-        $JSON1 = ConvertTo-Json $JSON
-
-        $JSON_Convert = $JSON1 | ConvertFrom-Json
-
-        $displayName = $JSON_Convert.displayName
-
-        $Properties = ($JSON_Convert | Get-Member | ? { $_.MemberType -eq "NoteProperty" }).Name
-
-            $displayName = $JSON_Convert.displayName
-
-            $FileName_CSV = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".csv"
-            $FileName_JSON = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".json"
-
-            $Object = New-Object System.Object
-
-                foreach($Property in $Properties){
-
-                $Object | Add-Member -MemberType NoteProperty -Name $Property -Value $JSON_Convert.$Property
-
-                }
-
-            write-host "Export Path:" "$ExportPath"
-
-            $Object | Export-Csv -LiteralPath "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
-            $JSON1 | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
-            write-host "CSV created in $ExportPath\$FileName_CSV..." -f cyan
-            write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
-            
-        }
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
 
     }
 
     catch {
 
+    $validJson = $false
     $_.Exception
+
+    }
+
+    if (!$validJson){
+    
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
+    break
 
     }
 
@@ -381,45 +304,35 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
 
-    # If the directory path doesn't exist prompt user to create the directory
-    $ExportPath = $ExportPath.replace('"','')
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
 
-    if(!(Test-Path "$ExportPath")){
+if(!(Test-Path "$ImportPath")){
 
-    Write-Host
-    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
-
-    $Confirm = read-host
-
-        if($Confirm -eq "y" -or $Confirm -eq "Y"){
-
-        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
-        Write-Host
-
-        }
-
-        else {
-
-        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
-        Write-Host
-        break
-
-        }
-
-    }
-
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
 Write-Host
+break
+
+}
 
 ####################################################
 
-$CPs = Get-DeviceCompliancePolicy
+$JSON_Data = Get-Content "$ImportPath"
 
-    foreach($CP in $CPs){
+# Excluding entries that are not required - id,createdDateTime,lastModifiedDateTime,version
+$JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'@odata.context',uploadState,packageId,appIdentifier,publishingState,usedLicenseCount,totalLicenseCount,productKey,licenseType,packageIdentityName
 
-    write-host "Device Compliance Policy:"$CP.displayName -f Yellow
-    Export-JSONData -JSON $CP -ExportPath "$ExportPath"
-    Write-Host
+$DisplayName = $JSON_Convert.displayName
 
-    }
+$JSON_Output = $JSON_Convert | ConvertTo-Json
+            
+write-host
+write-host "MDM Application '$DisplayName' Found..." -ForegroundColor Yellow
+write-host
+$JSON_Output
+write-host
+Write-Host "MDM Application '$DisplayName'" -ForegroundColor Yellow
+Add-MDMApplication -JSON $JSON_Output

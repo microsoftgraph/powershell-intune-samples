@@ -102,3 +102,87 @@ $TargetGroupId = (get-AADGroup -GroupName "$AADGroup").id
 
 Write-Host
 ```
+
+### 4. SoftwareUpdates_Export.ps1
+This script gets all the Software Update policies from the Intune Service that you have authenticated with. The script will then export the policy to .json format in the directory of your choice.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+```
+
+#### Get-SoftwareUpdatePolicy Function
+This function is used to get all Software Update policies from the Intune Service.
+
+It supports a single parameter as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns Windows 10 Software Update policies configured in Intune
+Get-SoftwareUpdatePolicy -Windows10
+
+# Returns iOS Software Update policies configured in Intune
+Get-SoftwareUpdatePolicy -iOS
+```
+
+#### Export-JSONData Function
+This function is used to export the policy information. It has two required parameters -JSON and -ExportPath.
+
++ JSON - The JSON data
++ ExportPath - The path where the .json should be exported to
+
+```PowerShell
+Export-JSONData -JSON $JSON -ExportPath "$ExportPath"
+```
+
+### 5. SofwareUpdates_Import_FromJSON.ps1
+This script imports from a JSON file a Software update policy into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Add-DeviceConfigurationPolicy function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Add-DeviceConfigurationPolicy Function
+This function is used to add a device configuration / Software Update policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Add-DeviceConfigurationPolicy -JSON $JSON
+```

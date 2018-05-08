@@ -539,3 +539,87 @@ The sample JSON file is shown below:
     }
 }
 ```
+### 17. Application_MDM_Export.ps1
+This script gets all the MDM Configuration Applications from the Intune Service that you have authenticated with. The script will then export the applications to .json format in the directory of your choice.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export the application data to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+```
+
+#### Get-IntuneApplication Function
+This function is used to get all MDM applications from the Intune Service. It supports a single parameter -Name as an input to the function which can be used to filter on a single application.
+
+```PowerShell
+# Returns all MDM applications in the Intune Service
+Get-IntuneApplication
+
+# Returns an application by Name in the Intune Service
+Get-IntuneApplication -Name "Microsoft Excel"
+
+# Returns all MDM application and selects the displayName, id and type
+Get-IntuneApplication | select displayName,id,'@odata.type' | sort displayName
+```
+
+#### Export-JSONData Function
+This function is used to export the MDM Application information. It has two required parameters -JSON and -ExportPath.
+
++ JSON - The JSON data
++ ExportPath - The path where the .json should be exported to
+
+```PowerShell
+Export-JSONData -JSON $JSON -ExportPath "$ExportPath"
+```
+
+### 18. Application_MDM_Import_FromJSON.ps1
+This script imports from a JSON file an MDM configured application into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Add-DeviceConfigurationPolicy function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Add-MDMApplication Function
+This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShellW
+Add-MDMApplication -JSON $JSON
+```

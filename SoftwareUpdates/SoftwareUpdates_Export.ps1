@@ -149,74 +149,66 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Get-DeviceCompliancePolicy(){
+Function Get-SoftwareUpdatePolicy(){
 
 <#
 .SYNOPSIS
-This function is used to get device compliance policies from the Graph API REST interface
+This function is used to get Software Update policies from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any device compliance policies
+The function connects to the Graph API Interface and gets any Software Update policies
 .EXAMPLE
-Get-DeviceCompliancePolicy
-Returns any device compliance policies configured in Intune
+Get-SoftwareUpdatePolicy -Windows10
+Returns Windows 10 Software Update policies configured in Intune
 .EXAMPLE
-Get-DeviceCompliancePolicy -Android
-Returns any device compliance policies for Android configured in Intune
-.EXAMPLE
-Get-DeviceCompliancePolicy -iOS
-Returns any device compliance policies for iOS configured in Intune
+Get-SoftwareUpdatePolicy -iOS
+Returns iOS update policies configured in Intune
 .NOTES
-NAME: Get-DeviceCompliancePolicy
+NAME: Get-SoftwareUpdatePolicy
 #>
 
 [cmdletbinding()]
 
 param
 (
-    [switch]$Android,
-    [switch]$iOS,
-    [switch]$Win10
+    [switch]$Windows10,
+    [switch]$iOS
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceManagement/deviceCompliancePolicies"
-    
+
     try {
 
         $Count_Params = 0
 
-        if($Android.IsPresent){ $Count_Params++ }
         if($iOS.IsPresent){ $Count_Params++ }
-        if($Win10.IsPresent){ $Count_Params++ }
+        if($Windows10.IsPresent){ $Count_Params++ }
 
         if($Count_Params -gt 1){
-        
-        write-host "Multiple parameters set, specify a single parameter -Android -iOS or -Win10 against the function" -f Red
-        
-        }
-        
-        elseif($Android){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("android") }
-        
-        }
-        
-        elseif($iOS){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("ios") }
-        
+
+        write-host "Multiple parameters set, specify a single parameter -iOS or -Windows10 against the function" -f Red
+
         }
 
-        elseif($Win10){
-        
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | Where-Object { ($_.'@odata.type').contains("windows10CompliancePolicy") }
-        
+        elseif($Count_Params -eq 0){
+
+        Write-Host "Parameter -iOS or -Windows10 required against the function..." -ForegroundColor Red
+        Write-Host
+        break
+
         }
-        
-        else {
+
+        elseif($Windows10){
+
+        $Resource = "deviceManagement/deviceConfigurations?`$filter=isof('microsoft.graph.windowsUpdateForBusinessConfiguration')&`$expand=groupAssignments"
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
+
+        }
+
+        elseif($iOS){
+
+        $Resource = "deviceManagement/deviceConfigurations?`$filter=isof('microsoft.graph.iosUpdateConfiguration')&`$expand=groupAssignments"
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
@@ -224,7 +216,7 @@ $Resource = "deviceManagement/deviceCompliancePolicies"
         }
 
     }
-    
+
     catch {
 
     $ex = $_.Exception
@@ -410,16 +402,49 @@ $ExportPath = Read-Host -Prompt "Please specify a path to export the policy data
 
     }
 
-Write-Host
+####################################################
+
+$WSUPs = Get-SoftwareUpdatePolicy -Windows10
+
+if($WSUPs){
+
+    foreach($WSUP in $WSUPs){
+
+        write-host "Software Update Policy:"$WSUP.displayName -f Yellow
+        Export-JSONData -JSON $WSUP -ExportPath "$ExportPath"
+        Write-Host
+
+    }
+
+}
+
+else {
+
+    Write-Host "No Software Update Policies for Windows 10 Created..." -ForegroundColor Red
+    Write-Host
+
+}
 
 ####################################################
 
-$CPs = Get-DeviceCompliancePolicy
+$ISUPs = Get-SoftwareUpdatePolicy -iOS
 
-    foreach($CP in $CPs){
+if($WSUPs){
 
-    write-host "Device Compliance Policy:"$CP.displayName -f Yellow
-    Export-JSONData -JSON $CP -ExportPath "$ExportPath"
-    Write-Host
+    foreach($ISUP in $ISUPs){
+
+        write-host "Software Update Policy:"$ISUP.displayName -f Yellow
+        Export-JSONData -JSON $ISUP -ExportPath "$ExportPath"
+        Write-Host
 
     }
+
+}
+
+else {
+
+    Write-Host "No Software Update Policies for iOS Created..." -ForegroundColor Red
+    Write-Host
+
+}
+

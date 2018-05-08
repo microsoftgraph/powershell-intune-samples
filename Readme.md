@@ -11,11 +11,16 @@ The following samples are included in this repository:
 - App Protection Policy - Creation, Get and Delete
 - Company Portal Branding - Get and Set
 - Compliance Policy - Add, Get and Delete
+- Corporate Device Enrollment - Get and Export
 - Device Configuration - Add, Get and Delete
 - Enrollment Restrictions - Get and Set
+- Intune Data Export
+- LOB Application - Add
 - Managed Devices - Get, Overview and Device Action
+- Paging - Get
 - Intune Roles (RBAC) - Add, Get and Delete
 - Remote Action Audits - Get
+- Software Updates - Add, Export, Get and Import
 - Terms and Conditions - Add, Get and Delete
 - User Policy Report
 
