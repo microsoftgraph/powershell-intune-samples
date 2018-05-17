@@ -39,7 +39,7 @@ User Principal Name: dave@graphdev.onmicrosoft.com
 Date Time difference is 53 days from current date time...
 ```
 
-### 1. Check_enrolledDateTime.ps1
+### 2. Check_enrolledDateTime.ps1
 This script returns any Intune Managed Devices that have enrolled in the Intune Service in the past 24 hours (default) that you have authenticated with.
 
 #### Variables
@@ -76,4 +76,25 @@ AAD Registered: True
 Management Agent: easMdm
 
 Date Time difference is 12 minutes from current date time...
+```
+
+### 3. DirectoryRoles_Get.ps1
+This sample script shows all Directory Roles from Microsoft Graph that you have authenticated with. It will offer a menu (sample below) of all Directory Roles available.
+```
+Please specify which Directory Role you want to query for User membership:
+1. Company Administrator
+2. Device Administrators
+3. Directory Readers
+4. Directory Synchronization Accounts
+5. Helpdesk Administrator
+6. Intune Service Administrator
+```
+Once you have chosen your selection it will show all the Users who are members of that specific role.
+
+#### Get-DirectoryRoles Function
+This function is used to get all Directory Roles from Microsoft Graph.
+
+```PowerShell
+# Returns all Directory Roles from Microsoft Graph
+Get-DirectoryRoles
 ```
