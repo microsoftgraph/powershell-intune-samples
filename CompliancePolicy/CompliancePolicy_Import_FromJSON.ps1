@@ -329,7 +329,7 @@ $JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -Exclu
 
 $DisplayName = $JSON_Convert.displayName
 
-$JSON_Output = $JSON_Convert | ConvertTo-Json
+$JSON_Output = $JSON_Convert | ConvertTo-Json -Depth 5
 
 # Adding Scheduled Actions Rule to JSON
 $scheduledActionsForRule = '"scheduledActionsForRule":[{"ruleName":"PasswordRequired","scheduledActionConfigurations":[{"actionType":"block","gracePeriodHours":0,"notificationTemplateId":"","notificationMessageCCList":[]}]}]'        

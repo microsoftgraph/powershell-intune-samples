@@ -178,7 +178,7 @@ Write-Verbose "Resource: $DCP_resource"
 
         if($JSON -eq "" -or $JSON -eq $null){
 
-        write-host "No JSON specified, please specify valid JSON for the Android Policy..." -f Red
+        write-host "No JSON specified, please specify valid JSON for the Device Configuration Policy..." -f Red
 
         }
 
@@ -332,7 +332,7 @@ $JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -Exclu
 
 $DisplayName = $JSON_Convert.displayName
 
-$JSON_Output = $JSON_Convert | ConvertTo-Json
+$JSON_Output = $JSON_Convert | ConvertTo-Json -Depth 5
             
 write-host
 write-host "Device Configuration Policy '$DisplayName' Found..." -ForegroundColor Yellow
