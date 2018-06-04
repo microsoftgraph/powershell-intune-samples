@@ -287,7 +287,7 @@ $ExportPath
 
         else {
 
-        $JSON1 = ConvertTo-Json $JSON
+        $JSON1 = ConvertTo-Json $JSON -Depth 5
 
         $JSON_Convert = $JSON1 | ConvertFrom-Json
 

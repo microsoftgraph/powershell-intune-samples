@@ -89,7 +89,7 @@ Please specify which Directory Role you want to query for User membership:
 5. Helpdesk Administrator
 6. Intune Service Administrator
 ```
-Once you have chosen your selection it will show all the Users who are members of that specific role.
+Once you have chosen your selection it will show all the users who are members of that specific role.
 
 #### Get-DirectoryRoles Function
 This function is used to get all Directory Roles from Microsoft Graph.
