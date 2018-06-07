@@ -53,7 +53,7 @@ The sample JSON files are shown below:
   "fingerprintBlocked": true,
   "appDataEncryptionType": "afterDeviceRestart",
 
-  "mobileAppIdentifierDeployments": [
+  "apps": [
     {
         "mobileAppIdentifier": {
         "@odata.type": "#microsoft.graph.androidMobileAppIdentifier",
@@ -99,7 +99,7 @@ The sample JSON files are shown below:
   "fingerprintBlocked": true,
   "appDataEncryptionType": "afterDeviceRestart",
 
-  "mobileAppIdentifierDeployments": [
+  "apps": [
     {
         "mobileAppIdentifier": {
         "@odata.type": "#microsoft.graph.iosMobileAppIdentifier",
@@ -185,7 +185,6 @@ Get-IntuneMAMApplication -Android
 
 # Returns all iOS MAM / APP applications configured in Intune
 Get-IntuneMAMApplication -iOS
-
 ```
 
 ### 5. ManagedAppPolicy_Remove.ps1
@@ -225,4 +224,105 @@ Get-AADUser -userPrincipalName "user@tenant.onmicrosoft.com" -Property MemberOf
 This function is used to get an App Protection application registrations found for the user. It has a mandatory parameter of -id for the users AAD ID.
 ```PowerShell
 Get-AADUserManagedAppRegistrations -id $UserID
+```
+
+### 7. ManagedAppPolicy_Export.ps1
+This script gets all App Protection policies (Android and iOS) from the Intune Service that you have authenticated with. The script will then export the policy to .json format in the directory of your choice.
+
+```PowerShell
+$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
+
+    # If the directory path doesn't exist prompt user to create the directory
+
+    if(!(Test-Path "$ExportPath")){
+
+    Write-Host
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
+
+        }
+
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+```
+
+#### Get-ManagedAppPolicy Function
+This function is used to get all App Protection Policies from the Intune Service.
+
+It supports a single parameter as an input to the function to pull data from the service.
+
+```PowerShell
+# Returns all App Protection policies configured in Intune
+Get-ManagedAppPolicy
+
+# Returns an App Protection policy that contains the Name configured in Intune
+Get-ManagedAppPolicy -Name "Android"
+
+```
+
+#### Get-ManagedAppProtection Function
+This function is used to get managed app protection configuration from the Intune Service.
+
+It supports multiple parameters as an input to the function to pull specific data from the service.
+
+```PowerShell
+# Returns a managed app protection policy for Android configured in Intune
+Get-ManagedAppProtection -id $id -OS "Android"
+
+# Returns a managed app protection policy for iOS configured in Intune
+Get-ManagedAppProtection -id $id -OS "iOS"
+
+# Returns a managed app protection policy for Windows 10 without enrollment configured in Intune
+Get-ManagedAppProtection -id $id -OS "WIP_WE"
+```
+
+#### Export-JSONData Function
+This function is used to export the policy information. It has two required parameters -JSON and -ExportPath.
+
++ JSON - The JSON data
++ ExportPath - The path where the .json should be exported to
+
+```PowerShell
+Export-JSONData -JSON $JSON -ExportPath "$ExportPath"
+```
+
+### 8. ManagedAppPolicy_Import_FromJSON.ps1
+This script imports from a JSON file an App Protection Policy into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Add-ManagedAppPolicy function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Add-ManagedAppPolicy Function
+This function is used to add an App Protection policy to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
+
+```PowerShell
+Add-ManagedAppPolicy -JSON $JSON
 ```
