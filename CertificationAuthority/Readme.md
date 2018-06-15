@@ -47,3 +47,26 @@ To run the script, the following examples are below:
 
 .\Validate-NDESConfig.ps1 -help
 ```
+### 3. Validate-NDESUrl.ps1
+Validate-NDESUrl.ps1 will ensure requests from devices enrolled in Microsoft Intune and targeted with a SCEP policy will successfully traverse the network path to the NDES server. Since the certificate request includes a query string that is longer than what is allowed by the default settings in Windows IIS and some reverse proxy servers, those servers and network devices must be configured to allow long query strings and web requests.
+
+https://docs.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/requestlimits/
+
+This tool will simulate a SCEP request with a large payload, enabling you to check the IIS logs on the NDES server to ensure that the request is not being blocked anywhere along the path.
+
+A query size of 30 is suggested as a starting point – success with this size suggests a valid configuration through the network path.
+
+#### Prerequisites
+Use of this script requires the following:
+* This script should be run from a client machine with Internet access, not on the NDES server
+* Requires PowerShell version 4.0 at a minimum
+* Requires PowerShell to be Run As Administrator
+
+#### Usage
+To run the script, the following examples are below:
+```PowerShell
+.EXAMPLE
+.\Validate-NDESUrl.ps1 -server externalDNSName.contoso.com -q 30
+
+.\Validate-NDESUrl.ps1 -help
+```
