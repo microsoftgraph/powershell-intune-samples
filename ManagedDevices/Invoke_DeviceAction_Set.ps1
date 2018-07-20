@@ -305,6 +305,7 @@ param
     [switch]$Retire,
     [switch]$Delete,
     [switch]$Sync,
+    [switch]$Rename,
     [Parameter(Mandatory=$true,HelpMessage="DeviceId (guid) for the Device you want to take action on must be specified:")]
     $DeviceID
 )
@@ -321,10 +322,11 @@ $graphApiVersion = "Beta"
         if($Retire.IsPresent){ $Count_Params++ }
         if($Delete.IsPresent){ $Count_Params++ }
         if($Sync.IsPresent){ $Count_Params++ }
+        if($Rename.IsPresent){ $Count_Params++ }
 
         if($Count_Params -eq 0){
 
-        write-host "No parameter set, specify -RemoteLock -ResetPasscode -Wipe -Delete or -Sync against the function" -f Red
+        write-host "No parameter set, specify -RemoteLock -ResetPasscode -Wipe -Delete -Sync or -rename against the function" -f Red
 
         }
 
@@ -461,6 +463,42 @@ $graphApiVersion = "Beta"
             else {
 
             Write-Host "Sync of the device $DeviceID was cancelled..."
+
+            }
+
+        }
+
+        elseif($Rename){
+
+        write-host "Please type the new device name:" -ForegroundColor Yellow
+        $NewDeviceName = Read-Host
+
+$JSON = @"
+
+{
+    deviceName:"$($NewDeviceName)"
+}
+
+"@
+
+        write-host
+        write-host "Note: The RenameDevice remote action is only supported on supervised iOS devices"
+        write-host "Are you sure you want to rename this device to" $($NewDeviceName) "(Y or N?)"
+        $Confirm = read-host
+
+            if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+            $Resource = "deviceManagement/managedDevices('$DeviceID')/setDeviceName"
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+            write-verbose $uri
+            Write-Verbose "Sending rename command to $DeviceID"
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $Json -ContentType "application/json"
+
+            }
+
+            else {
+
+            Write-Host "Rename of the device $DeviceID was cancelled..."
 
             }
 
@@ -623,3 +661,6 @@ write-host "User $UPN doesn't have any owned Devices..." -f Yellow
 }
 
 write-host
+
+
+
