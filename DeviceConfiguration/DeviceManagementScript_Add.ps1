@@ -178,10 +178,24 @@ NAME: Add-DeviceManagementScript
         $FileName = $File -split "/"
         $FileName = $FileName[-1]
         $OutFile = "$env:TEMP\$FileName"
-        Invoke-WebRequest -Uri $File -UseBasicParsing -OutFile $OutFile
+        try {
+            Invoke-WebRequest -Uri $File -UseBasicParsing -OutFile $OutFile
+        }
+        catch {
+            Write-Host "Could not download file from URL: $File" -ForegroundColor Red
+            break
+        }
         $File = $OutFile
+        if (!(Test-Path $File)) {
+            Write-Host "$File could not be located." -ForegroundColor Red
+            break
+        }
     }
     elseif ($URL -eq $false) {
+        if (!(Test-Path $File)) {
+            Write-Host "$File could not be located." -ForegroundColor Red
+            break
+        }
         $FileName = Get-Item $File | Select-Object -ExpandProperty Name
     }
     $B64File = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$File"));
