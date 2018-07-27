@@ -391,8 +391,8 @@ This script adds a device management script into the Intune Service that you hav
 This function is used to add a device management script to the Intune Service. It supports both adding scripts from a local file path or a URL. It supports three parameters -File where you define the path or URL to a file. -Description to define the description field of the script in Intune. -URL which is a switch to specify that the -File parameter is a URL.
 
 ```PowerShell
-Add-DeviceManagementScript -File $LocalFilePath -Description "Test script"
-Add-DeviceManagementScript -File $ScriptURL -URL -Description "Test script"
+Add-DeviceManagementScript -File "C:\Scripts\Spript.ps1" -Description "Script"
+Add-DeviceManagementScript -File "https://raw.githubusercontent.com/Forsbakk/Blog/master/%23PowerShellFun/test-script.ps1" -URL -Description "Test script"
 ```
 
 ### 9. DeviceManagementScript_Add_Assign.ps1
@@ -406,3 +406,4 @@ This function is used to assign a device management script to an AAD Group. This
 
 ```PowerShell
 Add-DeviceManagementScriptAssignment -ScriptId $Create_Local_Script.id -TargetGroupId $TargetGroupId
+```
