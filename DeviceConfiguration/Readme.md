@@ -401,7 +401,7 @@ This script adds and assigns a device management script into the Intune Service 
 #### Add-DeviceManagementScriptAssignment Function
 This function is used to assign a device management script to an AAD Group. This function has two required parameters.
 
-+ ScriptId - The policy ID defined in the Intune Service
++ ScriptId - The script ID defined in the Intune Service
 + TargetGroupId - The AAD Group ID where the policy should be assigned
 
 ```PowerShell
