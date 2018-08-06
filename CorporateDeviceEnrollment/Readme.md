@@ -9,7 +9,21 @@ Some script samples retrieve information from your Intune tenant, and others cre
 
 Within this section there are the following scripts with the explanation of usage.
 
-### 1. CorpDeviceEnrollment_Export.ps1
+### 1. CorpDeviceEnrollment_Add.ps1
+This script adds a Corporate Device Enrollment identifier to the Intune Service that you have authenticated with.
+
+#### Add-CorporateDeviceIdentifiers Function
+This function is used to add a Corporate Device Enrollment Identifier to the Intune Service.
+
+```PowerShell
+# Adds a IMEI Corporate Device Enrollment Identifiers to Intune
+Add-CorporateDeviceIdentifiers -IdentifierType imei -OverwriteImportedDeviceIdentities false -Identifier "123456789012345" -Description "IMEI Device"
+
+# Adds a SerialNumber Corporate Device Enrollment Identifiers to Intune
+Add-CorporateDeviceIdentifiers -IdentifierType SerialNumber -OverwriteImportedDeviceIdentities false -Identifier "12345678901234" -Description "SerialNumber Device"
+```
+
+### 2. CorpDeviceEnrollment_Export.ps1
 This script gets all the Corporate Device Enrollment Identifiers from the Intune Service that you have authenticated with. The script will then export the Device Identifiers to .csv format in the directory of your choice.
 
 ```PowerShell
@@ -55,7 +69,7 @@ This function is used to get all Corporate Device Enrollment Identifiers from th
 Get-CorporateDeviceIdentifiers
 ```
 
-### 2. CorpDeviceEnrollment_Get.ps1
+### 3. CorpDeviceEnrollment_Get.ps1
 This script gets all the Corporate Device Enrollment identifiers from the Intune Service that you have authenticated with.
 
 #### Get-CorporateDeviceIdentifiers Function
