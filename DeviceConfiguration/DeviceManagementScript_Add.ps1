@@ -302,4 +302,4 @@ else {
 
 Add-DeviceManagementScript -File "C:\Scripts\test-script.ps1" -Description "Test script"
 
-Add-DeviceManagementScript -File "https://raw.githubusercontent.com/Forsbakk/Blog/master/%23PowerShellFun/test-script.ps1" -URL -Description "Test script"
+Add-DeviceManagementScript -File "https://pathtourl/test-script.ps1" -URL -Description "Test script"

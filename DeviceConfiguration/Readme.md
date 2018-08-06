@@ -392,7 +392,7 @@ This function is used to add a device management script to the Intune Service. I
 
 ```PowerShell
 Add-DeviceManagementScript -File "C:\Scripts\Spript.ps1" -Description "Script"
-Add-DeviceManagementScript -File "https://raw.githubusercontent.com/Forsbakk/Blog/master/%23PowerShellFun/test-script.ps1" -URL -Description "Test script"
+Add-DeviceManagementScript -File "https://pathtourl/test-script.ps1" -URL -Description "Test script"
 ```
 
 ### 9. DeviceManagementScript_Add_Assign.ps1

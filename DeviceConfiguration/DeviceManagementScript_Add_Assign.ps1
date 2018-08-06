@@ -245,6 +245,7 @@ NAME: Add-DeviceManagementScript
 
 }
 
+####################################################
 
 Function Add-DeviceManagementScriptAssignment() {
     <#
@@ -318,6 +319,8 @@ NAME: Add-DeviceConfigurationPolicyAssignment
 
     }
 }
+
+####################################################
 
 Function Get-AADGroup() {
 
@@ -464,11 +467,9 @@ else {
 
 ####################################################
 
-####################################################
+# Setting application AAD Group to assign PowerShell scripts
 
-# Setting application AAD Group to assign Policy
-
-$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where policies will be assigned"
+$AADGroup = Read-Host -Prompt "Enter the Azure AD Group name where PowerShell scripts will be assigned"
 
 $TargetGroupId = (Get-AADGroup -GroupName "$AADGroup").id
 
@@ -497,10 +498,10 @@ Write-Host
 
 ####################################################
 
-Write-Host "Adding Device Management Script from 'https://raw.githubusercontent.com/Forsbakk/Blog/master/%23PowerShellFun/test-script.ps1'" -ForegroundColor Yellow
+Write-Host "Adding Device Management Script from 'https://pathtourl/test-script.ps1'" -ForegroundColor Yellow
 Write-Host
 
-$Create_Web_Script = Add-DeviceManagementScript -File "https://raw.githubusercontent.com/Forsbakk/Blog/master/%23PowerShellFun/test-script.ps1" -URL -Description "Test script"
+$Create_Web_Script = Add-DeviceManagementScript -File "https://pathtourl/test-script.ps1" -URL -Description "Test script"
 
 Write-Host "Device Management Script created as" $Create_Web_Script.id
 write-host
