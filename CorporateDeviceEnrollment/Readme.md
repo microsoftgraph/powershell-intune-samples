@@ -67,6 +67,9 @@ This function is used to get all Corporate Device Enrollment Identifiers from th
 ```PowerShell
 # Returns all Corporate Device Enrollment Identifiers configured in Intune
 Get-CorporateDeviceIdentifiers
+
+# Returns a specific Corporate Device Identifier configured in Intune
+Get-CorporateDeviceIdentifiers -DeviceIdentifier "123456789012345"
 ```
 
 ### 3. CorpDeviceEnrollment_Get.ps1
@@ -78,5 +81,31 @@ This function is used to get all Corporate Device Enrollment Identifiers from th
 ```PowerShell
 # Returns all Corporate Device Enrollment Identifiers configured in Intune
 Get-CorporateDeviceIdentifiers
+
+# Returns a specific Corporate Device Identifier configured in Intune
+Get-CorporateDeviceIdentifiers -DeviceIdentifier "123456789012345"
+
+```
+### 4. CorpDeviceEnrollment_Remove.ps1
+This script removes a Corporate Device identifier from the Intune Service that you have authenticated with.
+
+#### Get-CorporateDeviceIdentifiers Function
+This function is used to get all Corporate Device Enrollment Identifiers from the Intune Service.
+
+```PowerShell
+# Returns all Corporate Device Enrollment Identifiers configured in Intune
+Get-CorporateDeviceIdentifiers
+
+# Returns a specific Corporate Device Identifier configured in Intune
+Get-CorporateDeviceIdentifiers -DeviceIdentifier "123456789012345"
+
+```
+
+#### Remove-CorporateDeviceIdentifier Function
+This function is used to remove a Corporate Device Identifier from the Intune Service.
+
+```PowerShell
+# Returns all Corporate Device Enrollment Identifiers configured in Intune
+Remove-CorporateDeviceIdentifier -ImportedDeviceId "123456789012345"
 
 ```

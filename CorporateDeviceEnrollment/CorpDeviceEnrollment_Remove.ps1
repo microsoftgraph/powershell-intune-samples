@@ -1,6 +1,5 @@
-﻿
-<#
- 
+﻿<#
+ 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -89,13 +88,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+ 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+ 
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+ 
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+ 
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -213,6 +212,73 @@ $graphApiVersion = "beta"
 
 ####################################################
 
+Function Remove-CorporateDeviceIdentifier(){
+
+<#
+.SYNOPSIS
+This function is used to remove a Corporate Device Identifier from the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and removes a Corporate Device Identifier
+.EXAMPLE
+Remove-CorporateDeviceIdentifier -ImportedDeviceId "123456789012345"
+Removes Corporate Device Identifier with that Id configured in Intune
+.NOTES
+NAME: Remove-CorporateDeviceIdentifier
+#>
+
+[cmdletbinding()]
+
+param
+(
+    [Parameter(Mandatory=$true)]
+    $ImportedDeviceId
+)
+
+$graphApiVersion = "beta"
+$Resource = "deviceManagement/importedDeviceIdentities/$ImportedDeviceId"
+
+    try {
+
+    write-host "Are you sure you want to delete selected device information? Y or N?" -ForegroundColor Yellow
+    write-host "It will not affect devices already enrolled in Intune." -ForegroundColor Yellow
+
+    $Confirm = read-host
+
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
+
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Delete
+
+        }
+
+        else {
+
+            Write-Host "Deletion of the Device Identifier from Intune for the device was cancelled..." -ForegroundColor Gray
+            Write-Host
+
+        }
+
+    }
+
+    catch {
+
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
+
+    }
+
+}
+
+####################################################
+
 #region Authentication
 
 write-host
@@ -265,18 +331,26 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$CDI = Get-CorporateDeviceIdentifiers
+$CDI = Get-CorporateDeviceIdentifiers -DeviceIdentifier "123456789012345"
 
-    if($CDI){
+if(@($CDI).count -eq 1){
 
-        $CDI
+    $CDI_Id = $CDI.id
+    $CDI_Identifier = $CDI.importedDeviceIdentifier
 
-    }
+    Write-Host "DeviceId:" $CDI_Id
+    Write-Host "Imported Device Identifier:" $CDI_Identifier
+    Write-Host
+    
+    Remove-CorporateDeviceIdentifier -ImportedDeviceId $CDI_Id
 
-    else {
+}
 
-    Write-Host "No Corporate Device Identifiers found..." -ForegroundColor Red
+else {
 
-    }
+    Write-Host "More than one device was found with that Device Identifier," -ForegroundColor Red
+    Write-Host "or the Device Identifier wasn't found in the Intune Service..." -ForegroundColor Red
+    Write-Host
 
-Write-Host
+}
+
