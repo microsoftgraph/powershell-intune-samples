@@ -89,3 +89,50 @@ This script sets the company portal branding to default values in the Intune Ser
 
 }
 ```
+### 4. CompanyPortal_Export.ps1
+This script gets Company portal branding from the Intune Service that you have authenticated with and exports the configuration to a JSON file.
+
+#### Get-IntuneBrand Function
+This function is used to return Company portal branding from the Intune Service.
+
+```PowerShell
+# Returns company portal branding configured in Intune
+Get-IntuneBrand
+```
+#### Export-JSONData Function
+This function is used to export Branding information. It has two required parameters -JSON and -ExportPath.
+
++ JSON - The JSON data
++ ExportPath - The path where the .json should be exported to
+
+```PowerShell
+Export-JSONData -JSON $JSON -ExportPath "$ExportPath"
+```
+
+### 5. CompanyPortal_Import_FromJSON.ps1
+This script imports from a JSON file company portal branding into the Intune Service that you have authenticated with.
+
+When you run the script it will prompt for a path to a .json file, if the path is valid the Set-IntuneBrand function will be called.
+
+```PowerShell
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Branding\Branding.json"
+
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
+
+if(!(Test-Path "$ImportPath")){
+
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
+
+}
+```
+
+#### Set-IntuneBrand Function
+This function is used to set the company portal branding in the Intune Service. It requires multiple parameter -id and -JSON as an input to the function to pass the JSON data to the service.
+
+```
+Set-IntuneBrand -JSON $JSON
+```
