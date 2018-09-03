@@ -623,3 +623,39 @@ This function is used to add an MDM Application to the Intune Service. It suppor
 ```PowerShellW
 Add-MDMApplication -JSON $JSON
 ```
+
+### Application_InstallStatus.ps1
+
+#### Get-InstallStatusForApp
+This function will get all of the installation stats for an application, given the applications ID. We can get the application's ID with the "Application_GET_MDM.ps1" script and the Get-IntuneApplication function.
+
+##### Import the script Application_Get_MDM.ps1 from the Applications folder. 
+
+```PowerShellW
+. .\Application_Get_MDM.ps1
+```
+This will then load the functions within the script. One of which is the Get-IntuneApplication function.
+The Get-IntuneApplciation will get all of the Intune applications by default, unless given a name parameter.
+
+```PowerShell
+Get-IntuneApplication -Name "Microsoft Teams"
+```
+This would return an object of the Microsoft Teams application.
+
+What would be really useful is if we could get the installation stats of every applciation in our Intune environment.
+
+Import the Application_InstallStats.ps1 script
+
+```PowerShell
+. .\Application_InstallStats.ps1
+```
+This loads a function called Get-InstallStatusForApp. This will take an arguement of the applications ID (AppId), which we pulled earlier using the Get-IntuneApplication function.
+
+We can just get the installation stats of a single application
+
+```PowerShell
+$theApplication = Get-IntuneApplication -Name "Microsoft Teams"
+Get-InstallaStatusForApp -AppId $theApplication.ID
+```
+
+
