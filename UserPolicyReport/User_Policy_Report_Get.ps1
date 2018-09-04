@@ -482,32 +482,32 @@ This function is used to get device compliance policy assignment from the Graph 
 .DESCRIPTION
 The function connects to the Graph API Interface and gets a device compliance policy assignment
 .EXAMPLE
-Get-DeviceCompliancePolicyAssignment $id guid
+Get-DeviceCompliancePolicyAssignment -id $id
 Returns any device compliance policy assignment configured in Intune
 .NOTES
 NAME: Get-DeviceCompliancePolicyAssignment
 #>
-
+    
 [cmdletbinding()]
-
+    
 param
 (
     [Parameter(Mandatory=$true,HelpMessage="Enter id (guid) for the Device Compliance Policy you want to check assignment")]
     $id
 )
-
+    
 $graphApiVersion = "Beta"
 $DCP_resource = "deviceManagement/deviceCompliancePolicies"
     
     try {
-
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)/$id/groupAssignments"
+    
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)/$id/assignments"
     (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-        
+    
     }
     
     catch {
-
+    
     $ex = $_.Exception
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
@@ -518,9 +518,9 @@ $DCP_resource = "deviceManagement/deviceCompliancePolicies"
     Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
     write-host
     break
-
+    
     }
-
+    
 }
 
 ####################################################
@@ -583,21 +583,21 @@ $UserDevices = Get-AADUserDevices -UserID $UserID
             
                 write-host "Compliance State:" $UserDevice.complianceState -f Red
 
-                $uri = "https://graph.microsoft.com/beta/managedDevices/$UserDeviceId/deviceCompliancePolicyStates"
+                $uri = "https://graph.microsoft.com/beta/deviceManagement/managedDevices/$UserDeviceId/deviceCompliancePolicyStates"
                 
                 $deviceCompliancePolicyStates = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
                     foreach($DCPS in $deviceCompliancePolicyStates){
 
-                        if($DCPS.State -ne "notApplicable"){
+                        if($DCPS.State -eq "nonCompliant"){
 
                         Write-Host
                         Write-Host "Non Compliant Policy for device $UserDeviceName" -ForegroundColor Yellow
                         write-host "Display Name:" $DCPS.displayName
 
-                        $SettingStatesId = $DCPS.id.split("_")[2]
+                        $SettingStatesId = $DCPS.id
 
-                        $uri = "https://graph.microsoft.com/beta/managedDevices/$UserDeviceId/deviceCompliancePolicyStates/$SettingStatesId/settingStates"
+                        $uri = "https://graph.microsoft.com/beta/deviceManagement/managedDevices/$UserDeviceId/deviceCompliancePolicyStates/$SettingStatesId/settingStates?`$filter=(userId eq '$UserID')"
 
                         $SettingStates = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
@@ -723,7 +723,6 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-Write-Host
 write-host "User Principal Name:" -f Yellow
 $UPN = Read-Host
 
