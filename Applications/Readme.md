@@ -620,42 +620,34 @@ break
 #### Add-MDMApplication Function
 This function is used to add an MDM Application to the Intune Service. It supports a single parameter -JSON as an input to the function to pass the JSON data to the service.
 
-```PowerShellW
+```PowerShell
 Add-MDMApplication -JSON $JSON
 ```
 
-### Application_InstallStatus.ps1
+### 19. Application_InstallStatus.ps1
+This script gets the installation statistics for an application in the Intune Service that you have authenticated with.
+
+#### Get-IntuneApplication Function
+This function is used to get all MDM applications from the Intune Service and has a filter to only show applications where the odata.type doesn't contain "managed" or "iosVppApp". It supports a single parameter -Name as an input to the function which can be used to filter on a single application.
+
+```PowerShell
+# Returns all MDM applications in the Intune Service
+Get-IntuneApplication
+
+# Returns an application by Name in the Intune Service
+Get-IntuneApplication -Name "Microsoft Excel"
+
+# Returns all MDM application and selects the displayName, id and type
+Get-IntuneApplication | select displayName,id,'@odata.type' | sort displayName
+```
 
 #### Get-InstallStatusForApp
-This function will get all of the installation stats for an application, given the applications ID. We can get the application's ID with the "Application_GET_MDM.ps1" script and the Get-IntuneApplication function.
+This function will get all of the installation stats for an application, given the applications ID. We can get the application's ID with the "Application_MDM_Get.ps1" script and the Get-IntuneApplication function.
 
-##### Import the script Application_Get_MDM.ps1 from the Applications folder. 
+````PowerShell
+# Sample
+Get-InstallaStatusForApp -AppId 1111-22222-33333-44444-55555
 
-```PowerShellW
-. .\Application_Get_MDM.ps1
+$Application = Get-IntuneApplication -Name "Microsoft Teams"
+Get-InstallaStatusForApp -AppId $Application.id
 ```
-This will then load the functions within the script. One of which is the Get-IntuneApplication function.
-The Get-IntuneApplciation will get all of the Intune applications by default, unless given a name parameter.
-
-```PowerShell
-Get-IntuneApplication -Name "Microsoft Teams"
-```
-This would return an object of the Microsoft Teams application.
-
-What would be really useful is if we could get the installation stats of every applciation in our Intune environment.
-
-Import the Application_InstallStats.ps1 script
-
-```PowerShell
-. .\Application_InstallStats.ps1
-```
-This loads a function called Get-InstallStatusForApp. This will take an arguement of the applications ID (AppId), which we pulled earlier using the Get-IntuneApplication function.
-
-We can just get the installation stats of a single application
-
-```PowerShell
-$theApplication = Get-IntuneApplication -Name "Microsoft Teams"
-Get-InstallaStatusForApp -AppId $theApplication.ID
-```
-
-
