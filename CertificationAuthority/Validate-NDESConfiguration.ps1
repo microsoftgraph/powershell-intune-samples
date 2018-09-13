@@ -1,10 +1,6 @@
 ﻿
 <#
 
-.COPYRIGHT
-Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
-See LICENSE in the project root for license information.
-
 .SYNOPSIS
 Highlights configuration problems on an NDES server, as configured for use with Intune Standalone SCEP certificates.
 
@@ -13,15 +9,15 @@ Validate-NDESConfig looks at the configuration of your NDES server and ensures i
 certificates with Intune" article. 
 
 .NOTE This script is used purely to validate the configuration. All remedial tasks will need to be carried out manually.
-Where possible, a link and section description is provided.
+Where possible, a link and section description will be provided.
 
 .EXAMPLE
-.\Validate-NDESConfig -NDESServiceAccount Contoso\NDES_SVC.com -IssuingCAServerFQDN IssuingCA.contoso.com -SCEPUserCertTemplate SCEPGeneral
+.\Validate-NDESConfiguration -NDESServiceAccount Contoso\NDES_SVC.com -IssuingCAServerFQDN IssuingCA.contoso.com -SCEPUserCertTemplate SCEPGeneral
 
 .EXAMPLE
-.\Validate-NDESConfig -help
+.\Validate-NDESConfiguration -help
 
-.LINKS
+.LINK
 https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure
 
 #>
@@ -31,10 +27,55 @@ https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-yo
 Param(
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
 [alias("sa")]
+[ValidateScript({
+    if ($_ -match ".\\."){
+
+        $True
+    
+    }
+
+    else {
+
+    Throw "Please use the format Domain\Username for the NDES Service Account variable."
+
+    }
+
+    $EnteredDomain = $_.split("\")
+    $Domain = (Get-WmiObject Win32_ComputerSystem).domain.split(".")[0]
+        if ($EnteredDomain -like "$Domain") {
+
+        $True
+
+        }
+
+        else {
+   
+        Throw "Incorrect Domain. Ensure domain is '$($Domain)\<USERNAME>'"
+
+        }
+
+    }
+)]
 [string]$NDESServiceAccount,
 
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
 [alias("ca")]
+[ValidateScript({
+    $Domain = (Get-WmiObject Win32_ComputerSystem).domain
+        if ($_ -match $Domain) {
+
+        $True
+
+        }
+
+        else {
+   
+        Throw "The Network Device Enrollment Server and the Certificate Authority are not members of the same Active Directory domain. This is an unsupported configuration."
+
+        }
+
+    }
+)]
 [string]$IssuingCAServerFQDN,
 
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
@@ -53,6 +94,45 @@ Param(
 )
 
 #######################################################################
+
+Function Log-ScriptEvent {
+
+[CmdletBinding()]
+
+Param(
+      [parameter(Mandatory=$True)]
+      [String]$LogFilePath,
+
+      [parameter(Mandatory=$True)]
+      [String]$Value,
+
+      [parameter(Mandatory=$True)]
+      [String]$Component,
+
+      [parameter(Mandatory=$True)]
+      [ValidateRange(1,3)]
+      [Single]$Severity
+      )
+
+$DateTime = New-Object -ComObject WbemScripting.SWbemDateTime 
+$DateTime.SetVarDate($(Get-Date))
+$UtcValue = $DateTime.Value
+$UtcOffset = $UtcValue.Substring(21, $UtcValue.Length - 21)
+
+$LogLine =  "<![LOG[$Value]LOG]!>" +`
+            "<time=`"$(Get-Date -Format HH:mm:ss.fff)$($UtcOffset)`" " +`
+            "date=`"$(Get-Date -Format M-d-yyyy)`" " +`
+            "component=`"$Component`" " +`
+            "context=`"$([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)`" " +`
+            "type=`"$Severity`" " +`
+            "thread=`"$([Threading.Thread]::CurrentThread.ManagedThreadId)`" " +`
+            "file=`"`">"
+
+Add-Content -Path $LogFilePath -Value $LogLine
+
+}
+
+##########################################################################################################
 
 function Show-Usage {
 
@@ -103,6 +183,14 @@ function Get-NDESHelp {
 
 #######################################################################
 
+$parent = [System.IO.Path]::GetTempPath()
+[string] $name = [System.Guid]::NewGuid()
+New-Item -ItemType Directory -Path (Join-Path $parent $name) | Out-Null
+$TempDirPath = "$parent$name"
+$LogFilePath = "$($TempDirPath)\Validate-NDESConfig.log"
+
+#######################################################################
+
 #region Proceed with Variables...
 
     Write-Host
@@ -130,6 +218,11 @@ function Get-NDESHelp {
     if ($confirmation -eq 'y'){
     Write-Host
     Write-host "......................................................."
+    Log-ScriptEvent $LogFilePath "Initializing log file $($TempDirPath)\Validate-NDESConfig.log"  NDES_Validation 1
+    Log-ScriptEvent $LogFilePath "Proceeding with variables=YES"  NDES_Validation 1
+    Log-ScriptEvent $LogFilePath "NDESServiceAccount=$($NDESServiceAccount)" NDES_Validation 1
+    Log-ScriptEvent $LogFilePath "IssuingCAServer=$($IssuingCAServerFQDN)" NDES_Validation 1
+    Log-ScriptEvent $LogFilePath "SCEPCertificateTemplate=$($SCEPUserCertTemplate)" NDES_Validation 1
 
 #######################################################################
 
@@ -138,7 +231,8 @@ function Get-NDESHelp {
     if (-not (Get-WindowsFeature ADCS-Device-Enrollment).Installed){
     
     Write-Host "Error: NDES Not installed" -BackgroundColor Red
-    write-host "Exiting......................"
+    write-host "Exiting....................."
+    Log-ScriptEvent $LogFilePath "NDES Not installed" NDES_Validation 3
     break
 
     }
@@ -152,6 +246,7 @@ Import-Module ActiveDirectory | Out-Null
         $IISNotInstalled = $TRUE
         Write-Warning "IIS is not installed. Some tests will not run as we're unable to import the WebAdministration module"
         Write-Host
+        Log-ScriptEvent $LogFilePath "IIS is not installed. Some tests will not run as we're unable to import the WebAdministration module"  NDES_Validation 2
     
     }
 
@@ -170,6 +265,7 @@ Import-Module ActiveDirectory | Out-Null
     Write-Host
     Write-host "Checking Windows OS version..." -ForegroundColor Yellow
     Write-host
+    Log-ScriptEvent $LogFilePath "Checking OS Version" NDES_Validation 1
 
 $OSVersion = (Get-CimInstance -class Win32_OperatingSystem).Version
 $MinOSVersion = "6.3"
@@ -177,8 +273,9 @@ $MinOSVersion = "6.3"
     if ([version]$OSVersion -lt [version]$MinOSVersion){
     
         Write-host "Error: Unsupported OS Version. NDES Requires 2012 R2 and above." -BackgroundColor Red
+        Log-ScriptEvent $LogFilePath "Unsupported OS Version. NDES Requires 2012 R2 and above." NDES_Validation 3
         
-    } 
+        } 
     
     else {
     
@@ -186,6 +283,7 @@ $MinOSVersion = "6.3"
         Write-Host "OS Version " -NoNewline
         write-host "$($OSVersion)" -NoNewline -ForegroundColor Cyan
         write-host " supported."
+        Log-ScriptEvent $LogFilePath "Server is version $($OSVersion)" NDES_Validation 1
     
     }
 
@@ -195,30 +293,35 @@ $MinOSVersion = "6.3"
     
 #region Checking NDES Service Account properties in Active Directory
 
-    Write-host
-    Write-host "......................................................."
-    Write-Host
-    Write-host "Checking NDES Service Account properties in Active Directory..." -ForegroundColor Yellow
-    Write-host
+Write-host
+Write-host "......................................................."
+Write-Host
+Write-host "Checking NDES Service Account properties in Active Directory..." -ForegroundColor Yellow
+Write-host
+Log-ScriptEvent $LogFilePath "Checking NDES Service Account properties in Active Directory" NDES_Validation 1
 
-    $ADUser = $NDESServiceAccount.split("\")[1]
+$ADUser = $NDESServiceAccount.split("\")[1]
 
-    $ADUserProps = (Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut)
+$ADUserProps = (Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut)
 
-        if ($ADUserProps.enabled -ne $TRUE -OR $ADUserProps.PasswordExpired -ne $false -OR $ADUserProps.LockedOut -eq $TRUE){
+    if ($ADUserProps.enabled -ne $TRUE -OR $ADUserProps.PasswordExpired -ne $false -OR $ADUserProps.LockedOut -eq $TRUE){
         
-            Write-Host "Error: Problem with the AD account. Please see output below to determine the issue" -BackgroundColor Red
-            Write-Host
+        Write-Host "Error: Problem with the AD account. Please see output below to determine the issue" -BackgroundColor Red
+        Write-Host
+        Log-ScriptEvent $LogFilePath "Problem with the AD account. Please see output below to determine the issue"  NDES_Validation 3
         
-        }
+    }
         
-        else {
+    else {
 
-            Write-Host "Success: " -ForegroundColor Green -NoNewline
-            Write-Host "NDES Service Account seems to be in working order:"
+        Write-Host "Success: " -ForegroundColor Green -NoNewline
+        Write-Host "NDES Service Account seems to be in working order:"
+        Log-ScriptEvent $LogFilePath "NDES Service Account seems to be in working order"  NDES_Validation 1
         
-        }
-              
+    }
+
+
+  
 Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut | fl SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut
 
 #endregion
@@ -231,20 +334,23 @@ Write-host
 Write-host "......................................................."
 Write-host
 Write-host "Checking if NDES server is the CA..." -ForegroundColor Yellow
-Write-host 
+Write-host
+Log-ScriptEvent $LogFilePath "Checking if NDES server is the CA" NDES_Validation 1 
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
 
     if ($hostname -match $IssuingCAServerFQDN){
     
         Write-host "Error: NDES is running on the CA. This is an unsupported configuration!" -BackgroundColor Red
+        Log-ScriptEvent $LogFilePath "NDES is running on the CA"  NDES_Validation 3
     
     }
 
     else {
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
-        Write-Host "NDES server is not running on the CA" 
+        Write-Host "NDES server is not running on the CA"
+        Log-ScriptEvent $LogFilePath "NDES server is not running on the CA"  NDES_Validation 1 
     
     }
 
@@ -258,7 +364,8 @@ Write-host
 Write-host "......................................................."
 Write-host
 Write-host "Checking NDES Service Account local permissions..." -ForegroundColor Yellow
-Write-host 
+Write-host
+Log-ScriptEvent $LogFilePath "Checking NDES Service Account local permissions" NDES_Validation 1 
 
    if ((net localgroup) -match "Administrators"){
 
@@ -267,6 +374,7 @@ Write-host
         if ($LocalAdminsMember -like "*$NDESServiceAccount*"){
         
             Write-Warning "NDES Service Account is a member of the local Administrators group. This will provide the requisite rights but is _not_ a secure configuration. Use IIS_IUSERS instead."
+            Log-ScriptEvent $LogFilePath "NDES Service Account is a member of the local Administrators group. This will provide the requisite rights but is _not_ a secure configuration. Use IIS_IUSERS instead."  NDES_Validation 2
 
         }
 
@@ -274,6 +382,7 @@ Write-host
 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             Write-Host "NDES Service account is not a member of the Local Administrators group"
+            Log-ScriptEvent $LogFilePath "NDES Service account is not a member of the Local Administrators group"  NDES_Validation 1
     
         }
 
@@ -289,12 +398,14 @@ Write-host
 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             Write-Host "NDES Service Account is a member of the local IIS_IUSR group" -NoNewline
+            Log-ScriptEvent $LogFilePath "NDES Service Account is a member of the local IIS_IUSR group" NDES_Validation 1
     
         }
     
         else {
 
-            Write-Host "Error: NDES Service Account is not a member of the local IIS_IUSR group" -BackgroundColor red 
+            Write-Host "Error: NDES Service Account is not a member of the local IIS_IUSR group" -BackgroundColor red
+            Log-ScriptEvent $LogFilePath "NDES Service Account is not a member of the local IIS_IUSR group"  NDES_Validation 3 
 
             Write-host
             Write-host "Checking Local Security Policy for explicit rights via gpedit..." -ForegroundColor Yellow
@@ -310,6 +421,7 @@ Write-host
             
                     Write-Host "Success: " -ForegroundColor Green -NoNewline
                     Write-Host "NDES Service Account has been assigned the Logon Locally, Logon as a Service and Logon as a batch job rights explicitly."
+                    Log-ScriptEvent $LogFilePath "NDES Service Account has been assigned the Logon Locally, Logon as a Service and Logon as a batch job rights explicitly." NDES_Validation 1
                     Write-Host
                     Write-Host "Note:" -BackgroundColor Red -NoNewline
                     Write-Host " The Logon Locally is not required in normal runtime."
@@ -324,7 +436,8 @@ Write-host
 
                     Write-Host "Error: NDES Service Account has _NOT_ been assigned the Logon Locally, Logon as a Service or Logon as a batch job rights _explicitly_." -BackgroundColor red 
                     Write-Host 'Please review "Step 1 - Create an NDES service account".' 
-                    write-host "https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+                    write-host "https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+                    Log-ScriptEvent $LogFilePath "NDES Service Account has _NOT_ been assigned the Logon Locally, Logon as a Service or Logon as a batch job rights _explicitly_." NDES_Validation 3
             
                 }
     
@@ -337,6 +450,7 @@ Write-host
         Write-Host "Error: No IIS_IUSRS group exists. Ensure IIS is installed." -BackgroundColor red 
         write-host 'Please review "Step 3.1 - Configure prerequisites on the NDES server".' 
         write-host "https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "No IIS_IUSRS group exists. Ensure IIS is installed." NDES_Validation 3
     
     }
 
@@ -345,6 +459,7 @@ Write-host
    else {
 
         Write-Warning "No local Administrators group exists, likely due to this being a Domain Controller. It is not recommended to run NDES on a Domain Controller."
+        Log-ScriptEvent $LogFilePath "No local Administrators group exists, likely due to this being a Domain Controller. It is not recommended to run NDES on a Domain Controller." NDES_Validation 2
     
     }
 
@@ -360,8 +475,9 @@ Write-host "......................................................."
 Write-host
 Write-host "Checking Windows Features are installed..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking Windows Features are installed..." NDES_Validation 1
 
-$WindowsFeatures = @("Web-Filtering","Web-Net-Ext","Web-Net-Ext45","NET-Framework-Core","NET-HTTP-Activation","NET-Framework-45-Core","NET-WCF-HTTP-Activation45","Web-Metabase","Web-WMI")
+$WindowsFeatures = @("Web-Filtering","Web-Net-Ext45","NET-Framework-45-Core","NET-WCF-HTTP-Activation45","Web-Metabase","Web-WMI")
 
 foreach($WindowsFeature in $WindowsFeatures){
 
@@ -372,6 +488,7 @@ $FeatureDisplayName = $Feature.displayName
     
         Write-host "Success:" -ForegroundColor Green -NoNewline
         write-host "$FeatureDisplayName Feature Installed"
+        Log-ScriptEvent $LogFilePath "$($FeatureDisplayName) Feature Installed"  NDES_Validation 1
     
     }
 
@@ -380,12 +497,53 @@ $FeatureDisplayName = $Feature.displayName
         Write-Host "Error: $FeatureDisplayName Feature not installed!" -BackgroundColor red 
         Write-Host 'Please review "Step 3.1b - Configure prerequisites on the NDES server".' 
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "$($FeatureDisplayName) Feature not installed"  NDES_Validation 3
     
     }
 
 }
 
-#endregion 
+#endregion
+
+#################################################################
+
+#region Checking NDES Install Paramaters
+
+$ErrorActionPreference = "SilentlyContinue"
+
+Write-host
+Write-host "......................................................."
+Write-host
+Write-Host "Checking NDES Install Paramaters..." -ForegroundColor Yellow
+Write-host
+Log-ScriptEvent $LogFilePath "Checking NDES Install Paramaters" NDES_Validation 1
+
+$InstallParams = @(Get-WinEvent -LogName "Microsoft-Windows-CertificateServices-Deployment/Operational" | Where-Object {$_.id -eq "105"}|
+Where-Object {$_.message -match "Install-AdcsNetworkDeviceEnrollmentService"}| Sort-Object -Property TimeCreated -Descending | Select-Object -First 1)
+
+    if ($InstallParams.Message -match '-SigningProviderName "Microsoft Strong Cryptographic Provider"' -AND ($InstallParams.Message -match '-EncryptionProviderName "Microsoft Strong Cryptographic Provider"')) {
+
+        Write-Host "Success: " -ForegroundColor Green -NoNewline
+        write-host "Correct CSP used in install parameters"
+        Write-host
+        Write-Host $InstallParams.Message
+        Log-ScriptEvent $LogFilePath "Correct CSP used in install parameters:"  NDES_Validation 1
+        Log-ScriptEvent $LogFilePath "$($InstallParams.Message)"  NDES_Eventvwr 1
+
+    }
+
+    else {
+
+        Write-Host "Error: Incorrect CSP selected during install. NDES only supports the CryptoAPI CSP." -BackgroundColor red
+        Write-Host
+        Write-Host $InstallParams.Message
+        Log-ScriptEvent $LogFilePath "Error: Incorrect CSP selected during install. NDES only supports the CryptoAPI CSP"  NDES_Validation 3 
+        Log-ScriptEvent $LogFilePath "$($InstallParams.Message)"  NDES_Eventvwr 3
+    }
+
+$ErrorActionPreference = "Continue"
+
+#endregion
 
 #################################################################
 
@@ -396,6 +554,7 @@ Write-host "......................................................."
 Write-host
 Write-host "Checking IIS Application Pool health..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking IIS Application Pool health" NDES_Validation 1
 
     if (-not ($IISNotInstalled -eq $TRUE)){
 
@@ -417,6 +576,7 @@ Write-host
             Write-Host "Error: SCEP Application Pool missing!" -BackgroundColor red 
             Write-Host 'Please review "Step 3.1 - Configure prerequisites on the NDES server"'. 
             write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+            Log-ScriptEvent $LogFilePath "SCEP Application Pool missing"  NDES_Validation 3
         
         }
     
@@ -425,6 +585,7 @@ Write-host
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "Application Pool is configured to use " -NoNewline
         Write-Host "$($IISSCEPAppPoolAccount)"
+        Log-ScriptEvent $LogFilePath "Application Pool is configured to use $($IISSCEPAppPoolAccount)"  NDES_Validation 1
             
         }
             
@@ -433,6 +594,7 @@ Write-host
         Write-Host "Error: Application Pool is not configured to use the NDES Service Account" -BackgroundColor red 
         Write-Host 'Please review "Step 4.1 - Configure NDES for use with Intune".' 
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+        Log-ScriptEvent $LogFilePath "Application Pool is not configured to use the NDES Service Account"  NDES_Validation 3
             
         }
                 
@@ -440,6 +602,7 @@ Write-host
                 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             Write-Host "SCEP Application Pool is Started " -NoNewline
+            Log-ScriptEvent $LogFilePath "SCEP Application Pool is Started"  NDES_Validation 1
                 
         }
                 
@@ -447,6 +610,7 @@ Write-host
 
             Write-Host "Error: SCEP Application Pool is stopped!" -BackgroundColor red 
             Write-Host "Please start the SCEP Application Pool via IIS Management Console. You should also review the Application Event log output for Errors"
+            Log-ScriptEvent $LogFilePath "SCEP Application Pool is stopped"  NDES_Validation 3
                 
         }
 
@@ -454,7 +618,8 @@ Write-host
 
     else {
 
-        Write-Host "IIS is not installed." -BackgroundColor red 
+        Write-Host "IIS is not installed." -BackgroundColor red
+        Log-ScriptEvent $LogFilePath "SCEP Application Pool is stopped"  NDES_Validation 3 
 
     }
 
@@ -462,13 +627,15 @@ Write-host
 
 #################################################################
 
-#region Checking Request Filtering (this is different between 2012 R2 and 2016. Need to investigate
+#region Checking Request Filtering
 
 Write-Host
 Write-host
 Write-host "......................................................."
 Write-host
 Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering -> Edit Feature Setting) has been configured in IIS..." -ForegroundColor Yellow
+Write-Host
+Log-ScriptEvent $LogFilePath "Checking Request Filtering" NDES_Validation 1
 
     if (-not ($IISNotInstalled -eq $TRUE)){
 
@@ -477,7 +644,8 @@ Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering ->
         if ($RequestFiltering.'system.webserver'.security.requestFiltering.requestLimits.maxQueryString -eq "65534"){
     
             Write-Host "Success: " -ForegroundColor Green -NoNewline
-            write-host "MaxQueryString Set Correctly"    
+            write-host "MaxQueryString Set Correctly"
+            Log-ScriptEvent $LogFilePath "MaxQueryString Set Correctly"  NDES_Validation 1    
     
         }
     
@@ -486,6 +654,7 @@ Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering ->
             Write-Host "MaxQueryString not set correctly!" -BackgroundColor red 
             Write-Host 'Please review "Step 4.4 - Configure NDES for use with Intune".'
             write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+            Log-ScriptEvent $LogFilePath "MaxQueryString not set correctly"  NDES_Validation 3
     
         }
 
@@ -493,6 +662,7 @@ Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering ->
     
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             write-host "MaxUrl Set Correctly"
+            Log-ScriptEvent $LogFilePath "MaxUrl Set Correctly"  NDES_Validation 1
     
         }
 
@@ -500,7 +670,8 @@ Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering ->
     
             Write-Host "maxUrl not set correctly!" -BackgroundColor red 
             Write-Host 'Please review "Step 4.4 - Configure NDES for use with Intune".'
-            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure'" 
+            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure'"
+            Log-ScriptEvent $LogFilePath "maxUrl not set correctly"  NDES_Validation 3 
 
         }
 
@@ -508,7 +679,8 @@ Write-Host "Checking Request Filtering (Default Web Site -> Request Filtering ->
 
     else {
 
-        Write-Host "IIS is not installed." -BackgroundColor red 
+        Write-Host "IIS is not installed." -BackgroundColor red
+        Log-ScriptEvent $LogFilePath "IIS is not installed"  NDES_Validation 3 
 
     }
 
@@ -523,6 +695,7 @@ Write-host "......................................................."
 Write-host
 Write-Host 'Checking registry "HKLM:SYSTEM\CurrentControlSet\Services\HTTP\Parameters" has been set to allow long URLs...' -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking registry (HKLM:SYSTEM\CurrentControlSet\Services\HTTP\Parameters) has been set to allow long URLs" NDES_Validation 1
 
     if (-not ($IISNotInstalled -eq $TRUE)){
 
@@ -531,14 +704,15 @@ Write-host
             Write-Host "Error: MaxFieldLength not set to 65534 in the registry!" -BackgroundColor red
             Write-Host 
             Write-Host 'Please review "Step 4.3 - Configure NDES for use with Intune".'
-            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
-
+            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+            Log-ScriptEvent $LogFilePath "MaxFieldLength not set to 65534 in the registry" NDES_Validation 3
         } 
 
         else {
 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             write-host "MaxFieldLength set correctly"
+            Log-ScriptEvent $LogFilePath "MaxFieldLength set correctly"  NDES_Validation 1
     
         }
 		
@@ -547,7 +721,8 @@ Write-host
             Write-Host "MaxRequestBytes not set to 65534 in the registry!" -BackgroundColor red
             Write-Host 
             Write-Host 'Please review "Step 4.3 - Configure NDES for use with Intune".'
-            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure'" 
+            write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure'"
+            Log-ScriptEvent $LogFilePath "MaxRequestBytes not set to 65534 in the registry" NDES_Validation 3 
 
         }
         
@@ -555,6 +730,7 @@ Write-host
 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             write-host "MaxRequestBytes set correctly"
+            Log-ScriptEvent $LogFilePath "MaxRequestBytes set correctly"  NDES_Validation 1
         
         }
 
@@ -562,7 +738,8 @@ Write-host
 
     else {
 
-        Write-Host "IIS is not installed." -BackgroundColor red 
+        Write-Host "IIS is not installed." -BackgroundColor red
+        Log-ScriptEvent $LogFilePath "IIS is not installed." NDES_Validation 3
 
     }
 
@@ -577,6 +754,7 @@ Write-host "......................................................."
 Write-host
 Write-Host "Checking SPN has been set..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking SPN has been set" NDES_Validation 1
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
 
@@ -588,6 +766,7 @@ $spn = setspn.exe -L $ADUser
         write-host "Correct SPN set for the NDES service account:"
         Write-host
         Write-Host $spn -ForegroundColor Cyan
+        Log-ScriptEvent $LogFilePath "Correct SPN set for the NDES service account: $($spn)"  NDES_Validation 1
     
     }
     
@@ -595,7 +774,8 @@ $spn = setspn.exe -L $ADUser
 
         Write-Host "Error: Missing or Incorrect SPN set for the NDES Service Account!" -BackgroundColor red 
         Write-Host 'Please review "Step 3.1c - Configure prerequisites on the NDES server".'
-        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "Missing or Incorrect SPN set for the NDES Service Account"  NDES_Validation 3 
     
     }
 
@@ -608,8 +788,9 @@ $spn = setspn.exe -L $ADUser
 Write-host
 Write-host "......................................................."
 Write-host
-Write-Host "Checking there are no intermediate certs are in the Trusted Root store:..." -ForegroundColor Yellow
+Write-Host "Checking there are no intermediate certs are in the Trusted Root store..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking there are no intermediate certs are in the Trusted Root store" NDES_Validation 1
 
 $IntermediateCertCheck = Get-Childitem cert:\LocalMachine\root -Recurse | Where-Object {$_.Issuer -ne $_.Subject}
 
@@ -619,6 +800,7 @@ $IntermediateCertCheck = Get-Childitem cert:\LocalMachine\root -Recurse | Where-
         Write-Host "Certificates:"
         Write-Host 
         Write-Host $IntermediateCertCheck
+        Log-ScriptEvent $LogFilePath "Intermediate certificate found in the Trusted Root store: $($IntermediateCertCheck)"  NDES_Validation 3
     
     }
     
@@ -626,6 +808,7 @@ $IntermediateCertCheck = Get-Childitem cert:\LocalMachine\root -Recurse | Where-
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "Trusted Root store does not contain any Intermediate certificates."
+        Log-ScriptEvent $LogFilePath "Trusted Root store does not contain any Intermediate certificates."  NDES_Validation 1
     
     }
 
@@ -640,8 +823,9 @@ $ErrorActionPreference = "Silentlycontinue"
 Write-host
 Write-host "......................................................."
 Write-host
-Write-Host "Checking the EnrollmentAgentOffline and CEPEncryption are present ..." -ForegroundColor Yellow
+Write-Host "Checking the EnrollmentAgentOffline and CEPEncryption are present..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking the EnrollmentAgentOffline and CEPEncryption are present" NDES_Validation 1
 
 $certs = Get-ChildItem cert:\LocalMachine\My\
 
@@ -669,6 +853,7 @@ $certs = Get-ChildItem cert:\LocalMachine\My\
     
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "EnrollmentAgentOffline certificate is present"
+        Log-ScriptEvent $LogFilePath "EnrollmentAgentOffline certificate is present"  NDES_Validation 1
     
     }
     
@@ -677,7 +862,8 @@ $certs = Get-ChildItem cert:\LocalMachine\My\
         Write-Host "Error: EnrollmentAgentOffline certificate is not present!" -BackgroundColor red 
         Write-Host "This can take place when an account without Enterprise Admin permissions installs NDES. You may need to remove the NDES role and reinstall with the correct permissions." 
         write-host 'Please review "Step 3.1 - Configure prerequisites on the NDES server".' 
-        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "EnrollmentAgentOffline certificate is not present"  NDES_Validation 3 
     
     }
     
@@ -686,6 +872,7 @@ $certs = Get-ChildItem cert:\LocalMachine\My\
         
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "CEPEncryption certificate is present"
+        Log-ScriptEvent $LogFilePath "CEPEncryption certificate is present"  NDES_Validation 1
         
     }
         
@@ -695,6 +882,7 @@ $certs = Get-ChildItem cert:\LocalMachine\My\
         Write-Host "This can take place when an account without Enterprise Admin permissions installs NDES. You may need to remove the NDES role and reinstall with the correct permissions." 
         write-host 'Please review "Step 3.1 - Configure prerequisites on the NDES server".' 
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "CEPEncryption certificate is not present"  NDES_Validation 3
         
     }
 
@@ -711,12 +899,14 @@ Write-host "......................................................."
 Write-host
 Write-Host 'Checking registry "HKLM:SOFTWARE\Microsoft\Cryptography\MSCEP" has been set with the SCEP certificate template name...' -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking registry (HKLM:SOFTWARE\Microsoft\Cryptography\MSCEP) has been set with the SCEP certificate template name" NDES_Validation 1
 
     if (-not (Test-Path HKLM:SOFTWARE\Microsoft\Cryptography\MSCEP)){
 
-        Write-host "Registry key does not exist. This can occur if the NDES role has been installed but not configured." -BackgroundColor Red
+        Write-host "Error: Registry key does not exist. This can occur if the NDES role has been installed but not configured." -BackgroundColor Red
         Write-host 'Please review "Step 3 - Configure prerequisites on the NDES server".'
-        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure" 
+        write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "MSCEP Registry key does not exist."  NDES_Validation 3 
 
     }
 
@@ -733,6 +923,7 @@ Write-host
             write-host 'Please review "Step 3.1 - Configure prerequisites on the NDES server".' 
             write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
             Write-Host
+            Log-ScriptEvent $LogFilePath "Registry has not been configured with the SCEP Certificate template name. Default values have _not_ been changed."  NDES_Validation 3
             $FurtherReading = $FALSE
         
         }
@@ -749,6 +940,7 @@ Write-host
                 Write-Host "Success: " -ForegroundColor Green -NoNewline
                 write-host "SCEP certificate template '$($SCEPUserCertTemplate)' has been written to the registry under the _SignatureTemplate_ key. Ensure this aligns with the usage specificed on the SCEP template."
                 Write-host
+                Log-ScriptEvent $LogFilePath "SCEP certificate template $($SCEPUserCertTemplate)' has been written to the registry under the _SignatureTemplate_ key"  NDES_Validation 1
 
             }
 
@@ -762,6 +954,7 @@ Write-host
                 write-host "SCEP certificate template value: " -NoNewline
                 Write-host "$($SCEPUserCertTemplate)" -ForegroundColor Cyan
                 Write-Host
+                Log-ScriptEvent $LogFilePath "SignatureTemplate key does not match the SCEP certificate template name.Registry value=$($SignatureTemplate)|SCEP certificate template value=$($SCEPUserCertTemplate)"  NDES_Validation 2
         
             }
                 
@@ -775,6 +968,8 @@ Write-host
                     Write-Host "Success: " -ForegroundColor Green -NoNewline
                     write-host "SCEP certificate template '$($SCEPUserCertTemplate)' has been written to the registry under the _EncryptionTemplate_ key. Ensure this aligns with the usage specificed on the SCEP template."
                     Write-host
+                    Log-ScriptEvent $LogFilePath "SCEP certificate template $($SCEPUserCertTemplate) has been written to the registry under the _EncryptionTemplate_ key"  NDES_Validation 1
+
             
                 }
             
@@ -788,6 +983,8 @@ Write-host
                     write-host "SCEP certificate template value: " -NoNewline
                     Write-host "$($SCEPUserCertTemplate)" -ForegroundColor Cyan
                     Write-Host
+                    Log-ScriptEvent $LogFilePath "EncryptionTemplate key does not match the SCEP certificate template name.Registry value=$($EncryptionTemplate)|SCEP certificate template value=$($SCEPUserCertTemplate)"  NDES_Validation 2
+
             
                 }
                 
@@ -800,7 +997,8 @@ Write-host
                 
                         Write-Host "Success: " -ForegroundColor Green -NoNewline
                         write-host "SCEP certificate template '$($SCEPUserCertTemplate)' has been written to the registry under the _GeneralPurposeTemplate_ key. Ensure this aligns with the usage specificed on the SCEP template"
-                
+                        Log-ScriptEvent $LogFilePath "SCEP certificate template $($SCEPUserCertTemplate) has been written to the registry under the _GeneralPurposeTemplate_ key"  NDES_Validation 1
+
                     }
                 
                     else {
@@ -813,6 +1011,8 @@ Write-host
                         write-host "SCEP certificate template value: " -NoNewline
                         Write-host "$($SCEPUserCertTemplate)" -ForegroundColor Cyan
                         Write-Host
+                        Log-ScriptEvent $LogFilePath "GeneralPurposeTemplate key does not match the SCEP certificate template name.Registry value=$($GeneralPurposeTemplate)|SCEP certificate template value=$($SCEPUserCertTemplate)"  NDES_Validation 2
+
                 
                     }
 
@@ -842,6 +1042,7 @@ Write-host "......................................................."
 Write-host
 Write-Host "Checking IIS SSL certificate is valid for use..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking IIS SSL certificate is valid for use" NDES_Validation 1
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
 $serverAuthEKU = "1.3.6.1.5.5.7.3.1" # Server Authentication
@@ -874,7 +1075,7 @@ $ServerCertObject = Get-ChildItem Cert:\LocalMachine\My\$BoundServerCertThumb
     
     }
 
-        if ($ServerCertObject.EnhancedKeyUsageList -match $serverAuthEKU -AND $ServerCertObject.Subject -match $hostname -AND $ServerCertObject.Issuer -notmatch $ServerCertObject.Subject){
+        if ($ServerCertObject.EnhancedKeyUsageList -match $serverAuthEKU -AND (($ServerCertObject.Subject -match $hostname) -or ($ServerCertObject.DnsNameList -match $hostname)) -AND $ServerCertObject.Issuer -notmatch $ServerCertObject.Subject){
 
             Write-Host "Success: " -ForegroundColor Green -NoNewline
             write-host "Certificate bound in IIS is valid:"
@@ -893,13 +1094,15 @@ $ServerCertObject = Get-ChildItem Cert:\LocalMachine\My\$BoundServerCertThumb
             Write-Host
             write-host "Internal and External hostnames: " -NoNewline
             Write-host "$($DNSNameList)" -ForegroundColor Cyan
+            Log-ScriptEvent $LogFilePath "Certificate bound in IIS is valid. Subject:$($ServerCertObject.Subject)|Thumbprint:$($ServerCertObject.Thumbprint)|ValidUntil:$($ServerCertObject.NotAfter)|Internal&ExternalHostnames:$($DNSNameList)" NDES_Validation 1
 
             }
     
         else {
 
         Write-Host "Error: The certificate bound in IIS is not valid for use. Reason:" -BackgroundColor red 
-        write-host  
+        write-host
+          
 
                 if ($ServerCertObject.EnhancedKeyUsageList -match $serverAuthEKU) {
                 
@@ -947,8 +1150,9 @@ $ServerCertObject = Get-ChildItem Cert:\LocalMachine\My\$BoundServerCertThumb
                 
                 }
 
-        Write-Host 'Please review "Step 4 - Configure NDES for use with Intune > To Install and bind certificates on the NDES Server".'
+        Write-Host 'Please review "Step 4 - Configure NDES for use with Intune>To Install and bind certificates on the NDES Server".'
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "The certificate bound in IIS is not valid for use. CorrectEKU=$($EKUValid)|CorrectSubject=$($SubjectValid)|IsSelfSigned=$($SelfSigned)"  NDES_Validation 3
 
 }
         
@@ -963,6 +1167,7 @@ Write-host "......................................................."
 Write-host
 Write-Host "Checking Client certificate (NDES Policy module) is valid for use..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking Client certificate (NDES Policy module) is valid for use" NDES_Validation 1
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
 $clientAuthEku = "1.3.6.1.5.5.7.3.2" # Client Authentication
@@ -994,6 +1199,7 @@ $ClientCertObject = Get-ChildItem Cert:\LocalMachine\My\$NDESCertThumbprint
             Write-Host
             Write-Host "Valid Until: " -NoNewline
             Write-Host "$($ClientCertObject.NotAfter)" -ForegroundColor Cyan
+            Log-ScriptEvent $LogFilePath "Client certificate bound to NDES Connector is valid. Subject:$($ClientCertObject.Subject)|Thumbprint:$($ClientCertObject.Thumbprint)|ValidUntil:$($ClientCertObject.NotAfter)"  NDES_Validation 1
 
         }
     
@@ -1050,6 +1256,8 @@ $ClientCertObject = Get-ChildItem Cert:\LocalMachine\My\$NDESCertThumbprint
 
         Write-Host 'Please review "Step 4 - Configure NDES for use with Intune>To Install and bind certificates on the NDES Server".'
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
+        Log-ScriptEvent $LogFilePath "The certificate bound to the NDES Connector is not valid for use. CorrectEKU=$($ClientCertEKUValid)|CorrectSubject=$($ClientCertSubjectValid)|IsSelfSigned=$($ClientCertSelfSigned)"  NDES_Validation 3
+
 
 }
         
@@ -1066,13 +1274,15 @@ Write-host
 Write-Host "Checking behaviour of internal NDES URL: " -NoNewline -ForegroundColor Yellow
 Write-Host "https://$hostname/certsrv/mscep/mscep.dll" -ForegroundColor Cyan
 Write-host
+Log-ScriptEvent $LogFilePath "Checking behaviour of internal NDES URL" NDES_Validation 1
+Log-ScriptEvent $LogFilePath "Https://$hostname/certsrv/mscep/mscep.dll" NDES_Validation 1
 
 $Statuscode = try {(Invoke-WebRequest -Uri https://$hostname/certsrv/mscep/mscep.dll).statuscode} catch {$_.Exception.Response.StatusCode.Value__}
 
     if ($statuscode -eq "200"){
 
     Write-host "Error: https://$hostname/certsrv/mscep/mscep.dll returns 200 OK. This usually signifies an error with the Intune Connector registering itself or not being installed." -BackgroundColor Red
-    
+    Log-ScriptEvent $LogFilePath "https://$hostname/certsrv/mscep/mscep.dll returns 200 OK. This usually signifies an error with the Intune Connector registering itself or not being installed"  NDES_Validation 3
     } 
 
     elseif ($statuscode -eq "403"){
@@ -1093,6 +1303,7 @@ $Statuscode = try {(Invoke-WebRequest -Uri https://$hostname/certsrv/mscep/mscep
             write-host "CA Capabilities retrieved:"
             Write-Host
             write-host $CACaps
+            Log-ScriptEvent $LogFilePath "CA Capabilities retrieved:$CACaps"  NDES_Validation 1
                 
             }
 
@@ -1102,7 +1313,7 @@ $Statuscode = try {(Invoke-WebRequest -Uri https://$hostname/certsrv/mscep/mscep
     
         Write-host "Error: Unexpected Error code! This usually signifies an error with the Intune Connector registering itself or not being installed" -BackgroundColor Red
         Write-host "Expected value is a 403. We received a $($Statuscode). This could be down to a missing reboot post policy module install. Verify last boot time and module install time further down the validation."
-    
+        Log-ScriptEvent $LogFilePath "Unexpected Error code. Expected:403|Received:$Statuscode"  NDES_Validation 3
     
    }
         
@@ -1117,6 +1328,7 @@ Write-host "......................................................."
 Write-host
 Write-Host "Checking Servers last boot time..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking Servers last boot time" NDES_Validation 1
 
 $LastBoot = (Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime'
 ;EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}).lastbootuptime
@@ -1124,6 +1336,7 @@ $LastBoot = (Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastB
 write-host "Server last rebooted: "-NoNewline
 Write-Host "$($LastBoot). " -ForegroundColor Cyan -NoNewline
 Write-Host "Please ensure a reboot has taken place _after_ all registry changes and installing the NDES Connector. IISRESET is _not_ sufficient."
+Log-ScriptEvent $LogFilePath "LastBootTime:$LastBoot"  NDES_Validation 1
 
 #endregion
 
@@ -1135,7 +1348,8 @@ Write-host
 Write-host "......................................................."
 Write-host
 Write-Host "Checking Intune Connector is installed..." -ForegroundColor Yellow
-Write-host 
+Write-host
+Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Validation 1 
 
     if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
 
@@ -1145,6 +1359,7 @@ Write-host
         write-host "and is version " -NoNewline
         Write-Host "$($IntuneConnector.DisplayVersion)" -ForegroundColor Cyan -NoNewline
         Write-host
+        Log-ScriptEvent $LogFilePath "ConnectorVersion:$IntuneConnector"  NDES_Validation 1
 
     }
 
@@ -1153,7 +1368,8 @@ Write-host
         Write-Host "Error: Intune Connector not installed" -BackgroundColor red 
         Write-Host 'Please review "Step 5 - Enable, install, and configure the Intune certificate connector".'
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
-        Write-Host 
+        Write-Host
+        Log-ScriptEvent $LogFilePath "ConnectorNotInstalled"  NDES_Validation 3 
         
     }
 
@@ -1167,8 +1383,9 @@ Write-host
 Write-host
 Write-host "......................................................."
 Write-host
-Write-Host "Checking Intune Connector registry keys are intact " -ForegroundColor Yellow
+Write-Host "Checking Intune Connector registry keys are intact" -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking Intune Connector registry keys are intact" NDES_Validation 1
 $ErrorActionPreference = "SilentlyContinue"
 
 $KeyRecoveryAgentCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\KeyRecoveryAgentCertificate"
@@ -1178,7 +1395,8 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
     if (-not ($KeyRecoveryAgentCertificate)){
 
         Write-host "Error: KeyRecoveryAgentCertificate Registry key does not exist." -BackgroundColor Red
-        Write-Host 
+        Write-Host
+        Log-ScriptEvent $LogFilePath "KeyRecoveryAgentCertificate Registry key does not exist."  NDES_Validation 3 
 
     }
 
@@ -1189,6 +1407,7 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
             if (-not ($KeyRecoveryAgentCertificatePresent)) {
     
                 Write-Warning "KeyRecoveryAgentCertificate registry key exists but has no value"
+                Log-ScriptEvent $LogFilePath "KeyRecoveryAgentCertificate missing Value"  NDES_Validation 2
 
             }
 
@@ -1196,6 +1415,7 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
     
                 Write-Host "Success: " -ForegroundColor Green -NoNewline
                 Write-Host "KeyRecoveryAgentCertificate registry key exists"
+                Log-ScriptEvent $LogFilePath "KeyRecoveryAgentCertificate registry key exists"  NDES_Validation 1
 
             }
 
@@ -1207,6 +1427,8 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
 
         Write-host "Error: PfxSigningCertificate Registry key does not exist." -BackgroundColor Red
         Write-Host
+        Log-ScriptEvent $LogFilePath "PfxSigningCertificate Registry key does not exist."  NDES_Validation 3 
+
 
         }
 
@@ -1217,6 +1439,7 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
             if (-not ($PfxSigningCertificatePresent)) {
     
                 Write-Warning "PfxSigningCertificate registry key exists but has no value"
+                Log-ScriptEvent $LogFilePath "PfxSigningCertificate missing Value"  NDES_Validation 2
 
             }
 
@@ -1224,6 +1447,7 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
     
                 Write-Host "Success: " -ForegroundColor Green -NoNewline
                 Write-Host "PfxSigningCertificate registry keys exists"
+                Log-ScriptEvent $LogFilePath "PfxSigningCertificate registry key exists"  NDES_Validation 1
 
         }
 
@@ -1234,7 +1458,8 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
     if (-not ($SigningCertificate)){
 
         Write-host "Error: SigningCertificate Registry key does not exist." -BackgroundColor Red
-        Write-Host 
+        Write-Host
+        Log-ScriptEvent $LogFilePath "SigningCertificate Registry key does not exist"  NDES_Validation 3  
 
     }
 
@@ -1245,6 +1470,8 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
             if (-not ($SigningCertificatePresent)) {
     
                 Write-Warning "SigningCertificate registry key exists but has no value"
+                Log-ScriptEvent $LogFilePath "SigningCertificate registry key exists but has no value"  NDES_Validation 2
+
 
             }
 
@@ -1252,6 +1479,8 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
     
                 Write-Host "Success: " -ForegroundColor Green -NoNewline
                 Write-Host "SigningCertificate registry key exists"
+                Log-ScriptEvent $LogFilePath "SigningCertificate registry key exists"  NDES_Validation 1
+
 
             }
 
@@ -1275,43 +1504,144 @@ Write-host "......................................................."
 Write-host
 Write-Host "Checking Event logs for pertinent errors..." -ForegroundColor Yellow
 Write-host
+Log-ScriptEvent $LogFilePath "Checking Event logs for pertinent errors" NDES_Validation 1
 
-    if (-not (Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error,Warning -After $EventLogCollDays -ErrorAction silentlycontinue)) {
+    if (-not (Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error -After $EventLogCollDays -ErrorAction silentlycontinue)) {
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         write-host "No errors found in the Microsoft Intune Connector"
         Write-host
+        Log-ScriptEvent $LogFilePath "No errors found in the Microsoft Intune Connector"  NDES_Validation 1
 
     }
 
     else {
 
-        Write-Warning "Errors found in the Microsoft Intune Connector Event log. Please see below for the newest 10, and investigate further in Event Viewer."
+        Write-Warning "Errors found in the Microsoft Intune Connector Event log. Please see below for the most recent 5, and investigate further in Event Viewer."
         Write-Host
-        Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error,Warning -After $EventLogCollDays -Newest 10 | select TimeGenerated,Source,Message | fl
+        $EventsCol1 = (Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error -After $EventLogCollDays -Newest 5 | select TimeGenerated,Source,Message)
+        $EventsCol1 | fl
+        Log-ScriptEvent $LogFilePath "Errors found in the Microsoft Intune Connector Event log"  NDES_Eventvwr 3
+        $i = 0
+        $count = @($EventsCol1).count
 
-    }
+        foreach ($item in $EventsCol1) {
 
-    if (-not (Get-EventLog -LogName "Application" -EntryType Error,Warning -Source NDESConnector,Microsoft-Windows-NetworkDeviceEnrollmentService -After $EventLogCollDays -ErrorAction silentlycontinue)) {
+            Log-ScriptEvent $LogFilePath "$($EventsCol1[$i].TimeGenerated);$($EventsCol1[$i].Message);$($EventsCol1[$i].Source)"  NDES_Eventvwr 3
+            $i++
 
-        Write-Host "Success: " -ForegroundColor Green -NoNewline
-        write-host "No errors found in the Application log from source NetworkDeviceEnrollmentService or NDESConnector"
-        Write-host
+            }
+            
+        }
 
-    }
+            if (-not (Get-EventLog -LogName "Application" -EntryType Error -Source NDESConnector,Microsoft-Windows-NetworkDeviceEnrollmentService -After $EventLogCollDays -ErrorAction silentlycontinue)) {
+
+            Write-Host "Success: " -ForegroundColor Green -NoNewline
+            write-host "No errors found in the Application log from source NetworkDeviceEnrollmentService or NDESConnector"
+            Write-host
+            Log-ScriptEvent $LogFilePath "No errors found in the Application log from source NetworkDeviceEnrollmentService or NDESConnector"  NDES_Validation 1
+
+            }
 
     else {
 
-        Write-Warning "Errors found in the Application Event log for source NetworkDeviceEnrollmentService or NDESConnector. Please see below for the newest 10, and investigate further in Event Viewer."
+        Write-Warning "Errors found in the Application Event log for source NetworkDeviceEnrollmentService or NDESConnector. Please see below for the most recent 5, and investigate further in Event Viewer."
         Write-Host
-        Get-EventLog -LogName "Application" -EntryType Error,Warning -Source Microsoft-Windows-NetworkDeviceEnrollmentService -After $EventLogCollDays -Newest 10 | select TimeGenerated,Source,Message | fl
+        $EventsCol2 = (Get-EventLog -LogName "Application" -EntryType Error -Source NDESConnector,Microsoft-Windows-NetworkDeviceEnrollmentService -After $EventLogCollDays -Newest 5 | select TimeGenerated,Source,Message)
+        $EventsCol2 |fl
+        $i = 0
+        $count = @($EventsCol2).count
+
+        foreach ($item in $EventsCol2) {
+
+            Log-ScriptEvent $LogFilePath "$($EventsCol2[$i].TimeGenerated);$($EventsCol2[$i].Message);$($EventsCol2[$i].Source)"  NDES_Eventvwr 3
+            $i++
 
     }
+
+}
 
 $ErrorActionPreference = "Continue"
 
 #endregion
 
+#################################################################
+
+#region Zip up logfiles
+
+Write-host
+Write-host "......................................................."
+Write-host
+Write-host "Log Files..." -ForegroundColor Yellow
+Write-host 
+write-host "Do you want to gather troubleshooting files? This includes IIS, NDES Connector, NDES Plugin, CRP, and MSCEP log files, in addition to the SCEP template configuration.  [Y]es, [N]o:"
+$LogFileCollectionConfirmation = Read-Host
+
+    if ($LogFileCollectionConfirmation -eq "y"){
+
+    $IISLogPath = (Get-WebConfigurationProperty "/system.applicationHost/sites/siteDefaults" -name logfile.directory).Value + "\W3SVC1" -replace "%SystemDrive%",$env:SystemDrive
+    $IISLogs = Get-ChildItem $IISLogPath| Sort-Object -Descending -Property LastWriteTime | Select-Object -First 3
+    $NDESConnectorLogs = Get-ChildItem "C:\Program Files\Microsoft Intune\NDESConnectorSvc\Logs\Logs\NDESConnector*" | Sort-Object -Descending -Property LastWriteTime | Select-Object -First 3
+    $NDESPluginLogs = Get-ChildItem "C:\Program Files\Microsoft Intune\NDESPolicyModule\Logs\NDESPlugin.log"
+    $MSCEPLogs = Get-ChildItem "c:\users\*\mscep.log" | Sort-Object -Descending -Property LastWriteTime | Select-Object -First 3
+    $CRPLogs = Get-ChildItem "C:\Program Files\Microsoft Intune\NDESConnectorSvc\Logs\Logs\CertificateRegistrationPoint*" | Sort-Object -Descending -Property LastWriteTime | Select-Object -First 3
+
+    foreach ($IISLog in $IISLogs){
+
+    Copy-Item -Path $IISLog.FullName -Destination $TempDirPath
+
+    }
+
+    foreach ($NDESConnectorLog in $NDESConnectorLogs){
+
+    Copy-Item -Path $NDESConnectorLog.FullName -Destination $TempDirPath
+
+    }
+
+    foreach ($NDESPluginLog in $NDESPluginLogs){
+
+    Copy-Item -Path $NDESPluginLog.FullName -Destination $TempDirPath
+
+    }
+
+    foreach ($MSCEPLog in $MSCEPLogs){
+
+    Copy-Item -Path $MSCEPLog.FullName -Destination $TempDirPath
+
+    }
+
+    foreach ($CRPLog in $CRPLogs){
+
+    Copy-Item -Path $CRPLogs.FullName -Destination $TempDirPath
+
+    }
+
+    $SCEPUserCertTemplateOutputFilePath = "$($TempDirPath)\SCEPUserCertTemplate.txt"
+    certutil -v -template $SCEPUserCertTemplate > $SCEPUserCertTemplateOutputFilePath
+
+    Log-ScriptEvent $LogFilePath "Collecting server logs"  NDES_Validation 1
+
+    Add-Type -assembly "system.io.compression.filesystem"
+    $Currentlocation =  $env:temp
+    $date = Get-Date -Format ddMMyyhhmm
+    [io.compression.zipfile]::CreateFromDirectory($TempDirPath, "$($Currentlocation)\$($date)-Logs-$($hostname).zip")
+
+    Write-host
+    Write-Host "Success: " -ForegroundColor Green -NoNewline
+    write-host "Log files copied to $($Currentlocation)\$($date)-Logs-$($hostname).zip"
+    Write-host
+
+    }
+
+    else {
+
+    Log-ScriptEvent $LogFilePath "Do not collect logs"  NDES_Validation 1
+    $WriteLogOutputPath = $True
+
+    }
+
+
+#endregion
 
 #################################################################
 
@@ -1322,6 +1652,13 @@ Write-host "......................................................."
 Write-host
 Write-host "End of NDES configuration validation" -ForegroundColor Yellow
 Write-Host
+
+    if ($WriteLogOutputPath -eq $True) {
+
+        write-host "Log file copied to $($LogFilePath)"
+        Write-Host
+
+    }
 write-host "Ending script..." -ForegroundColor Yellow
 Write-host 
 

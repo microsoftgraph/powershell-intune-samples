@@ -23,8 +23,8 @@ Get-CertificateConnector
 Get-CertificateConnector -Name "certificate_connector_3/20/2017_10:52 AM"
 ```
 
-### 2. Validate-NDESConfig.ps1
-Validate-NDESConfig.ps1 highlights configuration issues on an NDES server, as configured for use with Intune Standalone SCEP certificates.
+### 2. Validate-NDESConfiguration.ps1
+Validate-NDESConfiguration.ps1 highlights configuration issues on an NDES server, as configured for use with Intune Standalone SCEP certificates.
 
 The script checks the configuration of your NDES server and ensures it aligns to the "Configure and manage SCEP certificates with Intune" article.
 
@@ -43,9 +43,9 @@ Use of this script requires the following:
 To run the script, the following examples are below:
 ```
 .EXAMPLE
-.\Validate-NDESConfig.ps1 -NDESServiceAccount Contoso\NDES_SVC -IssuingCAServerFQDN IssuingCA.contoso.com -SCEPUserCertTemplate SCEPGeneral
+.\Validate-NDESConfiguration.ps1 -NDESServiceAccount Contoso\NDES_SVC -IssuingCAServerFQDN IssuingCA.contoso.com -SCEPUserCertTemplate SCEPGeneral
 
-.\Validate-NDESConfig.ps1 -help
+.\Validate-NDESConfiguration.ps1 -help
 ```
 ### 3. Validate-NDESUrl.ps1
 Validate-NDESUrl.ps1 will ensure requests from devices enrolled in Microsoft Intune and targeted with a SCEP policy will successfully traverse the network path to the NDES server. Since the certificate request includes a query string that is longer than what is allowed by the default settings in Windows IIS and some reverse proxy servers, those servers and network devices must be configured to allow long query strings and web requests.
@@ -69,4 +69,13 @@ To run the script, the following examples are below:
 .\Validate-NDESUrl.ps1 -server externalDNSName.contoso.com -q 30
 
 .\Validate-NDESUrl.ps1 -help
+```
+
+##### Known Issue
+When the Validate-NDESUrl.ps1 script is used, an event is logged in the Microsoft-Windows-NetworkDeviceEnrollmentService crimson channel. This is caused by the spoofed SCEP request which is used to determine whether the large payload can traverse the network path. If you are going to use the Validate-NDESConfiguration.ps1 script to validate your NDES server configuration, you should ideally run that before using this script. This will prevent the events being picked up in the server validation output.
+
+Example event:
+```
+Source        : Microsoft-Windows-NetworkDeviceEnrollmentService
+Message       : The Network Device Enrollment Service cannot retrieve required information, such as the transaction ID, message type, or signing certificate, from the client's PKCS7 message (0x8009310b).  ASN1 bad tag value met.
 ```
