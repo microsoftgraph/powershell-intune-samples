@@ -783,7 +783,7 @@ if($CPs){
 
             foreach($Com_Group in $DCPA){
             
-                if($AADGroups.id -contains $Com_Group.targetGroupId){
+                if($AADGroups.id -contains $Com_Group.target.GroupId){
 
                 $CP_Names += $CP.displayName + " - " + $CP.'@odata.type'
 
