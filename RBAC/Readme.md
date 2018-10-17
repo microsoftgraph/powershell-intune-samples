@@ -329,3 +329,45 @@ This function is used to get an assignment from an Intune Role. It will return t
 ```PowerShell
 Get-RBACRoleAssignment -id $RBAC_Role_Assignments
 ```
+
+### 9. RBAC_ScopeTags_PolicyAssign.ps1
+This script can be used to automatically assign Scope Tags to all configuration and compliance policies configured in the Intune Service.
+
+The script will look for all Scope Tags configured in the Intune Service and then loops through all policies looking for the Scope Tag name in the DisplayName of the policy. If the Scope Tag name is contained in the DisplayName of the policy then the Scope Tag will be added.
+
+#### Get-RBACScopeTag Function
+This function is used to get all scope tags configured in the Intune Service you have authenticated with.
+```PowerShell
+# Lists all Scope Tags configured in Intune
+Get-RBACScopeTag
+
+# Gets a Scope Tag by displayName
+Get-RBACScopeTag -DisplayName "Test"
+```
+
+#### Update-DeviceCompliancePolicy Function
+This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-DeviceCompliancePolicy -id $Policy.id -JSON $JSON
+```
+
+#### Update-DeviceConfigurationPolicy Function
+This function is used to update a Device Configuration Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
+```
+
+### 10. RBAC_ScopeTags_PolicyUnAssign.ps1
+This script can be used to automatically unassign all Scope Tags from all configuration and compliance policies configured in the Intune Service.
+
+#### Update-DeviceCompliancePolicy Function
+This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-DeviceCompliancePolicy -id $Policy.id -JSON $JSON
+```
+
+#### Update-DeviceConfigurationPolicy Function
+This function is used to update a Device Configuration Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
+```
