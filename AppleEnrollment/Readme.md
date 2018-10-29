@@ -20,26 +20,51 @@ This function is used to get Apple Push Notification Certificate information fro
 Get-ApplePushNotificationCertificate
 
 ```
+### 2. AppleDEP_Sync.ps1
+This script reads the Apple DEP tokens in your Intune tenant and synchronizes with the Apple DEP service. If there are multiple DEP tokens, you will be prompted to select which token you wish to synchronize. The script will not synchronize multiple tokens at once.
 
-### 2. BulkAssignProfile.ps1
-This script reads the first 1000 Apple DEP devices which are not assigned to any profile and assigns the given enrollment profile id to it. If there are more than 1000 devices to assign, simply run the script more than once.
+WARNING: The Apple DEP service only accepts a synchronization request once every 15 minutes. If you try and synchronize more often than this, the script will inform you that a synchronization is already in progress and will provide the time remaining before another synchronization can occur.
 
-WARNING: Before running the script, get the correct enrollment profile id from Ibiza UI (check the profile url during profile edit) and assign it to the profileId variable as shown below. By default, profile id is empty to keep the script safe.
-
+#### Get-DEPOnboardingSettings Function
+This function is used to retrieve the DEP onboarding settings from the Intune service
 ```PowerShell
+# Returns Apple DEP onboarding settings configured in Intune
+Get-DEPOnboardingSettings
 
-$global:profileId = ''
-# $global:profileId = '<<profileguid>>'
-
+# Returns a specific Apple DEP onboarding token configured in Intune
+Get-DEPOnboardingSettings -tokenId $TokenId
 ```
 
-It supports two parameters as an input to the function to pull data from the service.
+#### Sync-AppleDEP Function
+This function is used to sync a specific Apple DEP token from the Intune service
+```PowerShell
+# Sync's an Apple DEP token configured in Intune
+Sync-AppleDEP -id $id
+```
+
+### 3. AppleDEPProfile_Assign.ps1
+This script assigns a DEP profile to a device. If there are multiple DEP tokens, you will be prompted to select which token you wish to work with. You will then be prompted for a device serial number, and then presented with a list of DEP profiles. The selected profile will then be assigned to the device.
+
+#### Get-DEPOnboardingSettings Function
+This function is used to retrieve the DEP onboarding settings from the Intune service
+```PowerShell
+# Returns Apple DEP onboarding settings configured in Intune
+Get-DEPOnboardingSettings
+
+# Returns a specific Apple DEP onboarding token configured in Intune
+Get-DEPOnboardingSettings -tokenId $TokenId
+```
+#### Get-DEPProfiles Function
+This function is used to return the DEP profiles from the Intune service.
 
 ```PowerShell
-# Prompt for the Intune user name and password to use to read, assign the first 1000 Apple Dep devices.
-BulkAssignProfile.ps1
+# Returns the DEP profiles configured in Intune based on the selected token
+Get-DEPProfiles -id $id
+```
+#### Assign-ProfileToDevice Function
+This function is used to set the DEP profile which the device receives as part of enrolment
 
-# Read, assign the first 1000 Apple Dep devices.
-BulkAssignProfile.ps1 -User "admin@asdf.onmicrosoft.com" -Password "Secret!"
-
+```PowerShell
+# Assigns DEP profile to DEP device
+Assign-ProfileToDevice -DeviceSerialNumber $DeviceSerialNumber -ProfileId $ProfileID
 ```

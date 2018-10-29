@@ -1,4 +1,4 @@
-<#
+﻿<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -27,8 +27,7 @@ NAME: Get-AuthToken
 param
 (
     [Parameter(Mandatory=$true)]
-    $User,
-    $Password
+    $User
 )
 
 $userUpn = New-Object "System.Net.Mail.MailAddress" -ArgumentList $User
@@ -103,17 +102,11 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     # https://msdn.microsoft.com/en-us/library/azure/microsoft.identitymodel.clients.activedirectory.promptbehavior.aspx
     # Change the prompt behaviour to force credentials each time: Auto, Always, Never, RefreshSession
 
-    $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Always"
+    $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
 
-    if ($Password -eq $null) {
-        $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
-        $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI, $clientId, $redirectUri, $platformParameters).Result
-    }
-    else {
-        $userCred = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $User, $Password
-        $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI, $userCred).Result
-    }
+    $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
 
+    $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI,$clientId,$redirectUri,$platformParameters,$userId).Result
 
         # If the accesstoken is valid then create the authentication header
 
@@ -155,43 +148,48 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Test-JSON(){
+Function Sync-AppleDEP(){
 
 <#
 .SYNOPSIS
-This function is used to test if the JSON passed to a REST Post request is valid
+Sync Intune tenant to Apple DEP service
 .DESCRIPTION
-The function tests if the JSON passed to the REST Post is valid
+Intune automatically syncs with the Apple DEP service once every 24hrs. This function synchronises your Intune tenant with the Apple DEP service.
 .EXAMPLE
-Test-JSON -JSON $JSON
-Test if the JSON is valid before calling the Graph REST interface
+Sync-AppleDEP
 .NOTES
-NAME: Test-JSON
+NAME: Sync-AppleDEP
 #>
 
-param (
+[cmdletbinding()]
 
-$JSON
-
+Param(
+[parameter(Mandatory=$true)]
+[string]$id
 )
+
+
+$graphApiVersion = "beta"
+$Resource = "deviceManagement/depOnboardingSettings/$id/syncWithAppleDeviceEnrollmentProgram"
 
     try {
 
-    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
-    $validJson = $true
+        $SyncURI = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+        Invoke-RestMethod -Uri $SyncURI -Headers $authToken -Method Post
 
-    }
-
+        }
+    
     catch {
 
-    $validJson = $false
-    $_.Exception
-
-    }
-
-    if (!$validJson){
-
-    Write-Host "Provided JSON isn't in valid JSON format" -f Red
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
     break
 
     }
@@ -200,70 +198,51 @@ $JSON
 
 ####################################################
 
-Function Assign-ProfileToDevices(){
+Function Get-DEPOnboardingSettings {
+
 <#
 .SYNOPSIS
-This function is used to assign a profile to given devices using the Graph API REST interface
+This function retrieves the DEP onboarding settings for your tenant. DEP Onboarding settings contain information such as Token ID, which is used to sync DEP and VPP
 .DESCRIPTION
-The function connects to the Graph API Interface and assigns a profile to given devices
+The function connects to the Graph API Interface and gets a retrieves the DEP onboarding settings.
 .EXAMPLE
-Assign-ProfileToDevices
-Assigns a profile to given devices in Intune
+Get-DEPOnboardingSettings
+Gets all DEP Onboarding Settings for each DEP token present in the tenant
 .NOTES
-NAME: Assign-ProfileToDevices
+NAME: Get-DEPOnboardingSettings
 #>
 
 [cmdletbinding()]
 
-param
-(
-    $Devices,
-    $ProfileId
+Param(
+[parameter(Mandatory=$false)]
+[string]$tokenid
 )
 
-$graphApiVersion = "Beta"
-$ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfileAssignment"
+$graphApiVersion = "beta"
 
     try {
 
-        if([string]::IsNullOrWhiteSpace($ProfileId)){
-
-        $ProfileId = Read-Host -Prompt "Please specify profile Id to assign to devices"
-        Write-Host
-
+        if ($tokenid){
+        
+        $Resource = "deviceManagement/depOnboardingSettings/$tokenid/"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+                
         }
 
-        $id = [Guid]::NewGuid();
-        if([string]::IsNullOrWhiteSpace($ProfileId) -or ![Guid]::TryParse($ProfileId, [ref]$id)){
-
-            write-host "Invalid ProfileId specified, please specify valid ProfileId to assign to devices..." -f Red
-
-        }
-        elseif ($Devices -eq $null -or $Devices.Count -eq 0){
-
-            write-host "No devices specified, please specify a list of devices to assign..." -f Red
-        }
         else {
-
-            $Resource = "deviceManagement/enrollmentProfiles('$ProfileId')/updateDeviceProfileAssignment"
-
-            $DevicesArray = $Devices -split "," 
-
-            $JSON = @{ "deviceIds" = $DevicesArray } | ConvertTo-Json
-
-            Test-JSON -JSON $JSON
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
-
-            Write-Host "Devices assigned!" -f Green
+        
+        $Resource = "deviceManagement/depOnboardingSettings/"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+        
         }
-
+               
     }
-
+    
     catch {
 
-    Write-Host
     $ex = $_.Exception
     $errorResponse = $ex.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($errorResponse)
@@ -277,84 +256,7 @@ $ResourceSegment = "deviceManagement/enrollmentProfiles('{0}')/updateDeviceProfi
 
     }
 
-}
-
-####################################################
-
-Function Get-UnAssignedDevices(){
-
-<#
-.SYNOPSIS
-This function is used to get all un-assigned bulk devices using the Graph API REST interface
-.DESCRIPTION
-The function connects to the Graph API Interface and gets all un-assigned bulk devices
-.EXAMPLE
-Get-UnAssignedDevices
-Gets all un-assigned bulk devices
-.NOTES
-NAME: Get-UnAssignedDevices
-#>
-
-[cmdletbinding()]
-
-param
-(
-)
-
-$graphApiVersion = "Beta"
-$ResourceSegment = "deviceManagement/importedAppleDeviceIdentities?`$filter=discoverySource eq 'deviceEnrollmentProgram'"
-
-    try {
-
-        [System.String]$devicesNextLink = ''
-        [System.String[]]$unAssignedDevices = @()
-        [System.Uri]$uri = "https://graph.microsoft.com/$graphApiVersion/$($ResourceSegment)"
-
-        DO
-        {
-            $response = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get -ContentType "application/json"
-            $devicesNextLink = $response."@odata.nextLink"
-            $uri = $devicesNextLink
-
-            foreach($device in $response.value)
-            {
-                write-host "SerialNumber: " $device.SerialNumber "RequestedEnrollmentProfileId: " $device.RequestedEnrollmentProfileId "`n"
-
-                if ([string]::IsNullOrEmpty($device.RequestedEnrollmentProfileId)) 
-                {
-                    $unAssignedDevices += $device.SerialNumber
-                }
-
-                if ($unAssignedDevices.Count -ge 1000)
-                {
-                   $devicesNextLink = ''
-                   break
-                }
-            }
-        }While(![string]::IsNullOrEmpty($devicesNextLink))
-
-        Write-Host $unAssignedDevices -f Yellow
-
-        return $unAssignedDevices
-    }
-
-    catch {
-
-    Write-Host
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-
-    }
-
-}
+} 
 
 ####################################################
 
@@ -402,7 +304,7 @@ else {
     }
 
 # Getting the authorization token
- $global:authToken = Get-AuthToken -User $User
+$global:authToken = Get-AuthToken -User $User
 
 }
 
@@ -410,7 +312,89 @@ else {
 
 ####################################################
 
-$global:devices = Get-UnAssignedDevices
-$global:profileId = ''
+$tokens = (Get-DEPOnboardingSettings)
 
-Assign-ProfileToDevices -Devices $global:devices -ProfileId $profileId
+if($tokens){
+
+$tokencount = @($tokens).count
+
+Write-Host "DEP tokens found: $tokencount"
+Write-Host
+
+    if($tokencount -gt 1){
+
+    $DEP_Tokens = $tokens.tokenName | Sort-Object -Unique
+
+    $menu = @{}
+
+    for ($i=1;$i -le $DEP_Tokens.count; $i++) 
+    { Write-Host "$i. $($DEP_Tokens[$i-1])" 
+    $menu.Add($i,($DEP_Tokens[$i-1]))}
+
+    Write-Host
+    [int]$ans = Read-Host 'Select the token you wish to sync (numerical value)'
+    $selection = $menu.Item($ans)
+    Write-Host
+
+        if($selection){
+
+        $SelectedToken = $tokens | Where-Object { $_.TokenName -eq "$Selection" }
+
+        $SelectedTokenId = $SelectedToken | Select-Object -ExpandProperty id
+
+        $id = $SelectedTokenId
+
+        }
+
+    }
+
+    elseif ($tokencount -eq 1){
+
+        $id = (Get-DEPOnboardingSettings).id
+
+        }
+
+    else {
+    
+        Write-Host
+        Write-Warning "No DEP tokens found!"
+        break
+
+    }
+
+    $LastSync = (Get-DEPOnboardingSettings -tokenid $id).lastSyncTriggeredDateTime
+    $TokenDisplayName = (Get-DEPOnboardingSettings -tokenid $id).TokenName
+
+    $CurrentTime = [System.DateTimeOffset]::Now
+
+    $LastSyncTime = [datetimeoffset]::Parse($LastSync)
+
+    $TimeDifference = ($CurrentTime - $LastSyncTime)
+
+    $TotalMinutes = ($TimeDifference.Minutes)
+
+    $RemainingTimeToSync = (15 - [int]$TotalMinutes)
+
+        if ($RemainingTimeToSync -gt 0 -AND $RemainingTimeToSync -lt 16) {
+
+            Write-Warning "Syncing in progress. You can retry sync in $RemainingTimeToSync minutes"
+            Write-Host
+
+        } 
+           
+        else {
+    
+            Write-Host "Syncing '$TokenDisplayName' DEP token with Apple DEP service..."
+            Sync-AppleDEP $id
+
+        }
+
+}
+
+else {
+
+    Write-Warning "No DEP tokens found!"
+    Write-Host
+    break
+
+}
