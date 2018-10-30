@@ -213,7 +213,12 @@ try {
 
         }
 
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        Do {
+            $Response = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+            Write-Verbose "Fetching $uri"
+            $uri = $Response.'@odata.nextLink'
+            $Response.Value
+        } Until ($null -eq $uri)
     
     }
 
@@ -266,8 +271,12 @@ $Resource = "deviceManagement/manageddevices('$DeviceID')?`$select=userId"
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
     Write-Verbose $uri
-    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).userId
-
+    Do {
+        $Response = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+        Write-Verbose "Fetching $uri"
+        $uri = $Response.'@odata.nextLink'
+        $Response.userId
+    } Until ($null -eq $uri)
     }
 
     catch {
@@ -323,8 +332,12 @@ $User_resource = "users"
         if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
+        Do {
+            $Response = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+            Write-Verbose "Fetching $uri"
+            $uri = $Response.'@odata.nextLink'
+            $Response.Value
+        } Until ($null -eq $uri)
         }
 
         else {
