@@ -61,7 +61,7 @@ Param(
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
 [alias("ca")]
 [ValidateScript({
-    $Domain = (Get-WmiObject Win32_ComputerSystem).domain
+    $Domain = (Get-ADDomain).NetBIOSName
         if ($_ -match $Domain) {
 
         $True
