@@ -41,7 +41,9 @@ Param(
     }
 
     $EnteredDomain = $_.split("\")
-    $Domain = (Get-WmiObject Win32_ComputerSystem).domain.split(".")[0]
+    $ads = New-Object -ComObject ADSystemInfo
+    $Domain = $ads.GetType().InvokeMember('DomainShortName','GetProperty', $Null, $ads, $Null)
+    
         if ($EnteredDomain -like "$Domain") {
 
         $True
@@ -61,7 +63,7 @@ Param(
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
 [alias("ca")]
 [ValidateScript({
-    $Domain = $env:userdomain
+    $Domain = (Get-WmiObject Win32_ComputerSystem).domain
         if ($_ -match $Domain) {
 
         $True
