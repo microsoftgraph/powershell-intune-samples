@@ -41,7 +41,9 @@ Param(
     }
 
     $EnteredDomain = $_.split("\")
-    $Domain = (Get-WmiObject Win32_ComputerSystem).domain.split(".")[0]
+    $ads = New-Object -ComObject ADSystemInfo
+    $Domain = $ads.GetType().InvokeMember('DomainShortName','GetProperty', $Null, $ads, $Null)
+    
         if ($EnteredDomain -like "$Domain") {
 
         $True
