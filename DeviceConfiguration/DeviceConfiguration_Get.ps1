@@ -287,14 +287,21 @@ param
 # Defining Variables
 $graphApiVersion = "v1.0"
 $Group_resource = "groups"
+# pseudo-group identifiers for all users and all devices
+[string]$AllUsers   = "acacacac-9df4-4c7d-9d50-4ef0226f57a9"
+[string]$AllDevices = "adadadad-808e-44e2-905a-0b7873a8a531"
 
     try {
 
         if($id){
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
+        switch ( $id ) {
+                $AllUsers   { $grp = [PSCustomObject]@{ displayName = "All users"}; $grp           }
+                $AllDevices { $grp = [PSCustomObject]@{ displayName = "All devices"}; $grp         }
+                default     { (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value  }
+                }
+                
         }
 
         elseif($GroupName -eq "" -or $GroupName -eq $null){
@@ -420,11 +427,8 @@ $DCP
 $id = $DCP.id
 
 $DCPA = Get-DeviceConfigurationPolicyAssignment -id $id
-
+write-host "Getting Configuration Policy assignment..." -f Cyan
     if($DCPA){
-
-    write-host "Getting Configuration Policy assignment..." -f Cyan
-
     if($DCPA.count -gt 1){
 
             foreach($group in $DCPA){
@@ -442,7 +446,9 @@ $DCPA = Get-DeviceConfigurationPolicyAssignment -id $id
         }
 
     }
-
+    else {
+        Write-Host "No assignments found."
+    }
     Write-Host
 
 }
