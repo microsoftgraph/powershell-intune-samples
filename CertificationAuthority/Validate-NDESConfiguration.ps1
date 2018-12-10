@@ -332,14 +332,12 @@ Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,acco
 
 #region Checking if NDES server is the CA
 
-Write-host
-Write-host "......................................................."
-Write-host
-Write-host "Checking if NDES server is the CA..." -ForegroundColor Yellow
-Write-host
+Write-host "`n.......................................................`n"
+Write-host "Checking if NDES server is the CA...`n" -ForegroundColor Yellow
 Log-ScriptEvent $LogFilePath "Checking if NDES server is the CA" NDES_Validation 1 
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
+$CARoleInstalled = (Get-WindowsFeature ADCS-Cert-Authority).InstallState -eq "Installed"
 
     if ($hostname -match $IssuingCAServerFQDN){
     
@@ -347,7 +345,11 @@ $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
         Log-ScriptEvent $LogFilePath "NDES is running on the CA"  NDES_Validation 3
     
     }
-
+    elseif($CARoleInstalled)
+    {
+        Write-host "Error: NDES server has Certification Authority Role installed. This is an unsupported configuration!" -BackgroundColor Red
+        Log-ScriptEvent $LogFilePath "NDES server has Certification Authority Role installed"  NDES_Validation 3
+    }
     else {
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
