@@ -148,7 +148,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-function Get-AndroidManagedStore {
+function Get-AndroidManagedStoreAccount {
 
 <#
 .SYNOPSIS
@@ -156,10 +156,10 @@ This function is used to query the Managed Google Play configuration via the Gra
 .DESCRIPTION
 The function connects to the Graph API Interface and returns the Managed Google Play configuration 
 .EXAMPLE
-Get-AndroidManagedStore 
+Get-AndroidManagedStoreAccount 
 Returns the Managed Google Play configuration from Intune 
 .NOTES
-NAME: Get-AndroidManagedStore
+NAME: Get-AndroidManagedStoreAccount
 #>
 
     
@@ -196,7 +196,7 @@ $Resource = "deviceManagement/androidManagedStoreAccountEnterpriseSettings"
 
 ####################################################
 
-function Sync-AndroidManagedStore {
+function Sync-AndroidManagedStoreAccount {
 
 <#
 .SYNOPSIS
@@ -204,10 +204,10 @@ This function is used to initiate an app sync for Managed Google Play via the Gr
 .DESCRIPTION
 The function connects to the Graph API Interface and initiates a Managed Google Play app sync
 .EXAMPLE
-Sync-AndroidManageStore
+Sync-AndroidManagedStoreAccount
 Initiates a Managed Google Play Sync in Intune
 .NOTES
-NAME: Sync-AndroidManageStore
+NAME: Sync-AndroidManagedStoreAccount
 #>
 
     
@@ -238,7 +238,6 @@ $Resource = "deviceManagement/androidManagedStoreAccountEnterpriseSettings/syncA
         Write-Error $ErrorMessage
 
     }
-
 
 }
 
@@ -296,13 +295,13 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-if((Get-AndroidManagedStore).bindStatus -ne "notBound"){
+if((Get-AndroidManagedStoreAccount).bindStatus -ne "notBound"){
 
     Write-Host "Found Managed Google Play Configuration. Performing Sync..." -ForegroundColor Yellow
     
-    $ManagedPlaySync = Sync-AndroidManagedStore
+    $ManagedPlaySync = Sync-AndroidManagedStoreAccount
     
-    If($ManagedPlaySync -ne $null){
+    if($ManagedPlaySync -ne $null){
 
         Write-Host "Starting sync with managed Google Play, Sync will take some time" -ForegroundColor Green
     
