@@ -350,7 +350,7 @@ $global:authToken = Get-AuthToken -User $User
 Write-Host "Please specify which Intune Role you want to duplicate:" -ForegroundColor Yellow
 Write-Host
 
-$RBAC_Roles = (Get-RBACRole | ? { $_.isBuiltInRoleDefinition -eq $true } | select displayName).displayName
+$RBAC_Roles = (Get-RBACRole | Where-Object { $_.isBuiltInRoleDefinition -eq $true } | Select-Object displayName).displayName
 
 $menu = @{}
 
@@ -368,42 +368,50 @@ $selection = $menu.Item($ans)
     Write-Host $selection -f Cyan
     Write-Host
 
-    $RBAC_Role = (Get-RBACRole | ? { $_.displayName -eq "$Selection" -and $_.isBuiltInRoleDefinition -eq $true })
+    $RBAC_Role = (Get-RBACRole | Where-Object { $_.displayName -eq "$Selection" -and $_.isBuiltInRoleDefinition -eq $true })
     $RBAC_Actions = $RBAC_Role.permissions.actions | ConvertTo-Json
-    $RBAC_DN = $RBAC_Role.displayName
 
-$JSON = @"
-    {
-    "@odata.type": "#microsoft.graph.roleDefinition",
-    "displayName": "$RBAC_DN",
-    "description": "$RBAC_DN",
-    "permissions": [
-            {   
-            "actions": $RBAC_Actions
-            }
-        
-        ],
-        "isBuiltInRoleDefinition": false  
-    }
-"@
+    $RBAC_DN = Read-Host "Please specify a displayName for the duplicated Intune Role"
 
-    $JSON
+        if($RBAC_DN -eq ""){
 
-    Write-Host
-
-        if(Get-RBACRole | ? { $_.isBuiltInRoleDefinition -eq $false -and $_.displayName -eq "$RBAC_DN" }){
-
-        Write-Host "A Custom Intune role with the name '$RBAC_DN' already exists..." -ForegroundColor Red 
+            Write-Host "Intune Role DisplayName can't be null, please specify a valid DisplayName..." -ForegroundColor Red
+            Write-Host
+            break
 
         }
 
-        else {
+        if(Get-RBACRole | Where-Object { $_.displayName -eq "$RBAC_DN"}){
 
+            Write-Host "A Custom Intune role with the name '$RBAC_DN' already exists..." -ForegroundColor Red
+            Write-Host
+            break
+
+        }
+
+$JSON = @"
+        {
+        "@odata.type": "#microsoft.graph.roleDefinition",
+        "displayName": "$RBAC_DN",
+        "description": "$RBAC_DN",
+        "permissions": [
+                {   
+                "actions": $RBAC_Actions
+                }
+            
+            ],
+            "isBuiltInRoleDefinition": false  
+        }
+"@
+
+        Write-Host
+        
+        $JSON
+        
+        Write-Host
         Write-Host "Duplicating Intune Role and Adding to the Intune Service..." -ForegroundColor Yellow
 
         Add-RBACRole -JSON $JSON
-
-        }
 
     }
 
@@ -416,6 +424,5 @@ $JSON = @"
     break
 
     }
-
 
 Write-Host
