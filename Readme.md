@@ -8,6 +8,7 @@ These samples demonstrate typical Intune administrator or Microsoft partner acti
 
 The following samples are included in this repository:
 - AdminConsent
+- AndroidEnterprise
 - AppleEnrollment
 - Applications
 - ApplicationSync
