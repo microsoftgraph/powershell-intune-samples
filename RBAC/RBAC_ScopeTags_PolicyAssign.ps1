@@ -640,8 +640,8 @@ if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
         foreach($ScopeTag in $ScopeTags){
 
-        $ScopeTag_DN = (Get-RBACScopeTag -DisplayName $ScopeTag.displayName).displayName
-        $ScopeTagId = (Get-RBACScopeTag -DisplayName $ScopeTag.displayName).id
+        $ScopeTag_DN = $ScopeTag.displayName
+        $ScopeTagId = $ScopeTag.id
 
         Write-Host "Checking Scope Tag '$ScopeTag_DN'..." -ForegroundColor Cyan
 

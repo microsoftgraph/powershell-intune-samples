@@ -1,6 +1,5 @@
-﻿
-<#
- 
+﻿<#
+
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
@@ -8,7 +7,7 @@ See LICENSE in the project root for license information.
 #>
 
 ####################################################
- 
+
 function Get-AuthToken {
 
 <#
@@ -89,13 +88,13 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
- 
+    
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
- 
+    
 $resourceAppIdURI = "https://graph.microsoft.com"
- 
+    
 $authority = "https://login.microsoftonline.com/$Tenant"
- 
+    
     try {
 
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
@@ -146,7 +145,7 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+    
 ####################################################
 
 Function Get-DeviceCompliancePolicy(){
@@ -605,11 +604,17 @@ if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
             $JSON = $Policy | Select-Object * -ExcludeProperty '@odata.context',createdDateTime,lastModifiedDateTime,version,assignments,supportsScopeTags,qualityUpdatesWillBeRolledBack,featureUpdatesWillBeRolledBack | ConvertTo-Json -Depth 5
 
-            $Result = Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
+            $JSON_Conversion = ($JSON | ConvertFrom-Json).'@odata.type'
 
-            if($Result -eq ""){
+            if(($JSON_Conversion -ne "#microsoft.graph.windowsUpdateForBusinessConfiguration") -and ($JSON_Conversion -ne "#microsoft.graph.unsupportedDeviceConfiguration")){
+            
+                $Result = Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
 
-                Write-Host "Configuration Policy '$PolicyDN' patched..." -ForegroundColor Gray
+                if($Result -eq ""){
+
+                    Write-Host "Configuration Policy '$PolicyDN' patched..." -ForegroundColor Gray
+
+                }
 
             }
 
