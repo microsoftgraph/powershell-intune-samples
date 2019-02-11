@@ -371,3 +371,33 @@ This function is used to update a Device Configuration Policy by specifying the 
 ```PowerShell
 Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
 ```
+
+### 11. RBAC_ScopeTags_DeviceAssign.ps1
+This script can be used to automatically assign a Scope Tag to an Intune Managed Device enrolled in the Intune Service.
+
+The script will look for all Scope Tags configured in the Intune Service and then assign that scope tag to that individual device. If the scope tag has already been assigned then it will return that its been assigned already. If the Intune Managed Device already has a scope tag assigned, the script will add the already existing scope tags.
+
+#### Get-RBACScopeTag Function
+This function is used to get all scope tags configured in the Intune Service you have authenticated with.
+```PowerShell
+# Lists all Scope Tags configured in Intune
+Get-RBACScopeTag
+
+# Gets a Scope Tag by displayName
+Get-RBACScopeTag -DisplayName "Test"
+```
+
+#### Update-ManagedDevices Function
+This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-ManagedDevices -id $ManagedDevice.id -ScopeTags $ScopeTag
+```
+
+### 12. RBAC_ScopeTags_DeviceUnAssign.ps1
+This script can be used to automatically unassign all Scope Tags to an Intune Managed Device enrolled in the Intune Service.
+
+#### Update-ManagedDevices Function
+This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+```PowerShell
+Update-ManagedDevices -id $ManagedDevice.id -ScopeTags ""
+```
