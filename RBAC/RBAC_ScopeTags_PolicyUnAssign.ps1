@@ -329,51 +329,6 @@ $DCP_resource = "deviceManagement/deviceConfigurations"
 
 ####################################################
 
-Function Test-JSON(){
-
-<#
-.SYNOPSIS
-This function is used to test if the JSON passed to a REST Post request is valid
-.DESCRIPTION
-The function tests if the JSON passed to the REST Post is valid
-.EXAMPLE
-Test-JSON -JSON $JSON
-Test if the JSON is valid before calling the Graph REST interface
-.NOTES
-NAME: Test-JSON
-#>
-
-param (
-
-$JSON
-
-)
-
-    try {
-
-    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
-    $validJson = $true
-
-    }
-
-    catch {
-
-    $validJson = $false
-    $_.Exception
-
-    }
-
-    if (!$validJson){
-
-    Write-Host "Provided JSON isn't in valid JSON format" -f Red
-    break
-
-    }
-
-}
-
-####################################################
-
 Function Update-DeviceCompliancePolicy(){
 
 <#
@@ -382,7 +337,7 @@ This function is used to update a device compliance policy using the Graph API R
 .DESCRIPTION
 The function connects to the Graph API Interface and updates a device compliance policy
 .EXAMPLE
-Update-DeviceCompliancePolicy -JSON $JSON
+Update-DeviceCompliancePolicy -id $Policy.id -Type $Type -ScopeTags "1"
 Updates a device configuration policy in Intune
 .NOTES
 NAME: Update-DeviceCompliancePolicy
@@ -392,29 +347,44 @@ NAME: Update-DeviceCompliancePolicy
 
 param
 (
+    [Parameter(Mandatory=$true)]
     $id,
-    $JSON
+    [Parameter(Mandatory=$true)]
+    $Type,
+    [Parameter(Mandatory=$true)]
+    $ScopeTags
 )
 
 $graphApiVersion = "beta"
 $Resource = "deviceManagement/deviceCompliancePolicies/$id"
 
     try {
+     
+        if($ScopeTags -eq "" -or $ScopeTags -eq $null){
 
-        if($JSON -eq "" -or $JSON -eq $null){
+$JSON = @"
 
-        write-host "No JSON specified, please specify valid JSON for the Android Policy..." -f Red
+{
+  "@odata.type": "$Type",
+  "roleScopeTagIds": []
+}
 
+"@
         }
 
         else {
 
-        Test-JSON -JSON $JSON
+            $object = New-Object –TypeName PSObject
+            $object | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "$Type"
+            $object | Add-Member -MemberType NoteProperty -Name 'roleScopeTagIds' -Value @($ScopeTags)
+            $JSON = $object | ConvertTo-Json
+
+        }
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $JSON -ContentType "application/json"
 
-        }
+        Start-Sleep -Milliseconds 100
 
     }
 
@@ -446,7 +416,7 @@ This function is used to update a device configuration policy using the Graph AP
 .DESCRIPTION
 The function connects to the Graph API Interface and updates a device configuration policy
 .EXAMPLE
-Update-DeviceConfigurationPolicy -JSON $JSON
+Update-DeviceConfigurationPolicy -id $Policy.id -Type $Type -ScopeTags "1"
 Updates an device configuration policy in Intune
 .NOTES
 NAME: Update-DeviceConfigurationPolicy
@@ -456,29 +426,44 @@ NAME: Update-DeviceConfigurationPolicy
 
 param
 (
+    [Parameter(Mandatory=$true)]
     $id,
-    $JSON
+    [Parameter(Mandatory=$true)]
+    $Type,
+    [Parameter(Mandatory=$true)]
+    $ScopeTags
 )
 
 $graphApiVersion = "beta"
 $Resource = "deviceManagement/deviceConfigurations/$id"
 
     try {
+     
+        if($ScopeTags -eq "" -or $ScopeTags -eq $null){
 
-        if($JSON -eq "" -or $JSON -eq $null){
+$JSON = @"
 
-        write-host "No JSON specified, please specify valid JSON for the Android Policy..." -f Red
+{
+  "@odata.type": "$Type",
+  "roleScopeTagIds": []
+}
 
+"@
         }
 
         else {
 
-        Test-JSON -JSON $JSON
+            $object = New-Object –TypeName PSObject
+            $object | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "$Type"
+            $object | Add-Member -MemberType NoteProperty -Name 'roleScopeTagIds' -Value @($ScopeTags)
+            $JSON = $object | ConvertTo-Json
+
+        }
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         Invoke-RestMethod -Uri $uri -Headers $authToken -Method Patch -Body $JSON -ContentType "application/json"
 
-        }
+        Start-Sleep -Milliseconds 100
 
     }
 
@@ -563,18 +548,15 @@ if($Confirm -eq "y" -or $Confirm -eq "Y"){
     Write-Host "Device Compliance Policies" -ForegroundColor Cyan
     Write-Host "Setting all Device Compliance Policies back to no Scope Tag..."
 
-    $CPs = Get-DeviceCompliancePolicy
+    $CPs = Get-DeviceCompliancePolicy | Sort-Object displayName
 
     if($CPs){
 
         foreach($Policy in $CPs){
 
-            $Policy.roleScopeTagIds = @()
             $PolicyDN = $Policy.displayName
 
-            $JSON = $Policy | Select-Object * -ExcludeProperty '@odata.context',createdDateTime,lastModifiedDateTime,version,assignments,scheduledActionsForRule | ConvertTo-Json -Depth 5
-
-            $Result = Update-DeviceCompliancePolicy -id $Policy.id -JSON $JSON
+            $Result = Update-DeviceCompliancePolicy -id $Policy.id -Type $Policy.'@odata.type' -ScopeTags ""
 
             if($Result -eq ""){
 
@@ -593,22 +575,15 @@ if($Confirm -eq "y" -or $Confirm -eq "Y"){
     Write-Host "Device Configuration Policies" -ForegroundColor Cyan
     Write-Host "Setting all Device Configuration Policies back to no Scope Tag..."
 
-    $DCPs = Get-DeviceConfigurationPolicy
+    $DCPs = Get-DeviceConfigurationPolicy | ? { $_.'@odata.type' -ne "#microsoft.graph.unsupportedDeviceConfiguration" } | sort displayName
 
     if($DCPs){
 
         foreach($Policy in $DCPs){
 
-            $Policy.roleScopeTagIds = @()
             $PolicyDN = $Policy.displayName
-
-            $JSON = $Policy | Select-Object * -ExcludeProperty '@odata.context',createdDateTime,lastModifiedDateTime,version,assignments,supportsScopeTags,qualityUpdatesWillBeRolledBack,featureUpdatesWillBeRolledBack | ConvertTo-Json -Depth 5
-
-            $JSON_Conversion = ($JSON | ConvertFrom-Json).'@odata.type'
-
-            if(($JSON_Conversion -ne "#microsoft.graph.windowsUpdateForBusinessConfiguration") -and ($JSON_Conversion -ne "#microsoft.graph.unsupportedDeviceConfiguration")){
             
-                $Result = Update-DeviceConfigurationPolicy -id $Policy.id -JSON $JSON
+                $Result = Update-DeviceConfigurationPolicy -id $Policy.id -Type $Policy.'@odata.type' -ScopeTags ""
 
                 if($Result -eq ""){
 
@@ -621,8 +596,6 @@ if($Confirm -eq "y" -or $Confirm -eq "Y"){
         }
 
     }
-
-}
 
 else {
 
