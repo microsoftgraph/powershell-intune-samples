@@ -388,7 +388,7 @@ Get-RBACScopeTag -DisplayName "Test"
 ```
 
 #### Update-ManagedDevices Function
-This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+This function is used to update a Intune Managed Device by specifying the required parameter -id and -JSON.
 ```PowerShell
 Update-ManagedDevices -id $ManagedDevice.id -ScopeTags $ScopeTag
 ```
@@ -397,7 +397,37 @@ Update-ManagedDevices -id $ManagedDevice.id -ScopeTags $ScopeTag
 This script can be used to automatically unassign all Scope Tags to an Intune Managed Device enrolled in the Intune Service.
 
 #### Update-ManagedDevices Function
-This function is used to update a Device Compliance Policy by specifying the required parameter -id and -JSON.
+This function is used to update a Intune Managed Device by specifying the required parameter -id and -JSON.
 ```PowerShell
 Update-ManagedDevices -id $ManagedDevice.id -ScopeTags ""
+```
+
+### 13. RBAC_ScopeTags_ApplicationAssign.ps1
+This script can be used to automatically assign a Scope Tag to an Intune Application in the Intune Service.
+
+The script will look for all Scope Tags configured in the Intune Service and then assign that scope tag to that individual application. If the scope tag has already been assigned then it will return that its been assigned already. If the Intune Application already has a scope tag assigned, the script will add the already existing scope tags.
+
+#### Get-RBACScopeTag Function
+This function is used to get all scope tags configured in the Intune Service you have authenticated with.
+```PowerShell
+# Lists all Scope Tags configured in Intune
+Get-RBACScopeTag
+
+# Gets a Scope Tag by displayName
+Get-RBACScopeTag -DisplayName "Test"
+```
+
+#### Update-IntuneApplication Function
+This function is used to update an Intune Application by specifying the required parameter -id, -Type and -JSON.
+```PowerShell
+Update-ManagedDevices -id $Application.id -Type "#microsoft.graph.WebApp" -ScopeTags $ScopeTag
+```
+
+### 14. RBAC_ScopeTags_ApplicationUnAssign.ps1
+This script can be used to automatically unassign all Scope Tags to an Intune Application in the Intune Service.
+
+#### Update-ManagedDevices Function
+This function is used to update an Intune Application by specifying the required parameter -id, -Type and -JSON.
+```PowerShell
+Update-ManagedDevices -id $Application.id -Type "#microsoft.graph.WebApp" -ScopeTags ""
 ```
