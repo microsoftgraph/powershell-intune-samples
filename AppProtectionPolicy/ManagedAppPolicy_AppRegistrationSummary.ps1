@@ -172,7 +172,9 @@ NAME: Get-ManagedAppPolicyRegistrationSummary
     )
 
     $graphApiVersion = "Beta"
-
+    $Stoploop = $false
+    [int]$Retrycount = "0"
+    do{
     try {
     
         if ($ReportType -eq "" -or $ReportType -eq $null) {
@@ -209,12 +211,22 @@ NAME: Get-ManagedAppPolicyRegistrationSummary
             Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
 
         }
-    
+        $Stoploop = $true
     }
 
     catch {
-    
+
         $ex = $_.Exception
+
+        # Retry 4 times if 503 service time out
+        if($ex.Response.StatusCode.value__ -eq "503") {
+            $Retrycount = $Retrycount + 1
+            $Stoploop = $Retrycount -gt 3
+            if($Stoploop -eq $false) {
+                Start-Sleep -Seconds 5
+                continue
+            }
+        }
         $errorResponse = $ex.Response.GetResponseStream()
         $reader = New-Object System.IO.StreamReader($errorResponse)
         $reader.BaseStream.Position = 0
@@ -223,33 +235,51 @@ NAME: Get-ManagedAppPolicyRegistrationSummary
         Write-Host "Response content:`n$responseBody" -f Red
         Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
         write-host
+        $Stoploop = $true
         break
-    
     }
+}
+while ($Stoploop -eq $false)
 
 }
 
 ####################################################
 
 #region Authentication
-
 write-host
 
-# Checking if authToken exists before running authentication
-if ($global:authToken) {
+Function Test-Token() {
+    # Checking if authToken exists before running authentication
+    if ($global:authToken) {
 
-    # Setting DateTime to Universal time to work in all timezones
-    $DateTime = (Get-Date).ToUniversalTime()
+        # Setting DateTime to Universal time to work in all timezones
+        $DateTime = (Get-Date).ToUniversalTime()
 
-    # If the authToken exists checking when it expires
-    $TokenExpires = ($authToken.ExpiresOn.datetime - $DateTime).Minutes
+        # If the authToken exists checking when it expires
+        $TokenExpires = ($authToken.ExpiresOn.datetime - $DateTime).Minutes
 
-    if ($TokenExpires -le 0) {
+        if ($TokenExpires -le 0) {
 
-        write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
-        write-host
+            write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
+            write-host
 
-        # Defining User Principal Name if not present
+            # Defining User Principal Name if not present
+
+            if ($User -eq $null -or $User -eq "") {
+
+                $User = Read-Host -Prompt "Please specify your user principal name for Azure Authentication"
+                Write-Host
+
+            }
+
+            $global:authToken = Get-AuthToken -User $User
+
+        }
+    }
+
+    # Authentication doesn't exist, calling Get-AuthToken function
+
+    else {
 
         if ($User -eq $null -or $User -eq "") {
 
@@ -258,27 +288,12 @@ if ($global:authToken) {
 
         }
 
+        # Getting the authorization token
         $global:authToken = Get-AuthToken -User $User
 
     }
 }
-
-# Authentication doesn't exist, calling Get-AuthToken function
-
-else {
-
-    if ($User -eq $null -or $User -eq "") {
-
-        $User = Read-Host -Prompt "Please specify your user principal name for Azure Authentication"
-        Write-Host
-
-    }
-
-    # Getting the authorization token
-    $global:authToken = Get-AuthToken -User $User
-
-}
-
+Test-Token
 #endregion
 
 ####################################################
@@ -315,21 +330,36 @@ Write-Host
 
 #################################################### 
 $AppType = Read-Host -Prompt "Please specify the type of report [Android_iOS, WIP_WE, WIP_MDM]"
-write-host "Running query against Microsoft Graph to download Registration Summary report.." -f Yellow
+if($AppType -eq "Android_iOS" -or $AppType -eq "WIP_WE" -or $AppType -eq "WIP_MDM") {
+            
+    write-host "Running query against Microsoft Graph to download Registration Summary Report.." -f Yellow
 
-$stream = [System.IO.StreamWriter] "$ExportPath\AppRegistrationSummary_$AppType.csv"
-$ManagedAppPolicies = Get-ManagedAppPolicyRegistrationSummary -ReportType $AppType
-$stream.WriteLine([string]($ManagedAppPolicies.content.header | % {$_.columnName } ))
+    $ofs = ','
+    $stream = [System.IO.StreamWriter]::new("$ExportPath\AppRegistrationSummary_$AppType.csv", $false, [System.Text.Encoding]::UTF8)
+    $ManagedAppPolicies = Get-ManagedAppPolicyRegistrationSummary -ReportType $AppType
+    $stream.WriteLine([string]($ManagedAppPolicies.content.header | % {$_.columnName } ))
 
-do {
-    $MoreItem = $ManagedAppPolicies.content.skipToken -ne "" -and $ManagedAppPolicies.content.skipToken -ne $null
-    foreach ($SummaryItem in $ManagedAppPolicies.content.body) {
-        $ofs = ','
-        $stream.WriteLine([string]($SummaryItem.values))
+    do {
+        Test-Token
+        write-host -NoNewline "."
+        $MoreItem = $ManagedAppPolicies.content.skipToken -ne "" -and $ManagedAppPolicies.content.skipToken -ne $null
+        foreach ($SummaryItem in $ManagedAppPolicies.content.body) {
+
+            $stream.WriteLine([string]($SummaryItem.values -replace ",","."))
+        }
+        if ($MoreItem) {
+            $ManagedAppPolicies = Get-ManagedAppPolicyRegistrationSummary -ReportType $AppType -NextPage ($ManagedAppPolicies.content.skipToken)
+        }
+
+    } while ($MoreItem)
+    $stream.close()
+    write-host
     }
-    if ($MoreItem) {
-        $ManagedAppPolicies = Get-ManagedAppPolicyRegistrationSummary -ReportType $AppType -NextPage ($ManagedAppPolicies.content.skipToken)
-    }
+    
+    else {
+    
+        Write-Host "AppType isn't a valid option..." -ForegroundColor Red
+        Write-Host
+    
+    } 
 
-}while ($MoreItem)
-$stream.close()
