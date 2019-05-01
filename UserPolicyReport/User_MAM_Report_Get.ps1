@@ -1237,7 +1237,7 @@ $TMACCount = @($TargetedManagedAppConfigurations).count
                                                        
                         }
 
-                        $Value = ($TargetedManagedAppConfiguration.customSettings | ? { $_.Name -eq "$searchName" } | select value).value
+                        $Value = ($TargetedManagedAppConfiguration.customSettings | ? { $_.Name -eq "$searchName" } | select value).value
 
                         if ($name -like "*ListURLs*"){
                                 
