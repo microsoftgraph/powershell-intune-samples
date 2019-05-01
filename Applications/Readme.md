@@ -651,33 +651,4 @@ Get-InstallaStatusForApp -AppId 1111-22222-33333-44444-55555
 $Application = Get-IntuneApplication -Name "Microsoft Teams"
 Get-InstallaStatusForApp -AppId $Application.id
 ```
-## 1. MAM_Whatif.ps1
 
-This script retrieves all assigned app configuration and app protection policies assigned to a user, and which apps they are targeted to. The script can be used to troubleshoot user issues as well as validate configurations and expected experience at the device level.
-
-#### Get-AADUser Function
-This function is used to get AAD Users from the Graph API REST interface
-
-#### Get-AADGroup Function
-This function is used to get AAD Groups from the Graph API REST interface
-
-#### Get-ManagedAppPolicy Function
-This function is used to get managed app policies (AppConfig) from the Graph API REST interface
-
-#### Get-ManagedAppProtection Function
-This function is used to get managed app protection configuration from the Graph API REST interface
-
-#### Get-ApplicationAssignment Function
-This function is used to get an application assignment from the Graph API REST interface
-
-#### Get-MobileAppConfigurations Function
-This function is used to get all Mobile App Configuration Policies (managed device) using the Graph API REST interface
-
-#### Get-TargetedManagedAppConfigurations Function
-This function is used to get all Targeted Managed App Configuration Policies using the Graph API REST interface
-
-#### Get-IntuneApplication Function
-This function is used to get applications from the Graph API REST interface
-
-#### Get-IntuneMAMApplication Function
-This function is used to get MAM applications from the Graph API REST interface
