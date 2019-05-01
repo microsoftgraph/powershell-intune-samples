@@ -5,7 +5,7 @@ This repository of PowerShell sample scripts show how to access Intune service r
 Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
 
 #### Disclaimer
-Some script samples retrieve information from your Intune tenant, and others create, delete or update data in your Intune tenant.  Understand the impact of each sample script prior to running it; samples should be run using a non-production or "test" tenant account. 
+Some script samples retrieve information from your Intune tenant, and others create, delete or update data in your Intune tenant.  Understand the impact of each sample script prior to running it; samples should be run using a non-production or "test" tenant account. 
 
 Within this section there are the following scripts with the explanation of usage.
 
@@ -135,3 +135,34 @@ It requires a single parameter of id to pull the assignment from the configurati
 ```PowerShell
 Get-DeviceConfigurationPolicyAssignment -id 4dccb81f-18db-4b7e-9a4e-b90c2980d0c3
 ```
+## 2. User_MAM_Report_Get.ps1
+
+This script retrieves all assigned app configuration and app protection policies assigned to a user, and which applications they are targeted to. The script can be used to troubleshoot user issues as well as validate configurations and expected experience at the device level.
+
+#### Get-AADUser Function
+This function is used to get AAD Users from the Graph API REST interface
+
+#### Get-AADGroup Function
+This function is used to get AAD Groups from the Graph API REST interface
+
+#### Get-ManagedAppPolicy Function
+This function is used to get managed app policies (AppConfig) from the Graph API REST interface
+
+#### Get-ManagedAppProtection Function
+This function is used to get managed app protection configuration from the Graph API REST interface
+
+#### Get-ApplicationAssignment Function
+This function is used to get an application assignment from the Graph API REST interface
+
+#### Get-MobileAppConfigurations Function
+This function is used to get all Mobile App Configuration Policies (managed device) using the Graph API REST interface
+
+#### Get-TargetedManagedAppConfigurations Function
+This function is used to get all Targeted Managed App Configuration Policies using the Graph API REST interface
+
+#### Get-IntuneApplication Function
+This function is used to get applications from the Graph API REST interface
+
+#### Get-IntuneMAMApplication Function
+This function is used to get MAM applications from the Graph API REST interface
+

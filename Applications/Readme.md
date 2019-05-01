@@ -651,3 +651,4 @@ Get-InstallaStatusForApp -AppId 1111-22222-33333-44444-55555
 $Application = Get-IntuneApplication -Name "Microsoft Teams"
 Get-InstallaStatusForApp -AppId $Application.id
 ```
+
