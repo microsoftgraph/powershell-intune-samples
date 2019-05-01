@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -742,21 +742,21 @@ $Resource = "deviceAppManagement/mobileApps"
         if($packageid){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") -and ($_.'packageid' -eq "$packageid") }
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") -and ($_.'appAvailability' -eq "Global") -and ($_.'packageid' -eq "$packageid") }
 
         }
 
         elseif($bundleid){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") -and ($_.'bundleid' -eq "$bundleid") }
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") -and ($_.'appAvailability' -eq "Global") -and ($_.'bundleid' -eq "$bundleid") }
 
         }
 
         else {
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") }
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { ($_.'@odata.type').Contains("managed") -and ($_.'appAvailability' -eq "Global") }
 
         }
 
@@ -1000,8 +1000,6 @@ $AssignmentCount = 0
             
         }     
 
-
-
         # If iOS Managed App Policy
     
         elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.iosManagedAppProtection"){
@@ -1057,7 +1055,7 @@ $AssignmentCount = 0
 
                     foreach($MAMApp in $MAMApps){
 
-                        $AppName = (Get-IntuneMAMApplication -bundleId $MAMApp.mobileAppIdentifier.bundleId).displayName
+                        $AppName = (Get-IntuneMAMApplication -bundleid $MAMApp.mobileAppIdentifier.bundleId).displayName
 
                         if($AppName){ $AppName }
                         else { $MAMApp.mobileAppIdentifier.bundleId }
