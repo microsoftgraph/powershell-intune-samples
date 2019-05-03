@@ -891,16 +891,18 @@ $OSChoicesCount = "2"
                     
         }
 
+=======
+
     $selection = $menu.Item($ans)
     Write-Host
 
         if($selection){
+
             
                 $OS = $OSChoices | ? { $_ -eq "$Selection" }
                 
-            }           
-                        
-            
+            }         
+
 
 #endregion
 
@@ -1466,4 +1468,3 @@ Write-Host "Evaluation complete..." -ForegroundColor Green
 Write-Host
 write-host "-------------------------------------------------------------------"
 Write-Host
-
