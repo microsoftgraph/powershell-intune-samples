@@ -882,14 +882,25 @@ $OSChoicesCount = "2"
 
     Write-Host
     [int]$ans = Read-Host 'Choose an OS (numerical value)'
+
+        if ($ans -ne 1 -or $ans -ne 2){
+            
+                Write-host "Invalid value enterered..." -ForegroundColor Red
+                Write-Host
+                break
+                    
+        }
+
     $selection = $menu.Item($ans)
     Write-Host
 
         if($selection){
-
-        $OS = $OSChoices | ? { $_ -eq "$Selection" }
-
-        }
+            
+                $OS = $OSChoices | ? { $_ -eq "$Selection" }
+                
+            }           
+                        
+            
 
 #endregion
 
@@ -1237,7 +1248,7 @@ $TMACCount = @($TargetedManagedAppConfigurations).count
                                                        
                         }
 
-                        $Value = ($TargetedManagedAppConfiguration.customSettings | ? { $_.Name -eq "$searchName" } | select value).value
+                        $Value = ($TargetedManagedAppConfiguration.customSettings | ? { $_.Name -eq "$searchName" } | select value).value
 
                         if ($name -like "*ListURLs*"){
                                 
@@ -1455,5 +1466,4 @@ Write-Host "Evaluation complete..." -ForegroundColor Green
 Write-Host
 write-host "-------------------------------------------------------------------"
 Write-Host
-
 
