@@ -882,14 +882,27 @@ $OSChoicesCount = "2"
 
     Write-Host
     [int]$ans = Read-Host 'Choose an OS (numerical value)'
+
+        if ($ans -ne 1 -or $ans -ne 2){
+            
+                Write-host "Invalid value enterered..." -ForegroundColor Red
+                Write-Host
+                break
+                    
+        }
+
+=======
+
     $selection = $menu.Item($ans)
     Write-Host
 
         if($selection){
 
-        $OS = $OSChoices | ? { $_ -eq "$Selection" }
+            
+                $OS = $OSChoices | ? { $_ -eq "$Selection" }
+                
+            }         
 
-        }
 
 #endregion
 
@@ -1455,5 +1468,3 @@ Write-Host "Evaluation complete..." -ForegroundColor Green
 Write-Host
 write-host "-------------------------------------------------------------------"
 Write-Host
-
-
