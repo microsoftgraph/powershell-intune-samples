@@ -6,7 +6,11 @@ Documentation for Intune and Microsoft Graph can be found here Intune Graph Docu
 Some script samples retrieve information from your Intune tenant, and others create, delete or update data in your Intune tenant.  Understand the impact of each sample script prior to running it; samples should be run using a non-production or "test" tenant account.
 ## Introduction
 The Microsoft Graph API for Intune provides the same facilities as does the Intune user interface so, automating manual tasks is a relatively straightforward programming process. In the case of a line of business (LOB) application, there are several additional steps required to complete the upload of the application file. This readme provides an overview and step-by-step guidance for uploading your line of business applications to Intune.
-## Prerequisites
+
+## 1. Application_LOB_Add.ps1
+The following script sample provides the ability to upload an iOS or Android LOB application to the Intune Service.
+
+### Prerequisites
 + Dependent PowerShell module (Azure AD)
 https://docs.microsoft.com/en-us/powershell/azure/active-directory/install-adv2?view=azureadps-2.0
 +	For Android: Android Studio from https://developer.android.com/studio/index.html
@@ -262,4 +266,215 @@ Upload-MSILob "C:\Software\Orca\Orca.Msi" -publisher "Microsoft" -description "O
 #### iOS
 ```
 Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -versionNumber "3.0.0" -expirationDateTime "2018-04-14T20:53:52Z"
+```
+
+## 2. Win32_Application_Add.ps1
+The following script sample provides the ability to upload a Win32 application to the Intune Service. For more information on creating an Intunewin file review the below article:
+
+https://docs.microsoft.com/en-us/intune/apps-win32-app-management
+
+### Prerequisites
+To use Win32 app management, be sure you meet the following criteria:
+
++ Windows 10 version 1607 or later (Enterprise, Pro, and Education versions)
+
+### Script parameters
+The following parameters are required when uploading an Intunewin file via this script sample:
+
++ SourceFile - This is the path to the Intunewin file
++ Publisher - The publisher of the application
++ Description - Description of the application
++ DetectionRules - The detection rules for the application
++ ReturnCodes - The returncodes for the application
+
+An example of this can be found below:
+
+```PowerShell
+# Win32 Application Upload
+Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes
+```
+There are other parameters that can be specified, these include:
+
++ displayName - This can be used to specify the application Name
++ installCmdLine - The complete installation command line for application installation
++ uninstallCmdLine - The complete installation command line for application uninstall
++ installExperience - You can configure a Win32 app to be installed in User or System context. User context refers to only a given user. System context refers to all users of a Windows 10 device.
+
+An example of this is below:
+
+```PowerShell
+# Win32 Application Upload
+Upload-Win32Lob -SourceFile "$SourceFile" -displayName "Application Name" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes
+-installCmdLine "powershell.exe -executionpolicy Bypass .\install.ps1" -uninstallCmdLine "powershell.exe -executionpolicy Bypass .\uninstall.ps1"
+```
+
+### Detection Rules
+The following section will provide samples on how to create detection rules and how to add multiple rules.
+
+#### File Rule
+To create a file detection rule the following can be used:
+
+```PowerShell
+# Defining Intunewin32 detectionRules
+$FileRule = New-DetectionRule -File -Path "C:\Program Files\ProgramName" -FileOrFolderName "program.exe" -FileDetectionType exists -check32BitOn64System False
+```
+
+#### MSI Rule
+To create an MSI detection rule the following can be used:
+
+```PowerShell
+$MSIRule = New-DetectionRule -MSI -MSIproductCode "{23170F69-40B1-2702-1604-000001000000}"
+```
+
+If the intunewin file your creating is an MSI you can use the MSI codes stored in the detection.xml file inside the package. This is completed by using the Get-IntuneWinXML function to open the SourceFile and then extracting the detection.xml.
+
+```PowerShell
+# Defining Intunewin32 detectionRules
+$DetectionXML = Get-IntuneWinXML "$SourceFile" -fileName "detection.xml"
+
+$MSIRule = New-DetectionRule -MSI -MSIproductCode $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
+```
+
+#### Registry Rule
+To create a Registry detection rule the following can be used:
+
+```PowerShell
+# Defining Intunewin32 detectionRules
+$RegistryRule = New-DetectionRule -Registry -RegistryKeyPath "HKEY_LOCAL_MACHINE\SOFTWARE\App" -RegistryDetectionType exists -check32BitRegOn64System True
+```
+
+#### PowerShell Script rule
+To create an app specific script rule that is used to detect the presence of the app, the following example can be used:
+
+```PowerShell
+$PowerShellScript = "C:\Scripts\script.ps1"
+
+$PowerShellRule = New-DetectionRule -PowerShell -ScriptFile "$PowerShellScript" `
+-enforceSignatureCheck $false -runAs32Bit $true
+
+# Creating Array for detection Rule
+$DetectionRule = @($PowerShellRule)
+```
+
+#### Detection Rule Construction
+To create and add multiple detection rules (i.e. File, Registry, MSI) the sample script requires each variable to be passed into an array, once its in an array it can be passed to the JSON object. Example below:
+
+```PowerShell
+# Defining Intunewin32 detectionRules
+$FileRule = New-DetectionRule -File -Path "C:\Program Files\Program" -FileOrFolderName "program.exe" -FileDetectionType exists -check32BitOn64System False
+
+$RegistryRule = New-DetectionRule -Registry -RegistryKeyPath "HKEY_LOCAL_MACHINE\SOFTWARE\App" -RegistryDetectionType exists -check32BitRegOn64System True
+
+$MSIRule = New-DetectionRule -MSI -MSIproductCode "{23170F69-40B1-2702-1604-000001000000}"
+
+# Creating Array for detection Rule
+$DetectionRule = @($FileRule,$RegistryRule,$MSIRule)
+```
+### Return Codes
+Return codes are used to indicate post-installation behavior. When you add an application via the Intune UI there are five default rules created:
+
++ ReturnCode = 0 -> Success
++ ReturnCode = 1707 -> Success
++ ReturnCode = 3010 -> Soft Reboot
++ ReturnCode = 1641 -> Hard Reboot
++ ReturnCode = 1618 -> Retry
+
+The sample script requires return codes to be specified. If the default return codes are valid then you can use the following to get all the default return codes:
+
+```PowerShell
+$ReturnCodes = Get-DefaultReturnCodes
+```
+
+If you want to use the Default return codes but want to add some extra return codes then you can use the following:
+
+```PowerShell
+$ReturnCodes = Get-DefaultReturnCodes
+
+$ReturnCodes += New-ReturnCode -returnCode 142 -type softReboot
+$ReturnCodes += New-ReturnCode -returnCode 339 -type softReboot
+```
+
+If you don't want to include the default return codes, then you need to create an array on the return codes, sample below:
+
+```PowerShell
+$ReturnCode1 = New-ReturnCode -returnCode 142 -type softReboot
+$ReturnCode2 = New-ReturnCode -returnCode 339 -type softReboot
+
+# Creating Array for ReturnCodes
+#$ReturnCodes = @($ReturnCode1,$ReturnCode2)
+```
+Once you have constructed your return codes then they can be passed to the Upload-Win32Lob function.
+
+### Running the script
+To run the sample script you can modify the samples below to match the type and conditions you want to upload:
+
+#### Sample 1
+PowerShell Detection Rule and default return codes
+
+```PowerShell
+$SourceFile = "C:\packages\package.intunewin"
+
+$PowerShellScript = "C:\Scripts\sample.ps1"
+
+$PowerShellRule = New-DetectionRule -PowerShell -ScriptFile "$PowerShellScript" -enforceSignatureCheck $false -runAs32Bit $true
+
+# Creating Array for detection Rule
+$DetectionRule = @($PowerShellRule)
+
+$ReturnCodes = Get-DefaultReturnCodes
+
+# Win32 Application Upload
+Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes -installCmdLine "powershell.exe -executionpolicy Bypass .\install.ps1" -uninstallCmdLine "powershell.exe -executionpolicy Bypass .\uninstall.ps1"
+```
+
+#### Sample 2
+Multiple Detection Rules including file, registry and MSI, plus default return codes with some additional return codes.
+
+```PowerShell
+$SourceFile = "C:\packages\package.intunewin"
+
+# Defining Intunewin32 detectionRules
+$DetectionXML = Get-IntuneWinXML "$SourceFile" -fileName "detection.xml"
+
+# Defining Intunewin32 detectionRules
+$FileRule = New-DetectionRule -File -Path "C:\Program Files\Application" -FileOrFolderName "application.exe" -FileDetectionType exists -check32BitOn64System False
+
+$RegistryRule = New-DetectionRule -Registry -RegistryKeyPath "HKEY_LOCAL_MACHINE\SOFTWARE\Program" -RegistryDetectionType exists -check32BitRegOn64System True
+
+$MSIRule = New-DetectionRule -MSI -MSIproductCode $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
+
+# Creating Array for detection Rule
+$DetectionRule = @($FileRule,$RegistryRule,$MSIRule)
+
+$ReturnCodes = Get-DefaultReturnCodes
+
+$ReturnCodes += New-ReturnCode -returnCode 302 -type softReboot
+$ReturnCodes += New-ReturnCode -returnCode 145 -type hardReboot
+
+# Win32 Application Upload
+Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes
+```
+
+#### Sample 3
+Multiple Detection Rules including file, registry and MSI, plus specific return codes.
+
+```PowerShell
+$SourceFile = "C:\packages\package.intunewin"
+
+# Defining Intunewin32 detectionRules
+$FileRule = New-DetectionRule -File -Path "C:\Program Files\Application" -FileOrFolderName "application.exe" -FileDetectionType exists -check32BitOn64System False
+
+# Creating Array for detection Rule
+$DetectionRule = @($FileRule)
+
+$ReturnCode1 = New-ReturnCode -returnCode 0 -type success
+$ReturnCode2 = New-ReturnCode -returnCode 1618 -type retry
+$ReturnCode3 = New-ReturnCode -returnCode 302 -type softReboot
+$ReturnCode4 = New-ReturnCode -returnCode 145 -type hardReboot
+
+# Creating Array for ReturnCodes
+$ReturnCodes = @($ReturnCode1,$ReturnCode2,$ReturnCode3,$ReturnCode4)
+
+# Win32 Application Upload
+Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes
 ```
