@@ -456,7 +456,7 @@ Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "D
 ```
 
 #### Sample 3
-Multiple Detection Rules including file, registry and MSI, plus specific return codes.
+Single File Detection Rule, plus specific return codes.
 
 ```PowerShell
 $SourceFile = "C:\packages\package.intunewin"
