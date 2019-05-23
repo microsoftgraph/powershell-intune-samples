@@ -149,6 +149,51 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
+Function Get-IntuneBrand(){
+
+<#
+.SYNOPSIS
+This function is used to get the Company Intune Branding resources from the Graph API REST interface
+.DESCRIPTION
+The function connects to the Graph API Interface and gets the Intune Branding Resource
+.EXAMPLE
+Get-IntuneBrand
+Returns the Company Intune Branding configured in Intune
+.NOTES
+NAME: Get-IntuneBrand
+#>
+
+[cmdletbinding()]
+
+$graphApiVersion = "Beta"
+$Resource = "deviceManagement/intuneBrandingProfiles"
+
+    try {
+
+    $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
+
+    }
+
+    catch {
+
+    $ex = $_.Exception
+    $errorResponse = $ex.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($errorResponse)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    $responseBody = $reader.ReadToEnd();
+    Write-Host "Response content:`n$responseBody" -f Red
+    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+    write-host
+    break
+
+    }
+
+}
+
+####################################################
+
 Function Set-IntuneBrand(){
 
 <#
@@ -167,11 +212,12 @@ NAME: Set-IntuneBrand
 
 param
 (
+    $id,
     $JSON
 )
 
 $graphApiVersion = "Beta"
-$App_resource = "deviceManagement"
+$Resource = "deviceManagement/intuneBrandingProfiles('$id')"
 
     try {
 
@@ -186,7 +232,7 @@ $App_resource = "deviceManagement"
 
         Test-JSON -JSON $JSON
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($App_resource)"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         Invoke-RestMethod -Uri $uri -Method Patch -ContentType "application/json" -Body $JSON -Headers $authToken
 
         }
@@ -313,22 +359,17 @@ $JSON_Default = @"
 
 {
 
-    "intuneBrand":{
-    "displayName":null,
-    "contactITName":null,
-    "contactITPhoneNumber":null,
-    "contactITEmailAddress":null,
-    "contactITNotes":null,
-    "privacyUrl":null,
-    "onlineSupportSiteUrl":null,
-    "onlineSupportSiteName":null,
+    "displayName": "",
+    "privacyUrl": "",
+    "contactITName":"",
+    "contactITPhoneNumber":"",
+    "contactITEmailAddress":"",
+    "contactITNotes":"",
+    "onlineSupportSiteUrl":"",
+    "onlineSupportSiteName":"",
     "themeColor":{"r":0,"g":114,"b":198},
     "showLogo":false,
-    "showNameNextToLogo":false,
-    "lightBackgroundLogo":null,
-    "darkBackgroundLogo":null,
-    "@odata.type":"#microsoft.management.services.api.intuneBrand"
-    }
+    "showDisplayNameNextToLogo":true
 
 }
 
@@ -336,4 +377,8 @@ $JSON_Default = @"
 
 ####################################################
 
-Set-IntuneBrand -JSON $JSON_Default
+$IntuneBrand = Get-IntuneBrand
+
+$id = $IntuneBrand.id
+
+Set-IntuneBrand -id $id -JSON $JSON_Default

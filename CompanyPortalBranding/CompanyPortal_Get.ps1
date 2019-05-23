@@ -166,12 +166,12 @@ NAME: Get-IntuneBrand
 [cmdletbinding()]
 
 $graphApiVersion = "Beta"
-$Resource = "deviceManagement/intuneBrand"
+$Resource = "deviceManagement/intuneBrandingProfiles"
 
     try {
 
     $uri = "https://graph.microsoft.com/$graphApiVersion/$($resource)"
-    Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
 
     }
 
