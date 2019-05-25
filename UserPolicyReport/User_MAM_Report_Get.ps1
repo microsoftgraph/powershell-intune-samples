@@ -881,28 +881,45 @@ $OSChoicesCount = "2"
     $menu.Add($i,($OSChoices[$i-1]))}
 
     Write-Host
-    [int]$ans = Read-Host 'Choose an OS (numerical value)'
+    $ans = Read-Host 'Choose an OS (numerical value)'
 
-        if ($ans -ne 1 -or $ans -ne 2){
-            
-                Write-host "Invalid value enterered..." -ForegroundColor Red
-                Write-Host
-                break
-                    
-        }
+    if($ans -eq "" -or $ans -eq $null){
 
-=======
-
-    $selection = $menu.Item($ans)
+    Write-Host "OS choice can't be null, please specify a valid OS..." -ForegroundColor Red
     Write-Host
+    break
+
+    }
+
+    elseif(($ans -match "^[\d\.]+$") -eq $true){
+
+    $selection = $menu.Item([int]$ans)
 
         if($selection){
 
-            
-                $OS = $OSChoices | ? { $_ -eq "$Selection" }
-                
-            }         
+            $OS = $OSChoices | ? { $_ -eq "$Selection" }
 
+        }
+
+        else {
+
+            Write-Host "OS choice selection invalid, please specify a valid OS..." -ForegroundColor Red
+            Write-Host
+            break
+
+        }
+
+    }
+
+    else {
+
+        Write-Host "OS choice not an integer, please specify a valid OS..." -ForegroundColor Red
+        Write-Host
+        break
+
+    }
+
+    Write-Host
 
 #endregion
 
