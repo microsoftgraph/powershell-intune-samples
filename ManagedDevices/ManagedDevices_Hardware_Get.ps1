@@ -333,23 +333,31 @@ if($Devices){
     Write-Host "Device found:" $Device.deviceName -ForegroundColor Yellow
     Write-Host
 
-    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$select=hardwareInformation"
-    $Hardware = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).hardwareInformation
+    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$select=hardwareinformation,iccid,udid"
 
-    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber,meid,subscriberCarrier
-    $HardwareExcludes = $Hardware | select * -ExcludeProperty sharedDeviceCachedUsers,phoneNumber
+    $DeviceInfo = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
+
+    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber,meid,subscriberCarrier,iccid,udid
+    $HardwareExcludes = $DeviceInfo.hardwareInformation | select * -ExcludeProperty sharedDeviceCachedUsers,phoneNumber
+    $OtherDeviceInfo = $DeviceInfo | select iccid,udid
 
         $Object = New-Object System.Object
 
             foreach($Property in $DeviceNoHardware.psobject.Properties){
 
-            $Object | Add-Member -MemberType NoteProperty -Name $Property.Name -Value $Property.Value
+                $Object | Add-Member -MemberType NoteProperty -Name $Property.Name -Value $Property.Value
 
             }
 
             foreach($Property in $HardwareExcludes.psobject.Properties){
 
-            $Object | Add-Member -MemberType NoteProperty -Name $Property.Name -Value $Property.Value
+                $Object | Add-Member -MemberType NoteProperty -Name $Property.Name -Value $Property.Value
+
+            }
+
+            foreach($Property in $OtherDeviceInfo.psobject.Properties){
+
+                $Object | Add-Member -MemberType NoteProperty -Name $Property.Name -Value $Property.Value
 
             }
 
