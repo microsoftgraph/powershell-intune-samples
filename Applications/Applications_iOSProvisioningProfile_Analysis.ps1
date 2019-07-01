@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 .COPYRIGHT
 Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
@@ -243,6 +243,18 @@ $Group_resource = "groups"
 ####################################################
 
 Function Get-iOSProvisioningProfile{
+
+<#
+.SYNOPSIS
+This function is used to get iOS Provisioning Profile expiry information from the plist file uploaded to Intune.
+.DESCRIPTION
+The function connects to the Graph API Interface, gets the provisioning profile information, and then analyses the expiration date. Profile can be expired (Red) or due for expiry (Yellow - under 60 days remaining)
+.EXAMPLE
+Get-AADGroup
+Gets all iOS Provisioning Profiles
+.NOTES
+NAME: Get-iOSProvisioningProfile
+#>
 
 [cmdletbinding()]
 
