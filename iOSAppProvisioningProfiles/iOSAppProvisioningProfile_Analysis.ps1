@@ -366,7 +366,7 @@ $CSV = @()
         $TimeDifference = ($CurrentTime - $ProfileExpirationDate)
         $TotalDays = ($TimeDifference.Days)
 
-        write-host "Provisioning Profile Name: $($displayName)"
+        write-host "iOS App Provisioning Profile Name: $($displayName)"
             
             
                 if ($GroupID) {
@@ -389,21 +389,21 @@ $CSV = @()
             
             if ($TotalDays -gt "0") {
            
-                Write-Host "Profile Expiration Date: " -NoNewline
+                Write-Host "iOS App Provisioning Profile Expiration Date: " -NoNewline
                 write-host "$($ProfileExpirationDate)" -ForegroundColor Red
 
             }
 
             elseif ($TotalDays -gt "-30") {
             
-                    Write-Host "Profile Expiration Date: " -NoNewline
+                    Write-Host "iOS App Provisioning Profile Expiration Date: " -NoNewline
                     write-host "$($ProfileExpirationDate)" -ForegroundColor Yellow 
 
             }
 
             else {
             
-                    Write-Host "Profile Expiration Date: $($ProfileExpirationDate)"
+                    Write-Host "iOS App Provisioning Profile: $($ProfileExpirationDate)"
 
             }
 
@@ -426,7 +426,7 @@ $CSV = @()
         [string] $name = [System.Guid]::NewGuid()
         New-Item -ItemType Directory -Path (Join-Path $parent $name) | Out-Null
         $TempDirPath = "$parent$name" 
-        $TempExportFilePath = "$($TempDirPath)\iOSProvisioningFileExport.csv"
+        $TempExportFilePath = "$($TempDirPath)\iOSAppProvisioningProfileExport.csv"
         $CSV | Add-Content $TempExportFilePath -Force
         Write-Host
         Write-Host "$($TempExportFilePath)"
@@ -438,7 +438,7 @@ $CSV = @()
 
     else {
     
-        write-host "No profiles found."
+        write-host "No iOS App Provisioning Profiles found."
         write-host
 
     }
