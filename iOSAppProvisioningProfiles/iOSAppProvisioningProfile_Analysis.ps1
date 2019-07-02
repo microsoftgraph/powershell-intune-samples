@@ -157,7 +157,7 @@ This function is used to get AAD Groups from the Graph API REST interface
 The function connects to the Graph API Interface and gets any Groups registered with AAD
 .EXAMPLE
 Get-AADGroup
-Returns all users registered with Azure AD
+Returns an AAD group
 .NOTES
 NAME: Get-AADGroup
 #>
