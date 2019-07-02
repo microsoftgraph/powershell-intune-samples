@@ -345,7 +345,7 @@ $global:authToken = Get-AuthToken -User $User
 write-host
 write-host "-------------------------------------------------------------------"
 Write-Host
-write-host "Analysing iOS App Provisioning Files..." -ForegroundColor Yellow
+write-host "Analysing iOS App Provisioning Profiles..." -ForegroundColor Yellow
 Write-Host
 write-host "-------------------------------------------------------------------"
 write-host
