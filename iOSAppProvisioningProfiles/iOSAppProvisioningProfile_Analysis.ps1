@@ -435,3 +435,10 @@ $CSV = @()
         }
 
     }
+
+    else {
+    
+        write-host "No profiles found."
+        write-host
+
+    }
