@@ -246,11 +246,11 @@ Function Get-iOSProvisioningProfile{
 
 <#
 .SYNOPSIS
-This function is used to get iOS Provisioning Profile expiry information from the plist file uploaded to Intune.
+This function is used to get iOS Provisioning Profile uploaded to Intune.
 .DESCRIPTION
-The function connects to the Graph API Interface, gets the provisioning profile information, and then analyses the expiration date. Profile can be expired (Red) or due for expiry (Yellow - under 60 days remaining)
+The function connects to the Graph API Interface and gets an iOS App Provisioning Profile.
 .EXAMPLE
-Get-AADGroup
+Get-iOSProvisioningProfile
 Gets all iOS Provisioning Profiles
 .NOTES
 NAME: Get-iOSProvisioningProfile
