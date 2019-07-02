@@ -350,6 +350,7 @@ write-host
 $Profiles = (Get-iOSProvisioningProfile)
 $Days = 30
 $CSV = @()
+$CSV += "iOSAppProvisioningProfileName,GroupAssignedName,ExpiryDate"
 
     foreach ($Profile in $Profiles) {
     
@@ -424,7 +425,7 @@ $CSV = @()
         [string] $name = [System.Guid]::NewGuid()
         New-Item -ItemType Directory -Path (Join-Path $parent $name) | Out-Null
         $TempDirPath = "$parent$name" 
-        $TempExportFilePath = "$($TempDirPath)\iOSAppProvisioningProfileExport.csv"
+        $TempExportFilePath = "$($TempDirPath)\iOSAppProvisioningProfileExport.txt"
         $CSV | Add-Content $TempExportFilePath -Force
         Write-Host
         Write-Host "$($TempExportFilePath)"
