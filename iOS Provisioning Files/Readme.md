@@ -1,4 +1,4 @@
-### iOSProvisioningFile_Analysis.ps1
+### iOSProvisioningProfile_Analysis.ps1
 This script gets the iOS Provisioning Profiles in an Intune tenant and outputs the expiry information from the mobileprovision file.
 
 #### Get-AADGroup Function
