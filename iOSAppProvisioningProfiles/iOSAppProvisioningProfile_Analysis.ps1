@@ -341,12 +341,6 @@ $global:authToken = Get-AuthToken -User $User
 ####################################################
 
 # Create Temp file for export data
- 
-$parent = [System.IO.Path]::GetTempPath()
-[string] $name = [System.Guid]::NewGuid()
-New-Item -ItemType Directory -Path (Join-Path $parent $name) | Out-Null
-$TempDirPath = "$parent$name" 
-$TempExportFilePath = "$($TempDirPath)\iOSProvisioningFileExport.csv"
 
 write-host
 write-host "-------------------------------------------------------------------"
@@ -367,24 +361,29 @@ $CSV = @()
         $Exp = ($PayloadRaw | C:\windows\System32\findstr.exe /i "date").trim()[3]
         [datetime]$ProfileExpirationDate = $Exp.TrimStart('<date>').trimend('</date>')
         $displayName = $Profile.displayName
-        $id = ($Profile.assignments.target.groupId)
-        $GroupName = (Get-AADGroup -id $id).DisplayName
+        $GroupID = ($Profile.assignments.target.groupId)
         $CurrentTime = [System.DateTimeOffset]::Now
         $TimeDifference = ($CurrentTime - $ProfileExpirationDate)
         $TotalDays = ($TimeDifference.Days)
 
         write-host "Provisioning Profile Name: $($displayName)"
             
-            if ($id) {
             
-                write-host "Group assigned: $($GroupName)"
+                if ($GroupID) {
+               
+                    foreach ($id in $GroupID) {
+                
+                    $GroupName = (Get-AADGroup -id $id).DisplayName
+                    write-host "Group assigned: $($GroupName)"
+
+                    }
 
                 }
 
                 else {
                 
                 write-host "Group assigned: " -NoNewline 
-                Write-Host "Unassigned" -ForegroundColor Yellow
+                Write-Host "Unassigned"
                 
                 }
             
@@ -416,14 +415,23 @@ $CSV = @()
     
     }
 
+    if (!($Profiles.count -eq 0)) {
+
     Write-Host "Export results? [Y]es, [N]o"
     $conf = Read-Host
  
         if ($conf -eq "Y"){
 
+        $parent = [System.IO.Path]::GetTempPath()
+        [string] $name = [System.Guid]::NewGuid()
+        New-Item -ItemType Directory -Path (Join-Path $parent $name) | Out-Null
+        $TempDirPath = "$parent$name" 
+        $TempExportFilePath = "$($TempDirPath)\iOSProvisioningFileExport.csv"
         $CSV | Add-Content $TempExportFilePath -Force
         Write-Host
         Write-Host "$($TempExportFilePath)"
         Write-Host
 
         }
+
+    }
