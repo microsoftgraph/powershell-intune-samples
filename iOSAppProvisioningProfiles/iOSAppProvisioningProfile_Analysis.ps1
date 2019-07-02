@@ -340,8 +340,6 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-# Create Temp file for export data
-
 write-host
 write-host "-------------------------------------------------------------------"
 Write-Host
