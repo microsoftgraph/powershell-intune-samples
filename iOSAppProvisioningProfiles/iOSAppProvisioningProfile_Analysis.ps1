@@ -351,6 +351,7 @@ $Profiles = (Get-iOSProvisioningProfile)
 $Days = 30
 $CSV = @()
 $CSV += "iOSAppProvisioningProfileName,GroupAssignedName,ExpiryDate"
+$GroupsOutput = @()
 
     foreach ($Profile in $Profiles) {
     
@@ -372,10 +373,11 @@ $CSV += "iOSAppProvisioningProfileName,GroupAssignedName,ExpiryDate"
                
                     foreach ($id in $GroupID) {
                 
-                    $GroupName = (Get-AADGroup -id $id).DisplayName
-                    write-host "Group assigned: $($GroupName)"
+                            $GroupName = (Get-AADGroup -id $id).DisplayName
+                            write-host "Group assigned: $($GroupName)"
+                            $CSV += "$($displayName),$($GroupName),$($ProfileExpirationDate)"
 
-                    }
+                        }
 
                 }
 
@@ -410,7 +412,7 @@ $CSV += "iOSAppProvisioningProfileName,GroupAssignedName,ExpiryDate"
         Write-Host
         write-host "-------------------------------------------------------------------"
         write-host
-        $CSV += "$($displayName),$($GroupName),$($ProfileExpirationDate)"
+        
     
     }
 
