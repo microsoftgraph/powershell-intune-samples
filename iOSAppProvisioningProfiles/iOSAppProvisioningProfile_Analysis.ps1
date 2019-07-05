@@ -385,6 +385,7 @@ $GroupsOutput = @()
                 
                 write-host "Group assigned: " -NoNewline 
                 Write-Host "Unassigned"
+                $CSV += "$($displayName),,$($ProfileExpirationDate)"
                 
                 }
             
