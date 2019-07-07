@@ -412,6 +412,9 @@ function GetWin32AppBody() {
         [parameter(Mandatory = $true, ParameterSetName = "EXE", Position = 1)]
         [Switch]$EXE,
 
+        [Parameter(Mandatory = $false, ParameterSetName = "PWSH", Position = 1)]
+        [switch]$PowerShell,
+
         [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$displayName,
@@ -428,106 +431,121 @@ function GetWin32AppBody() {
         [ValidateNotNullOrEmpty()]
         [string]$filename,
 
-        [parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$SetupFileName,
-
         [parameter(Mandatory = $false)]
         [ValidateSet('system', 'user')]
         $installExperience = "system",
 
+        [parameter(Mandatory = $true, ParameterSetName = "PWSH")]
+        [parameter(Mandatory = $true, ParameterSetName = "MSI")]
+        [ValidateNotNullOrEmpty()]
+        $setupFileName,
+
+        [parameter(Mandatory = $true, ParameterSetName = "PWSH")]
+        [parameter(Mandatory = $true, ParameterSetName = "EXE")]
+        [ValidateNotNullOrEmpty()]
+        $uninstallCommandLine,
+        
         [parameter(Mandatory = $true, ParameterSetName = "EXE")]
         [ValidateNotNullOrEmpty()]
         $installCommandLine,
 
-        [parameter(Mandatory = $true, ParameterSetName = "EXE")]
+        [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        $uninstallCommandLine,
+        $msiPackageType,
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        $MsiPackageType,
-
-        [parameter(Mandatory = $true, ParameterSetName = "MSI")]
-        [ValidateNotNullOrEmpty()]
-        $MsiProductCode,
+        $msiProductCode,
 
         [parameter(Mandatory = $false, ParameterSetName = "MSI")]
-        $MsiProductName,
+        $msiProductName,
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        $MsiProductVersion,
+        $msiProductVersion,
 
         [parameter(Mandatory = $false, ParameterSetName = "MSI")]
-        $MsiPublisher,
+        $msiPublisher,
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        $MsiRequiresReboot,
+        $msiRequiresReboot,
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        $MsiUpgradeCode
+        $msiUpgradeCode
 
     )
 
-    if ($MSI) {
-
-        $body = @{ "@odata.type" = "#microsoft.graph.win32LobApp" };
-        $body.applicableArchitectures = "x64,x86";
-        $body.description = $description;
-        $body.developer = "";
-        $body.displayName = $displayName;
-        $body.fileName = $filename;
+    $body = @{ "@odata.type" = "#microsoft.graph.win32LobApp" }
+    if ($msi) {
+        $body.applicableArchitectures = "x64,x86"
+        $body.description = $description
+        $body.developer = ""
+        $body.displayName = $displayName
+        $body.fileName = $filename
         $body.installCommandLine = "msiexec /i `"$SetupFileName`""
-        $body.installExperience = @{"runAsAccount" = "$installExperience" };
-        $body.informationUrl = $null;
-        $body.isFeatured = $false;
-        $body.minimumSupportedOperatingSystem = @{"v10_1607" = $true };
+        $body.installExperience = @{"runAsAccount" = "$installExperience" }
+        $body.informationUrl = $null
+        $body.isFeatured = $false
+        $body.minimumSupportedOperatingSystem = @{"v10_1607" = $true }
         $body.msiInformation = @{
-            "packageType"    = "$MsiPackageType";
-            "productCode"    = "$MsiProductCode";
-            "productName"    = "$MsiProductName";
-            "productVersion" = "$MsiProductVersion";
-            "publisher"      = "$MsiPublisher";
-            "requiresReboot" = "$MsiRequiresReboot";
-            "upgradeCode"    = "$MsiUpgradeCode"
-        };
-        $body.notes = "";
-        $body.owner = "";
-        $body.privacyInformationUrl = $null;
-        $body.publisher = $publisher;
-        $body.runAs32bit = $false;
-        $body.setupFilePath = $SetupFileName;
-        $body.uninstallCommandLine = "msiexec /x `"$MsiProductCode`""
-
+            "packageType"    = "$msiPackageType"
+            "productCode"    = "$msiProductCode"
+            "productName"    = "$msiProductName"
+            "productVersion" = "$msiProductVersion"
+            "publisher"      = "$msiPublisher"
+            "requiresReboot" = "$msiRequiresReboot"
+            "upgradeCode"    = "$msiUpgradeCode"
+        }
+        $body.notes = ""
+        $body.owner = ""
+        $body.privacyInformationUrl = $null
+        $body.publisher = $publisher
+        $body.runAs32bit = $false
+        $body.setupFilePath = $SetupFileName
+        $body.uninstallCommandLine = "msiexec /x `"$msiProductCode`""
     }
-
     elseif ($EXE) {
-
-        $body = @{ "@odata.type" = "#microsoft.graph.win32LobApp" };
-        $body.description = $description;
-        $body.developer = "";
-        $body.displayName = $displayName;
-        $body.fileName = $filename;
+        $body.description = $description
+        $body.developer = ""
+        $body.displayName = $displayName
+        $body.fileName = $filename
         $body.installCommandLine = "$installCommandLine"
-        $body.installExperience = @{"runAsAccount" = "$installExperience" };
-        $body.informationUrl = $null;
-        $body.isFeatured = $false;
-        $body.minimumSupportedOperatingSystem = @{"v10_1607" = $true };
-        $body.msiInformation = $null;
-        $body.notes = "";
-        $body.owner = "";
-        $body.privacyInformationUrl = $null;
-        $body.publisher = $publisher;
-        $body.runAs32bit = $false;
-        $body.setupFilePath = $SetupFileName;
+        $body.installExperience = @{"runAsAccount" = "$installExperience" }
+        $body.informationUrl = $null
+        $body.isFeatured = $false
+        $body.minimumSupportedOperatingSystem = @{"v10_1607" = $true }
+        $body.msiInformation = $null
+        $body.notes = ""
+        $body.owner = ""
+        $body.privacyInformationUrl = $null
+        $body.publisher = $publisher
+        $body.runAs32bit = $false
+        $body.setupFilePath = $SetupFileName
         $body.uninstallCommandLine = "$uninstallCommandLine"
-
+    }
+    elseif ($PowerShell) {
+        $body.description = $description
+        $body.developer = ""
+        $body.displayName = $displayName
+        $body.fileName = $filename
+        $body.installCommandLine = "Powershell.exe -executionPolicy bypass -file './$SetupFileName'"
+        $body.installExperience = @{"runAsAccount" = "$installExperience" }
+        $body.informationUrl = $null
+        $body.isFeatured = $false
+        $body.minimumSupportedOperatingSystem = @{"v10_1607" = $true }
+        $body.msiInformation = $null
+        $body.notes = ""
+        $body.owner = ""
+        $body.privacyInformationUrl = $null
+        $body.publisher = $publisher
+        $body.runAs32bit = $false
+        $body.setupFilePath = $SetupFileName
+        $body.uninstallCommandLine = "$uninstallCommandLine"
     }
 
-    $body;
+    return $body
 }
 
 ####################################################
@@ -600,7 +618,7 @@ Function New-DetectionRule() {
         [Switch]$PowerShell,
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI", Position = 1)]
-        [Switch]$MSI,
+        [Switch]$msi,
 
         [parameter(Mandatory = $true, ParameterSetName = "File", Position = 1)]
         [Switch]$File,
@@ -622,7 +640,7 @@ Function New-DetectionRule() {
 
         [parameter(Mandatory = $true, ParameterSetName = "MSI")]
         [ValidateNotNullOrEmpty()]
-        [String]$MSIproductCode,
+        [String]$msiProductCode,
    
         [parameter(Mandatory = $true, ParameterSetName = "File")]
         [ValidateNotNullOrEmpty()]
@@ -682,11 +700,11 @@ Function New-DetectionRule() {
 
     }
     
-    elseif ($MSI) {
+    elseif ($msi) {
     
         $DR = @{ "@odata.type" = "#microsoft.graph.win32LobAppProductCodeDetection" }
         $DR.productVersionOperator = "notConfigured";
-        $DR.productCode = "$MsiProductCode";
+        $DR.productCode = "$msiProductCode";
         $DR.productVersion = $null;
 
     }
@@ -914,19 +932,19 @@ NAME: Upload-Win32LOB
         if ((($Ext).contains("msi") -or ($Ext).contains("Msi")) -and (!$installCmdLine -or !$uninstallCmdLine)) {
 
             # MSI
-            $MsiExecutionContext = $DetectionXML.ApplicationInfo.MsiInfo.MsiExecutionContext
-            $MsiPackageType = "DualPurpose";
-            if ($MsiExecutionContext -eq "System") { $MsiPackageType = "PerMachine" }
-            elseif ($MsiExecutionContext -eq "User") { $MsiPackageType = "PerUser" }
+            $msiExecutionContext = $DetectionXML.ApplicationInfo.MsiInfo.MsiExecutionContext
+            $msiPackageType = "DualPurpose";
+            if ($msiExecutionContext -eq "System") { $msiPackageType = "PerMachine" }
+            elseif ($msiExecutionContext -eq "User") { $msiPackageType = "PerUser" }
 
-            $MsiProductCode = $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
-            $MsiProductVersion = $DetectionXML.ApplicationInfo.MsiInfo.MsiProductVersion
-            $MsiPublisher = $DetectionXML.ApplicationInfo.MsiInfo.MsiPublisher
-            $MsiRequiresReboot = $DetectionXML.ApplicationInfo.MsiInfo.MsiRequiresReboot
-            $MsiUpgradeCode = $DetectionXML.ApplicationInfo.MsiInfo.MsiUpgradeCode
+            $msiProductCode = $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
+            $msiProductVersion = $DetectionXML.ApplicationInfo.MsiInfo.MsiProductVersion
+            $msiPublisher = $DetectionXML.ApplicationInfo.MsiInfo.MsiPublisher
+            $msiRequiresReboot = $DetectionXML.ApplicationInfo.MsiInfo.MsiRequiresReboot
+            $msiUpgradeCode = $DetectionXML.ApplicationInfo.MsiInfo.MsiUpgradeCode
             
-            if ($MsiRequiresReboot -eq "false") { $MsiRequiresReboot = $false }
-            elseif ($MsiRequiresReboot -eq "true") { $MsiRequiresReboot = $true }
+            if ($msiRequiresReboot -eq "false") { $msiRequiresReboot = $false }
+            elseif ($msiRequiresReboot -eq "true") { $msiRequiresReboot = $true }
 
             $mobileAppBody = GetWin32AppBody `
                 -MSI `
@@ -936,13 +954,13 @@ NAME: Upload-Win32LOB
                 -filename $FileName `
                 -SetupFileName "$SetupFileName" `
                 -installExperience $installExperience `
-                -MsiPackageType $MsiPackageType `
-                -MsiProductCode $MsiProductCode `
+                -MsiPackageType $msiPackageType `
+                -MsiProductCode $msiProductCode `
                 -MsiProductName $displayName `
-                -MsiProductVersion $MsiProductVersion `
-                -MsiPublisher $MsiPublisher `
-                -MsiRequiresReboot $MsiRequiresReboot `
-                -MsiUpgradeCode $MsiUpgradeCode
+                -MsiProductVersion $msiProductVersion `
+                -MsiPublisher $msiPublisher `
+                -MsiRequiresReboot $msiRequiresReboot `
+                -MsiUpgradeCode $msiUpgradeCode
 
         }
 
@@ -1161,10 +1179,10 @@ $FileRule = New-DetectionRule -File -Path "C:\Program Files\Application" `
 $RegistryRule = New-DetectionRule -Registry -RegistryKeyPath "HKEY_LOCAL_MACHINE\SOFTWARE\Program" `
     -RegistryDetectionType exists -check32BitRegOn64System True
 
-$MSIRule = New-DetectionRule -MSI -MSIproductCode $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
+$msiRule = New-DetectionRule -MSI -MSIproductCode $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
 
 # Creating Array for detection Rule
-$DetectionRule = @($FileRule, $RegistryRule, $MSIRule)
+$DetectionRule = @($FileRule, $RegistryRule, $msiRule)
 
 $ReturnCodes = Get-DefaultReturnCodes
 
