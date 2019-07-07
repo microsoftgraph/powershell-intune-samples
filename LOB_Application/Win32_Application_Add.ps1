@@ -779,8 +779,7 @@ Function Get-IntuneWinXML() {
         $fileName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet("false", "true")]
-        [string]$removeitem = "true"
+        [switch]$removeitem
     )
 
     Test-SourceFile "$SourceFile"
@@ -791,9 +790,7 @@ Function Get-IntuneWinXML() {
     $zip = [IO.Compression.ZipFile]::OpenRead("$SourceFile")
 
     $zip.Entries | Where-Object { $_.Name -like "$filename" } | ForEach-Object {
-
         [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "$Directory\$filename", $true)
-
     }
 
     $zip.Dispose()
@@ -802,7 +799,9 @@ Function Get-IntuneWinXML() {
 
     return $IntuneWinXML
 
-    if ($removeitem -eq "true") { remove-item "$Directory\$filename" }
+    if ($removeitem) { 
+        remove-item "$Directory\$filename" 
+    }
 
 }
 
