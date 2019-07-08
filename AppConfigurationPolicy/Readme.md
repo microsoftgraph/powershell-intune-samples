@@ -1,4 +1,4 @@
-#### Intune App Configuration Policy Script Samples
+# Intune App Configuration Policy Script Samples
 This repository of PowerShell sample scripts show how to access Intune service resources. They demonstrate this by making HTTPS RESTful API requests to the Microsoft Graph API from PowerShell.
 
 Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
@@ -8,7 +8,7 @@ Some script samples retrieve information from your Intune tenant, and others cre
 
 Within this section there are the following scripts with the explanation of usage.
 
-#### 1.	AppConfigPolicy_Export.ps1
+### 1.	AppConfigPolicy_Export.ps1
 This script gets all App Configuration Policies in an Intune tenant and exports each policy to .json format in the directory of your choice. 
 
 #### Get-ManagedAppAppConfigPolicy
@@ -19,7 +19,7 @@ This function is used to get app configuration policies for managed devices from
 This function is used to get an app bundle ID from the Graph API REST interface
 #### Export-JSONData
 This function is used to export JSON data returned from Graph
-#### 2.	AppConfigPolicy_ImportFromJSON.ps1
+### 2.	AppConfigPolicy_ImportFromJSON.ps1
 This script imports an App Configuration Policy from a JSON file into the Intune Service you have authenticated with. 
 When you run the script it will prompt for a path to a .json file.
 #### Add-ManagedAppAppConfigPolicy
