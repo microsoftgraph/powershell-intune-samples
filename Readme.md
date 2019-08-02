@@ -1,3 +1,17 @@
+---
+page_type: sample
+products:
+- ms-graph
+languages:
+- powershell
+extensions:
+  contentType: samples
+  technologies:
+  - Microsoft Graph
+  services:
+  - Intune
+  createdDate: 4/4/2017 9:41:27 AM
+---
 # Intune Graph Samples
 
 This repository of PowerShell sample scripts show how to access Intune service resources.  They demonstrate this by making HTTPS RESTful API requests to the Microsoft Graph API from PowerShell.
