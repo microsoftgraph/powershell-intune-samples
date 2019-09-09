@@ -7,7 +7,7 @@ languages:
 extensions:
   contentType: samples
   technologies:
-  - Microsoft Graph
+  - Microsoft Graph 
   services:
   - Intune
   createdDate: 4/4/2017 9:41:27 AM
