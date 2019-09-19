@@ -648,21 +648,19 @@ function Get-WindowsProtectionSummary {
 
 function Get-ManagedAppUsageSummary {
     Log-Info "Getting Managed App Usage Summary for user $UPN"
-    $UsageSummary = Get-MsGraphObject "deviceAppManagement/managedAppStatuses('usageSummary')"
 
-    $Report = ($UsageSummary.content.report | ConvertFrom-Json)
+    $UsageSummary = Get-MsGraphObject "deviceAppManagement/managedAppStatuses('appregistrationsummary')?fetch=6000&policyMode=0&columns=UserId,DisplayName,UserEmail,ApplicationName,ApplicationInstanceId,ApplicationVersion,DeviceName,DeviceType,DeviceManufacturer,DeviceModel,AndroidPatchVersion,AzureADDeviceId,MDMDeviceID,Platform,PlatformVersion,ManagementLevel,PolicyName,LastCheckInDate"
+    $Report = $UsageSummary.content.body
     $FilteredRows = @()
-    if ($Report.value.Count -gt 0) {
-        foreach ($Row in $Report.value) {
-            if ($Row.userId -ieq $UserId) {
+    if ($Report.Count -gt 0) {
+        foreach ($Row in $Report) {
+            if ($Row.values[0] -ieq $UserId) {
                 $FilteredRows += $Row
             }
         }
     }
-
-    $Report.value = $FilteredRows
-
-    $UsageSummary.content.report = $Report
+    $Report = $FilteredRows
+    $UsageSummary.content.body = $Report
 
     return $UsageSummary
 }
