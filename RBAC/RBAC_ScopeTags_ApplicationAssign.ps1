@@ -309,7 +309,7 @@ $Resource = "deviceAppManagement/mobileApps/$id"
 
     try {
 
-        if(($Type -eq "#microsoft.graph.androidManagedStoreApp") -or ($Type -eq "#microsoft.graph.microsoftStoreForBusinessApp") -or ($Type -eq "#microsoft.graph.iosVppApp")){
+        if(($Type -eq "#microsoft.graph.microsoftStoreForBusinessApp") -or ($Type -eq "#microsoft.graph.iosVppApp")){
 
             Write-Warning "Scope Tags aren't available on '$Type' application Type..."
 
