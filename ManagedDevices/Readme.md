@@ -277,3 +277,91 @@ This function is used to get all managed devices from the Intune Service.
 ```PowerShell
 Get-ManagedDevices
 ```
+
+### 8. Win10_PrimaryUser_Get.ps1
+This script returns the Primary user of an Intune managed Windows 10 device when provided a device name and it will also the Registered Owner and Registered Users on the associated Azure AD device object.
+
+##### Example usage
+```
+# Gets all win10 devices and outputs Intune Primary User, Registered Owner and Registered User
+.\Win10_PrimaryUser_Get.ps1
+
+# Get specific Win10 device and outputs Intune Primary User, Registered Owner and Registered User
+.\Win10_PrimaryUser_Get.ps1 -DeviceName c7e9d83a-085e-4886-989b-b4ee1d68c5a4
+```
+
+##### Example output
+```
+Device name: WIN10-01
+Intune device id: e774b98b-9e40-457d-a8b1-d396030b01ab
+Intune Primary user id: 815f48e9-c108-4524-b9fc-66cf6bbe7b0d
+
+AAD Registered Owner:
+Id: 815f48e9-c108-4524-b9fc-66cf6bbe7b0d
+Name: Test User
+
+RegisteredUsers:
+Id: 815f48e9-c108-4524-b9fc-66cf6bbe7b0d
+Name: Test User
+```
+
+#### Get-AADDeviceId - Function
+This gets an AAD device object id from the Intune AAD device id
+```PowerShell
+Get-AADDeviceId -deviceId c7e9d83a-085e-4886-989b-b4ee1d68c5a4”
+```
+
+#### Get-Win10IntuneManagedDevice – Function
+This function is used to return Intune managed Windows 10 devices only
+
+```PowerShell
+Get-Win10IntuneManagedDevice -deviceName “DESKTOP-123456”
+```
+
+#### Get-IntuneDevicePrimaryUser - Function
+This function is used to get an Intune managed device's Primary User
+
+```PowerShell
+Get-IntuneDevicePrimaryUser -deviceId c7e9d83a-085e-4886-989b-b4ee1d68c5a4
+```
+
+#### Get-AADDevicesRegisteredOwners - Function
+This function is used to get the AAD device registered owner when provided the AAD deviceID
+
+```PowerShell
+Get-AADDevicesRegisteredOwners -deviceId $aadDeviceId
+```
+#### Get-AADDevicesRegisteredUsers - Function
+This function is used to get the AAD device registered users when provided the AAD deviceID
+```PowerShell
+Get-AADDevicesRegisteredUsers -deviceId $aadDeviceId
+```
+
+### 9. Win10_PrimaryUser_Set.ps1
+This script can be used to set an Intune managed Windows 10 device Primary user when provided a device name and User ID.
+
+##### Example usage
+```
+.\Win10_PrimaryUser_Set.ps1 -DeviceName c7e9d83a-085e-4886-989b-b4ee1d68c5a4 -UserPrincipalName user@tenant.onmicrosoft.com
+```
+
+#### Set-IntuneDevicePrimaryUser - Function
+This updates the Intune device primary user
+```PowerShell
+Set-IntuneDevicePrimaryUser -IntuneDeviceId c7e9d83a-085e-4886-989b-b4ee1d68c5a4 -userId 5f801fed-661e-4f43-8dd5-9ff034047307
+```
+
+### 10. Win10_PrimaryUser_Delete.ps1
+This script can be used to remove the primary user from an Intune managed Windows 10 device.
+
+##### Example usage
+```
+.\Win10_PrimaryUser_Delete.ps1 -DeviceName c7e9d83a-085e-4886-989b-b4ee1d68c5a4
+```
+
+#### Delete-IntuneDevicePrimaryUser - Function
+This function deletes the Intune device primary user when provided a DeviceID
+
+```PowerShell
+Delete-IntuneDevicePrimaryUser -IntuneDeviceId c7e9d83a-085e-4886-989b-b4ee1d68c5a4”
+```
