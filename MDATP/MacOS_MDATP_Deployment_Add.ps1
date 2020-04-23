@@ -407,14 +407,10 @@ else {
         break
     }
 
-    else {
-
-        $OnboardingXMLFile = get-content "$OnboardingXMLFilePath" -Encoding byte
-        $OnboardingXML = [System.Convert]::ToBase64String($OnboardingXMLFile)
-
-    }
-
 }
+
+$OnboardingXMLFile = get-content "$OnboardingXMLFilePath" -Encoding byte
+$OnboardingXML = [System.Convert]::ToBase64String($OnboardingXMLFile)
 
 ####################################################
 
