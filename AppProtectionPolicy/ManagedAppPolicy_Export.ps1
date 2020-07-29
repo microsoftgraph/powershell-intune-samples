@@ -480,7 +480,7 @@ Write-Host
 
 write-host "Running query against Microsoft Graph for App Protection Policies" -f Yellow
 
-$ManagedAppPolicies = Get-ManagedAppPolicy | ? { ($_.'@odata.type').contains("ManagedAppProtection") }
+$ManagedAppPolicies = Get-ManagedAppPolicy
 
 write-host
 
@@ -514,8 +514,36 @@ if($ManagedAppPolicies){
 
         }
 
+        elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.windowsInformationProtectionPolicy"){
+
+            $AppProtectionPolicy = Get-ManagedAppProtection -id $ManagedAppPolicy.id -OS "WIP_WE"
+
+            $AppProtectionPolicy | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "#microsoft.graph.windowsInformationProtectionPolicy"
+
+            $AppProtectionPolicy
+
+            Export-JSONData -JSON $AppProtectionPolicy -ExportPath "$ExportPath"
+
+        }
+
+        elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.mdmWindowsInformationProtectionPolicy"){
+
+            $AppProtectionPolicy = Get-ManagedAppProtection -id $ManagedAppPolicy.id -OS "WIP_MDM"
+
+            $AppProtectionPolicy | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "#microsoft.graph.mdmWindowsInformationProtectionPolicy"
+
+            $AppProtectionPolicy
+
+            Export-JSONData -JSON $AppProtectionPolicy -ExportPath "$ExportPath"
+
+        }
+
     Write-Host
 
     }
 
+}
+else
+{
+    Write-Host "No App protection policies configured!"
 }
