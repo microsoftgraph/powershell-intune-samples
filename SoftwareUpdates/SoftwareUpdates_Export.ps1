@@ -430,7 +430,7 @@ else {
 
 $ISUPs = Get-SoftwareUpdatePolicy -iOS
 
-if($WSUPs){
+if($ISUPs){
 
     foreach($ISUP in $ISUPs){
 

@@ -4,6 +4,10 @@ This repository of PowerShell sample scripts can assist in configuring a Microso
 
 The following scripts are included in this repository:
 - Configure-MDATPIntuneSecAdminRole.ps1
+- MacOS_MDATP_Deployment_Add.ps1
+- MacOS_MDATP_Deployment_Add_Assign.ps1
+
+For information about using the MDATP Deployment Scripts, please see [MacOS_MDATP_Deployment_Readme](https://github.com/microsoftgraph/powershell-intune-samples/raw/master/MDATP/MacOS_MDATP_Deployment_Readme.docx)
 
 The scripts are licensed "as-is." under the MIT License.
 
