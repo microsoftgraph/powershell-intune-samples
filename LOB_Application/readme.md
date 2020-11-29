@@ -478,3 +478,9 @@ $ReturnCodes = @($ReturnCode1,$ReturnCode2,$ReturnCode3,$ReturnCode4)
 # Win32 Application Upload
 Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" -description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes
 ```
+
+## 3. Win32_Application_Update.ps1
+Used to update description, publisher, binary files, etc. (any information Win32_Application_Add adds)
+
+It works exactly like Win32_Application_Add.ps1 with one exception, it needs one extra parameter appId.
+appId is the application id of the application that will be updated
