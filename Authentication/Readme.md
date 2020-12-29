@@ -9,7 +9,25 @@ Some script samples retrieve information from your Intune tenant, and others cre
 
 Within this section there are the following scripts with the explanation of usage.
 
-### 1. Auth_From_File.ps1
+### 1. Auth_AppOnly.ps1
+This script demonstrates how to use Application Authentication against Graph API. To enable the usage of Application Authentication please review the following documentation from the Microsoft Graph Team:
+
+https://docs.microsoft.com/en-us/graph/auth-v2-service?context=graph/api/1.0
+https://docs.microsoft.com/en-us/graph/auth-register-app-v2
+
+The Get-AuthToken function requires the following variable input:
+
+- $Tenant - The name of your tenant your authenticating against e.g. tenantname.onmicrosoft.com
+- $ClientId - The Client / Application ID created after following https://docs.microsoft.com/en-us/graph/auth-v2-service?context=graph/api/1.0 documentation
+- $ClientSecret - The client secret can be created after you've created your app registration in Azure AD - https://docs.microsoft.com/en-us/graph/auth-register-app-v2
+
+```
+Get-AuthToken -Tenant "tenantname.onmicrosoft.com" -ClientId "ClientId/ApplicationId" -ClientSecret "ClientSecret"
+```
+#### Note:
+You will have to assign Microsoft Graph permissions that are "Application" permissions, otherwise when you authenticate against the service Graph calls could fail. Please review documentation above.
+
+### 2. Auth_From_File.ps1
 This script demonstrates how to store a password as a secure string in a file.  The file's contents are used during authentication to supply the password, rather than requiring an interactive user login.
 
 The Authentication region defines two variables:  $User and $Password.  The $User variable indicates the user principal name for the credentials, and the $Password variable indicates the location of the file which has the password string (the password file).
