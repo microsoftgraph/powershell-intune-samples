@@ -151,74 +151,75 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 Function Get-itunesApplication(){
 
-<#
-.SYNOPSIS
-This function is used to get an iOS application from the itunes store using the Apple REST API interface
-.DESCRIPTION
-The function connects to the Apple REST API Interface and returns applications from the itunes store
-.EXAMPLE
-Get-itunesApplication -SearchString "Microsoft Corporation"
-Gets an iOS application from itunes store
-.EXAMPLE
-Get-itunesApplication -SearchString "Microsoft Corporation" -Limit 10
-Gets an iOS application from itunes store with a limit of 10 results
-.NOTES
-NAME: Get-itunesApplication
-https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
-#>
-
-[cmdletbinding()]
-
-param
-(
-    [Parameter(Mandatory=$true)]
-    $SearchString,
-    [int]$Limit
-)
-
-    try{
-
-    Write-Verbose $SearchString
-
-    # Testing if string contains a space and replacing it with a +
-    $SearchString = $SearchString.replace(" ","+")
-
-    Write-Verbose "SearchString variable converted if there is a space in the name $SearchString"
-
-        if($Limit){
-
-        $iTunesUrl = "https://itunes.apple.com/search?entity=software&term=$SearchString&attribute=softwareDeveloper&limit=$limit"
-
+    <#
+    .SYNOPSIS
+    This function is used to get an iOS application from the itunes store using the Apple REST API interface
+    .DESCRIPTION
+    The function connects to the Apple REST API Interface and returns applications from the itunes store
+    .EXAMPLE
+    Get-itunesApplication -SearchString "Microsoft Corporation"
+    Gets an iOS application from itunes store
+    .EXAMPLE
+    Get-itunesApplication -SearchString "Microsoft Corporation" -Limit 10
+    Gets an iOS application from itunes store with a limit of 10 results
+    .NOTES
+    NAME: Get-itunesApplication
+    https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
+    #>
+    
+    [cmdletbinding()]
+    
+    param
+    (
+        [Parameter(Mandatory=$true)]
+        $SearchString,
+        [int]$Limit
+    )
+    
+        try{
+    
+        Write-Verbose $SearchString
+    
+        # Testing if string contains a space and replacing it with %20
+        $SearchString = $SearchString.replace(" ","%20")
+    
+        Write-Verbose "SearchString variable converted if there is a space in the name $SearchString"
+    
+            if($Limit){
+    
+            $iTunesUrl = "https://itunes.apple.com/search?country=us&media=software&entity=software,iPadSoftware&term=$SearchString&limit=$limit"
+            
+            }
+    
+            else {
+    
+            $iTunesUrl = "https://itunes.apple.com/search?country=us&entity=software&term=$SearchString&attribute=softwareDeveloper"
+    
+            }
+    
+        write-verbose $iTunesUrl
+    
+        $apps = Invoke-RestMethod -Uri $iTunesUrl -Method Get
+    
+        # Putting sleep in so that no more than 20 API calls to itunes REST API
+        # https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
+        Start-Sleep 3
+    
+        return $apps
+    
         }
-
-        else {
-
-        $iTunesUrl = "https://itunes.apple.com/search?entity=software&term=$SearchString&attribute=softwareDeveloper"
-
+    
+        catch {
+    
+        write-host $_.Exception.Message -f Red
+        write-host $_.Exception.ItemName -f Red
+        write-verbose $_.Exception
+        write-host
+        break
+    
         }
-
-    write-verbose $iTunesUrl
-    $apps = Invoke-RestMethod -Uri $iTunesUrl -Method Get
-
-    # Putting sleep in so that no more than 20 API calls to itunes REST API
-    # https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
-    sleep 3
-
-    return $apps
-
+    
     }
-
-    catch {
-
-    write-host $_.Exception.Message -f Red
-    write-host $_.Exception.ItemName -f Red
-    write-verbose $_.Exception
-    write-host
-    break
-
-    }
-
-}
 
 ####################################################
 
@@ -315,14 +316,15 @@ Function Add-iOSApplication(){
                 iPad=$iPad;
                 iPhoneAndIPod=$iPhone;
             };
-            minimumSupportedOperatingSystem=@{
+            minimumSupportedOperatingSystem=@{       
                 v8_0=$osVersion -lt 9.0;
-                v9_0=$osVersion -eq 9.0;
-                v10_0=$osVersion -gt 9.0;
+                v9_0=$osVersion.ToString().StartsWith(9)
+                v10_0=$osVersion.ToString().StartsWith(10)
+                v11_0=$osVersion.ToString().StartsWith(11)
+                v12_0=$osVersion.ToString().StartsWith(12)
+                v13_0=$osVersion.ToString().StartsWith(13)
             };
         };
-    
-        $JSON = ConvertTo-Json $graphApp
     
         # Step 3 - Publish the application to Graph
         Write-Host "Creating application via Graph"
