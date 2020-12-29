@@ -219,51 +219,38 @@ $ExportPath
 
         if($JSON -eq "" -or $JSON -eq $null){
 
-        write-host "No JSON specified, please specify valid JSON..." -f Red
+            write-host "No JSON specified, please specify valid JSON..." -f Red
 
         }
 
         elseif(!$ExportPath){
 
-        write-host "No export path parameter set, please provide a path to export the file" -f Red
+            write-host "No export path parameter set, please provide a path to export the file" -f Red
 
         }
 
         elseif(!(Test-Path $ExportPath)){
 
-        write-host "$ExportPath doesn't exist, can't export JSON Data" -f Red
+            write-host "$ExportPath doesn't exist, can't export JSON Data" -f Red
 
         }
 
         else {
 
-        $JSON1 = ConvertTo-Json $JSON -Depth 5
+            $JSON1 = ConvertTo-Json $JSON -Depth 5
 
-        $JSON_Convert = $JSON1 | ConvertFrom-Json
+            $JSON_Convert = $JSON1 | ConvertFrom-Json
 
-        $displayName = $JSON_Convert.displayName
+            $displayName = $JSON_Convert.displayName
 
-        # Updating display name to follow file naming conventions - https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
-        $DisplayName = $DisplayName -replace '\<|\>|:|"|/|\\|\||\?|\*', "_"
+            # Updating display name to follow file naming conventions - https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
+            $DisplayName = $DisplayName -replace '\<|\>|:|"|/|\\|\||\?|\*', "_"
 
-        $Properties = ($JSON_Convert | Get-Member | ? { $_.MemberType -eq "NoteProperty" }).Name
-
-            $FileName_CSV = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".csv"
             $FileName_JSON = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".json"
-
-            $Object = New-Object System.Object
-
-                foreach($Property in $Properties){
-
-                $Object | Add-Member -MemberType NoteProperty -Name $Property -Value $JSON_Convert.$Property
-
-                }
 
             write-host "Export Path:" "$ExportPath"
 
-            $Object | Export-Csv -LiteralPath "$ExportPath\$FileName_CSV" -Delimiter "," -NoTypeInformation -Append
             $JSON1 | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
-            write-host "CSV created in $ExportPath\$FileName_CSV..." -f cyan
             write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
             
         }
@@ -365,8 +352,8 @@ $ExportPath = Read-Host -Prompt "Please specify a path to export the policy data
 
 Write-Host
 
-$DCPs = Get-DeviceConfigurationPolicy
-
+# Filtering out iOS and Windows Software Update Policies
+$DCPs = Get-DeviceConfigurationPolicy | Where-Object { ($_.'@odata.type' -ne "#microsoft.graph.iosUpdateConfiguration") -and ($_.'@odata.type' -ne "#microsoft.graph.windowsUpdateForBusinessConfiguration") }
 foreach($DCP in $DCPs){
 
 write-host "Device Configuration Policy:"$DCP.displayName -f Yellow
