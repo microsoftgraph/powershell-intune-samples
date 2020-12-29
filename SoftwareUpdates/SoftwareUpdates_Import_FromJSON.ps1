@@ -327,7 +327,7 @@ break
 $JSON_Data = Get-Content "$ImportPath"
 
 # Excluding entries that are not required - id,createdDateTime,lastModifiedDateTime,version
-$JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'groupAssignments@odata.context',groupAssignments
+$JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'groupAssignments@odata.context',groupAssignments,supportsScopeTags
 
 $DisplayName = $JSON_Convert.displayName
 
