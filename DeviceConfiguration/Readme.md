@@ -225,9 +225,10 @@ This function is used to assign a policy to an AAD Group. This function has two 
 
 + ConfigurationPolicyId - The policy ID defined in the Intune Service
 + TargetGroupId - The AAD Group ID where the policy should be assigned
++ AssignmentType - Choose whether the assignment is an inclusion or exclusion
 
 ```PowerShell
-Add-DeviceConfigurationPolicyAssignment -ConfigurationPolicyId $CreateResult_Android.id -TargetGroupId $TargetGroupId
+Add-DeviceConfigurationPolicyAssignment -ConfigurationPolicyId $CreateResult_Android.id -TargetGroupId $TargetGroupId -AssignmentType Included
 ```
 
 #### Get-AADGroup Function
