@@ -513,7 +513,19 @@ if($ManagedAppPolicies){
             Export-JSONData -JSON $AppProtectionPolicy -ExportPath "$ExportPath"
 
         }
+		
+        elseif($ManagedAppPolicy.'@odata.type' -eq "#microsoft.graph.windowsInformationProtectionPolicy"){
 
+            $AppProtectionPolicy = Get-ManagedAppProtection -id $ManagedAppPolicy.id -OS "WIP_WE"
+
+            $AppProtectionPolicy | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "#microsoft.graph.windowsInformationProtectionPolicy"
+
+            $AppProtectionPolicy
+
+            Export-JSONData -JSON $AppProtectionPolicy -ExportPath "$ExportPath"
+
+        }
+		
     Write-Host
 
     }
