@@ -11,6 +11,7 @@ extensions:
   services:
   - Intune
   createdDate: 4/4/2017 9:41:27 AM
+noDependencies: true
 ---
 # Intune Graph Samples
 
