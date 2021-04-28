@@ -6,6 +6,8 @@ Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT
 See LICENSE in the project root for license information.
 
 #>
+[cmdletbinding()]
+param ( [Parameter(Mandatory=$false)][String]$FileName )
 
 ####################################################
 
@@ -309,7 +311,11 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+If (Test-Path -Path $FileName -Type Leaf) {
+	$ImportPath = $FileName
+} Else {
+	$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+}
 
 # Replacing quotes for Test-Path
 $ImportPath = $ImportPath.replace('"','')
