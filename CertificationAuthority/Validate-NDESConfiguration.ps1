@@ -1,4 +1,4 @@
-﻿
+
 <#
 
 .SYNOPSIS
@@ -25,6 +25,11 @@ https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-yo
 [CmdletBinding(DefaultParameterSetName="NormalRun")]
 
 Param(
+
+[parameter(Mandatory=$false,ParameterSetName="Unattended")]
+[alias("ua","silent","s","unattended")]
+[switch]$unattend,  
+
 [parameter(Mandatory=$true,ParameterSetName="NormalRun")]
 [alias("sa")]
 [ValidateScript({
@@ -51,8 +56,9 @@ Param(
         }
 
         else {
-   
-        Throw "Incorrect Domain. Ensure domain is '$($Domain)\<USERNAME>'"
+        if (-not $unattend) {
+            Throw "Incorrect Domain. Ensure domain is '$($Domain)\<USERNAME>'"
+            }
 
         }
 
@@ -90,9 +96,11 @@ Param(
 
 [parameter(ParameterSetName="Help")]
 [alias("u")]
-[switch]$usage  
+[switch]$usage
 
-    
+
+
+
 )
 
 #######################################################################
@@ -195,23 +203,33 @@ $LogFilePath = "$($TempDirPath)\Validate-NDESConfig.log"
 
 #region Proceed with Variables...
 
-    Write-Host
-    Write-host "......................................................."
-    Write-Host
-    Write-Host "NDES Service Account = "-NoNewline 
-    Write-Host "$($NDESServiceAccount)" -ForegroundColor Cyan
-    Write-host
-    Write-Host "Issuing CA Server = " -NoNewline
-    Write-Host "$($IssuingCAServerFQDN)" -ForegroundColor Cyan
-    Write-host
-    Write-Host "SCEP Certificate Template = " -NoNewline
-    Write-Host "$($SCEPUserCertTemplate)" -ForegroundColor Cyan
-    Write-Host
-    Write-host "......................................................."
-    Write-Host
-    Write-Host "Proceed with variables? [Y]es, [N]o"
+
     
-    $confirmation = Read-Host
+    if ($unattend) {
+        $NDESServiceAccount = Get-Item 'IIS:\AppPools\SCEP' | select -expandproperty processmodel | select -Expand username
+        $IssuingCAServerFQDN = (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Cryptography\MSCEP\CAInfo).Configuration -replace "\\.*$", ""
+        $SCEPUserCertTemplate = (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Cryptography\MSCEP).EncryptionTemplate
+        $confirmation = "y"
+    }
+    else {
+            Write-Host
+            Write-host "......................................................."
+            Write-Host
+            Write-Host "NDES Service Account = "-NoNewline 
+            Write-Host "$($NDESServiceAccount)" -ForegroundColor Cyan
+            Write-host
+            Write-Host "Issuing CA Server = " -NoNewline
+            Write-Host "$($IssuingCAServerFQDN)" -ForegroundColor Cyan
+            Write-host
+            Write-Host "SCEP Certificate Template = " -NoNewline
+            Write-Host "$($SCEPUserCertTemplate)" -ForegroundColor Cyan
+            Write-Host
+            Write-host "......................................................."
+            Write-Host
+            Write-Host "Proceed with variables? [Y]es, [N]o"
+            $confirmation = Read-Host
+        }
+
 
 #endregion
 
@@ -303,8 +321,8 @@ Write-host
 Log-ScriptEvent $LogFilePath "Checking NDES Service Account properties in Active Directory" NDES_Validation 1
 
 $ADUser = $NDESServiceAccount.split("\")[1]
-
 $ADUserProps = (Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut)
+
 
     if ($ADUserProps.enabled -ne $TRUE -OR $ADUserProps.PasswordExpired -ne $false -OR $ADUserProps.LockedOut -eq $TRUE){
         
@@ -323,9 +341,8 @@ $ADUserProps = (Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExp
     }
 
 
-  
 Get-ADUser $ADUser -Properties SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut | fl SamAccountName,enabled,AccountExpirationDate,accountExpires,accountlockouttime,PasswordExpired,PasswordLastSet,PasswordNeverExpires,LockedOut
-
+    
 #endregion
 
 #######################################################################
@@ -1578,9 +1595,15 @@ Write-host "......................................................."
 Write-host
 Write-host "Log Files..." -ForegroundColor Yellow
 Write-host 
-write-host "Do you want to gather troubleshooting files? This includes IIS, NDES Connector, NDES Plugin, CRP, and MSCEP log files, in addition to the SCEP template configuration.  [Y]es, [N]o:"
-$LogFileCollectionConfirmation = Read-Host
-
+if ($unattend) {
+    Write-Host "Automatically gathering files."
+    $LogFileCollectionConfirmation = "y"
+    }
+else {
+    Write-Host "Do you want to gather troubleshooting files? This includes IIS, NDES Connector, NDES Plugin, CRP, and MSCEP log files, in addition to the SCEP template configuration.  [Y]es, [N]o:"
+    $LogFileCollectionConfirmation = Read-Host
+    }
+    
     if ($LogFileCollectionConfirmation -eq "y"){
 
     $IISLogPath = (Get-WebConfigurationProperty "/system.applicationHost/sites/siteDefaults" -name logfile.directory).Value + "\W3SVC1" -replace "%SystemDrive%",$env:SystemDrive
@@ -1661,6 +1684,13 @@ Write-Host
 
         write-host "Log file copied to $($LogFilePath)"
         Write-Host
+        # for ODC
+        $copyPath = "$env:temp\CollectedData\Intune\Files\NDES"
+        if ($unattend ){
+            if ( -not (test-path $copyPath) ) { mkdir $copyPath -Force }
+            copy $LogFilePath $copyPath
+            }
+
 
     }
 write-host "Ending script..." -ForegroundColor Yellow

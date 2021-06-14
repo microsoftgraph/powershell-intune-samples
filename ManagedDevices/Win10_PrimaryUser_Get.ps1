@@ -430,6 +430,52 @@ param
 
 ####################################################
 
+function Get-IntuneUserName {
+
+<#
+.SYNOPSIS
+This lists the Intune device primary user
+.DESCRIPTION
+This lists the Intune device primary user
+.EXAMPLE
+Get-IntuneDevicePrimaryUser
+.NOTES
+NAME: Get-IntuneDevicePrimaryUser
+#>
+
+[cmdletbinding()]
+
+param
+(
+    [Parameter(Mandatory=$true)]
+    [string] $userId
+)
+    
+    $graphApiVersion = "beta"
+    $Resource = "users"
+	$uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)" + "/" + $userId  
+    try {
+        
+        $primaryUser = Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+
+        return $primaryUser.DisplayName
+        
+	} catch {
+		$ex = $_.Exception
+		$errorResponse = $ex.Response.GetResponseStream()
+		$reader = New-Object System.IO.StreamReader($errorResponse)
+		$reader.BaseStream.Position = 0
+		$reader.DiscardBufferedData()
+		$responseBody = $reader.ReadToEnd();
+		Write-Host "Response content:`n$responseBody" -f Red
+		Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
+		throw "Get-IntuneUserName error"
+	}
+}
+
+
+
+
 #region Authentication
 
 write-host
@@ -499,6 +545,7 @@ if($Devices){
             Write-Host "Intune device id:" $device."id"
             
             $IntuneDevicePrimaryUser = Get-IntuneDevicePrimaryUser -deviceId $device.id
+            $displayName = Get-IntuneUserName $IntuneDevicePrimaryUser
 
             if($IntuneDevicePrimaryUser -eq $null){
 
@@ -509,7 +556,7 @@ if($Devices){
             else {
 
                 Write-Host "Intune Primary user id:" $IntuneDevicePrimaryUser
-
+                Write-Host "Intune Primary user display name: " $displayName
             }
 
             $aadDeviceId = Get-AADDeviceId -deviceId $device."azureActiveDirectoryDeviceId"
