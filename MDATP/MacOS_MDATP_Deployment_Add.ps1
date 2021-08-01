@@ -459,10 +459,10 @@ $MDATP = @"
 
 {
   "@odata.type": "#microsoft.graph.macOSMdatpApp",
-  "description": "Microsoft Defender Advanced Threat Protection (Microsoft Defender ATP) is a unified platform for preventative protection, post-breach detection, automated investigation, and response. Microsoft Defender ATP protects endpoints from cyber threats; detects advanced attacks and data breaches, automates security incidents and improves security posture.",
+  "description": "Microsoft Defender for Endpoint (macOS) is a unified platform for preventative protection, post-breach detection, automated investigation, and response. Microsoft Defender ATP protects endpoints from cyber threats; detects advanced attacks and data breaches, automates security incidents and improves security posture.",
   "developer": "Microsoft",
-  "displayName": "macOS Microsoft Defender ATP for macOS",
-  "informationUrl": "https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/microsoft-defender-advanced-threat-protection​",
+  "displayName": "Microsoft Defender for Endpoint (macOS)",
+  "informationUrl": "https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint​",
   "isFeatured": false,
   "largeIcon": {
     "type": "image/png",
@@ -470,7 +470,7 @@ $MDATP = @"
   },
   "notes": "",
   "owner": "Microsoft",
-  "privacyInformationUrl": "https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/mac-privacy​",
+  "privacyInformationUrl": "https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/mac-privacy​",
   "publisher": "Microsoft"
 }
 
