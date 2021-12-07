@@ -1,4 +1,4 @@
-﻿
+
 <#
 
 .SYNOPSIS
@@ -1165,7 +1165,7 @@ $ServerCertObject = Get-ChildItem Cert:\LocalMachine\My\$BoundServerCertThumb
 #################################################################
 
 #region Checking Client certificate.
-
+<#  --- This section is removed as the new Intune connector does not require a Client certificate, see https://docs.microsoft.com/en-us/mem/intune/protect/certificates-scep-configure#install-the-microsoft-intune-connector
 Write-host
 Write-host "......................................................."
 Write-host
@@ -1264,7 +1264,7 @@ $ClientCertObject = Get-ChildItem Cert:\LocalMachine\My\$NDESCertThumbprint
 
 
 }
-        
+#>
 #endregion
 
 #################################################################
@@ -1355,7 +1355,7 @@ Write-Host "Checking Intune Connector is installed..." -ForegroundColor Yellow
 Write-host
 Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Validation 1 
 
-    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
+    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Certificate Connector for Microsoft Intune"}){
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
