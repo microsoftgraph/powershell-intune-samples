@@ -165,6 +165,12 @@ NAME: Get-DeviceConfigurationPolicy
 
 [cmdletbinding()]
 
+param
+(
+    [Parameter(Mandatory=$false)]
+    $Name
+)
+
 $graphApiVersion = "Beta"
 $DCP_resource = "deviceManagement/deviceConfigurations"
     
