@@ -170,8 +170,19 @@ $DCP_resource = "deviceManagement/deviceConfigurations"
     
     try {
     
-    $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
-    (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+    If ($null -eq $Name) {
+            
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)"
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        
+        }
+        
+        Else {
+            
+            $uri = "https://graph.microsoft.com/$graphApiVersion/$($DCP_resource)?filter=contains(displayName,'$($Name)')"
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        
+        }
     
     }
     
@@ -351,15 +362,33 @@ $ExportPath = Read-Host -Prompt "Please specify a path to export the policy data
 ####################################################
 
 Write-Host
+Write-Host "You can export all, or just enter a policy name? A(All) or PolicyName ?" -ForegroundColor Yellow
 
-# Filtering out iOS and Windows Software Update Policies
-$DCPs = Get-DeviceConfigurationPolicy | Where-Object { ($_.'@odata.type' -ne "#microsoft.graph.iosUpdateConfiguration") -and ($_.'@odata.type' -ne "#microsoft.graph.windowsUpdateForBusinessConfiguration") }
-foreach($DCP in $DCPs){
+$PolicyName = read-host
 
-write-host "Device Configuration Policy:"$DCP.displayName -f Yellow
-Export-JSONData -JSON $DCP -ExportPath "$ExportPath"
-Write-Host
+if($PolicyName -eq "a" -or $PolicyName -eq "A"){
 
+    # Filtering out iOS and Windows Software Update Policies
+    $DCPs = Get-DeviceConfigurationPolicy | Where-Object { ($_.'@odata.type' -ne "#microsoft.graph.iosUpdateConfiguration") -and ($_.'@odata.type' -ne "#microsoft.graph.windowsUpdateForBusinessConfiguration") }
+    foreach($DCP in $DCPs){
+
+    write-host "Device Configuration Policy:"$DCP.displayName -f Yellow
+    Export-JSONData -JSON $DCP -ExportPath "$ExportPath"
+    Write-Host
+
+    }
 }
+else {
+    # Filtering out specific policies
+    $DCPs = Get-DeviceConfigurationPolicy -Name "$PolicyName"
+    foreach($DCP in $DCPs){
+
+    write-host "Device Configuration Policy:"$DCP.displayName -f Yellow
+    Export-JSONData -JSON $DCP -ExportPath "$ExportPath"
+    Write-Host
+    }
+}
+
+####################################################
 
 Write-Host
