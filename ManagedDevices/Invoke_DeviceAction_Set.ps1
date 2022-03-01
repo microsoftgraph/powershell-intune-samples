@@ -482,7 +482,7 @@ $JSON = @"
 "@
 
         write-host
-        write-host "Note: The RenameDevice remote action is only supported on supervised iOS devices"
+        write-host "Note: The RenameDevice remote action is only supported on supervised iOS and Windows 10 Azure AD joined devices"
         write-host "Are you sure you want to rename this device to" $($NewDeviceName) "(Y or N?)"
         $Confirm = read-host
 
@@ -635,6 +635,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Wipe -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Delete -Verbose
         #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Sync -Verbose
+        #Invoke-DeviceAction -DeviceID $SelectedDeviceId -Rename -Verbose
 
         }
 
@@ -648,6 +649,7 @@ Write-Host
         #Invoke-DeviceAction -DeviceID $Devices.id -Wipe -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Delete -Verbose
         #Invoke-DeviceAction -DeviceID $Devices.id -Sync -Verbose
+        #Invoke-DeviceAction -DeviceID $Devices.id -Rename -Verbose
 
     }
 
