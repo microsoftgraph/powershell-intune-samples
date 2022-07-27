@@ -186,7 +186,7 @@ $Resource = "deviceManagement/deviceManagementScripts"
         else {
 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$expand=groupAssignments"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
 
         }
     
