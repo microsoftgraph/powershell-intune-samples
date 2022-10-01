@@ -323,6 +323,8 @@ Function Add-iOSApplication(){
                 v11_0=$osVersion.ToString().StartsWith(11)
                 v12_0=$osVersion.ToString().StartsWith(12)
                 v13_0=$osVersion.ToString().StartsWith(13)
+                v14_0=$osVersion.ToString().StartsWith(14)
+                v15_0=$osVersion.ToString().StartsWith(15)
             };
         };
     
