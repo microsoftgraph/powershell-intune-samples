@@ -326,15 +326,24 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$App = Get-IntuneApplication -Name "Microsoft Excel"
+# One App
+# $App = Get-IntuneApplication -Name "Microsoft Excel"
+
+# Multiple Apps
+$App = Get-IntuneApplication
 
 if($App){
 
     if(@($App).count -gt 1){
-
-    Write-Host "More than one application has been found, please specify a single application..." -ForegroundColor Red
-    Write-Host
-
+        foreach ($Object in $App) {
+            if ($Object.displayName -ne "Company Portal") {
+                write-host "Removing Application..." -f Yellow
+                $Object.displayname + ": " + $Object.'@odata.type'
+                $Object.id
+                Remove-IntuneApplication -id $Object.id
+                write-host
+            }
+        }
     }
 
     elseif(@($App).count -eq 1){
