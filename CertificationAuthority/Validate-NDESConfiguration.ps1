@@ -1,3 +1,4 @@
+
 <#
 
 .SYNOPSIS
@@ -20,12 +21,11 @@ Where possible, a link and section description will be provided.
 https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure
 
 #>
-
-[CmdletBinding(DefaultParameterSetName="NormalRun")]
+[CmdletBinding(DefaultParameterSetName="Unattended")]
 
 Param(
 
-[parameter(Mandatory=$false,ParameterSetName="Unattended")]
+[parameter(ParameterSetName="Unattended")]
 [alias("ua","silent","s","unattended")]
 [switch]$unattend,  
 
@@ -56,7 +56,9 @@ Param(
 
             else {
           
-                Throw "Incorrect Domain. Ensure domain is '$($Domain)\<USERNAME>'" 
+                Throw "Incorrect Domain. Ensure domain is '$($Domain)\<USERNAME>'"
+              
+
             }
 
        }
@@ -96,9 +98,12 @@ Param(
 [parameter(ParameterSetName="Help")]
 [alias("u")]
 [switch]$usage
- 
-)
 
+
+
+
+)
+$PsCmdlet.ParameterSetName
 #######################################################################
 
 Function Log-ScriptEvent {
@@ -201,7 +206,7 @@ $LogFilePath = "$($TempDirPath)\Validate-NDESConfig.log"
 
 
     
-    if ($unattend) {
+    if ($PSCmdlet.ParameterSetName -eq "Unattended") {
         $NDESServiceAccount = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\MicrosoftIntune\PFXCertificateConnector\CA*").Username
         $MscepRaEku = '1.3.6.1.4.1.311.20.2.1' # CEP Encryption
         # Get cert authority from the Certificate Request Agent cert.
@@ -679,9 +684,9 @@ Log-ScriptEvent $LogFilePath "Checking registry (HKLM:SYSTEM\CurrentControlSet\S
 Write-Host
 Write-Host "......................................................."
 Write-Host
-Write-Host "Checking SPN has been set..." -ForegroundColor Yellow
+Write-Host "Checking SPN has been set for $ADUser..." -ForegroundColor Yellow
 Write-Host
-Log-ScriptEvent $LogFilePath "Checking SPN has been set" NDES_Validation 1
+Log-ScriptEvent $LogFilePath "Checking SPN has been set for $ADUser" NDES_Validation 1
 
 $hostname = ([System.Net.Dns]::GetHostByName(($env:computerName))).hostname
 
@@ -1274,6 +1279,19 @@ Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Valid
         Log-ScriptEvent $LogFilePath "ConnectorVersion:$IntuneConnector"  NDES_Validation 1
 
     }
+    elseif ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
+
+        Write-Host "Success: " -ForegroundColor Green -NoNewline
+        Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
+        Write-Host "$($IntuneConnector.InstallDate) " -ForegroundColor Cyan -NoNewline 
+        write-host "and is version " -NoNewline
+        Write-Host "$($IntuneConnector.DisplayVersion)" -ForegroundColor Cyan
+        write-warning "This version of the Intune certificate connector has been replaced by the Certificate Connector for Microsoft Intune"
+        write-warning "URL: https://learn.microsoft.com/en-us/mem/intune/protect/certificate-connector-overview" 
+        Write-host
+        Log-ScriptEvent $LogFilePath "ConnectorVersion:$IntuneConnector"  NDES_Validation 1
+
+    }
 
     else {
 
@@ -1486,7 +1504,7 @@ Write-Host "......................................................."
 Write-Host
 Write-Host "Log Files..." -ForegroundColor Yellow
 Write-Host 
-if ($unattend) {
+if ($PSCmdlet.ParameterSetName -eq "Unattended") {
     Write-Host "Automatically gathering files."
     $LogFileCollectionConfirmation = "y"
     }
@@ -1539,7 +1557,7 @@ else {
     Add-Type -assembly "system.io.compression.filesystem"
     $Currentlocation =  $env:temp
     $date = Get-Date -Format ddMMyyhhmmss
-    [io.compression.zipfile]::CreateFromDirectory($TempDirPath, "$($Currentlocation)\$($date)-Logs-$($hostname).zip")
+    [io.compression.zipfile]::CreateFromDirectory($TempDirPath, "$($Currentlocation)\$($date)-CertConnectorLogs-$($hostname).zip")
 
     Write-Host
     Write-Host "Success: " -ForegroundColor Green -NoNewline
@@ -1574,7 +1592,7 @@ Write-Host
         Write-Host
         # for ODC
         $copyPath = "$env:temp\CollectedData\Intune\Files\NDES"
-        if ($unattend ){
+        if ($PSCmdlet.ParameterSetName -eq "Unattended" ){
             if ( -not (test-path $copyPath) ) { mkdir $copyPath -Force }
             copy $LogFilePath $copyPath
             }
