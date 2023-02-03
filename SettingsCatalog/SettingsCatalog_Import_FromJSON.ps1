@@ -29,7 +29,6 @@ param
 (
     [Parameter(Mandatory=$true)]
     $User
-
 )
 
 $userUpn = New-Object "System.Net.Mail.MailAddress" -ArgumentList $User
@@ -39,9 +38,9 @@ $tenant = $userUpn.Host
 Write-Host "Checking for AzureAD module..."
 
     $AadModule = Get-Module -Name "AzureAD" -ListAvailable
-    
+
     if ($AadModule -eq $null) {
-        
+
         Write-Host "AzureAD PowerShell module not found, looking for AzureADPreview"
         $AadModule = Get-Module -Name "AzureADPreview" -ListAvailable
 
@@ -65,6 +64,14 @@ Write-Host "Checking for AzureAD module..."
 
         $aadModule = $AadModule | ? { $_.version -eq $Latest_Version.version }
 
+            # Checking if there are multiple versions of the same module found
+
+            if($AadModule.count -gt 1){
+
+            $aadModule = $AadModule | select -Unique
+
+            }
+
         $adal = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
         $adalforms = Join-Path $AadModule.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
 
@@ -80,8 +87,6 @@ Write-Host "Checking for AzureAD module..."
 [System.Reflection.Assembly]::LoadFrom($adal) | Out-Null
 
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
- 
-# Client ID used for Intune scopes
 
 $clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
 
@@ -101,10 +106,10 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
 
     $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($User, "OptionalDisplayableId")
-            
+
     $authResult = $authContext.AcquireTokenAsync($resourceAppIdURI,$clientId,$redirectUri,$platformParameters,$userId).Result
 
-    # If the accesstoken is valid then create the authentication header
+        # If the accesstoken is valid then create the authentication header
 
         if($authResult.AccessToken){
 
@@ -125,7 +130,6 @@ $authority = "https://login.microsoftonline.com/$Tenant"
         Write-Host
         Write-Host "Authorization Access Token is null, please re-run authentication..." -ForegroundColor Red
         Write-Host
-
         break
 
         }
@@ -142,54 +146,52 @@ $authority = "https://login.microsoftonline.com/$Tenant"
     }
 
 }
- 
+
 ####################################################
 
-Function Get-DeviceManagementScripts(){
+Function Add-SettingsCatalogPolicy(){
 
 <#
 .SYNOPSIS
-This function is used to get device management scripts from the Graph API REST interface
+This function is used to add a Settings Catalog policy using the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any device management scripts
+The function connects to the Graph API Interface and adds a Settings Catalog policy
 .EXAMPLE
-Get-DeviceManagementScripts
-Returns any device management scripts configured in Intune
-Get-DeviceManagementScripts -ScriptId $ScriptId
-Returns a device management script configured in Intune
+Add-SettingsCatalogPolicy -JSON $JSON
+Adds a Settings Catalog policy in Endpoint Manager
 .NOTES
-NAME: Get-DeviceManagementScripts
+NAME: Add-SettingsCatalogPolicy
 #>
 
 [cmdletbinding()]
 
-param (
-
-    [Parameter(Mandatory=$false)]
-    $ScriptId
-
+param
+(
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $JSON
 )
 
 $graphApiVersion = "Beta"
-$Resource = "deviceManagement/deviceManagementScripts"
-    
+$Resource = "deviceManagement/configurationPolicies"
+
     try {
 
-        if($ScriptId){
+        if($JSON -eq "" -or $JSON -eq $null){
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource/$ScriptId"
-
-        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
+        write-host "No JSON specified, please specify valid JSON for the Endpoint Security Disk Encryption Policy..." -f Red
 
         }
 
         else {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$expand=groupAssignments"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        Test-JSON -JSON $JSON
+
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
+        Invoke-RestMethod -Uri $uri -Headers $authToken -Method Post -Body $JSON -ContentType "application/json"
 
         }
-    
+
     }
     
     catch {
@@ -211,103 +213,54 @@ $Resource = "deviceManagement/deviceManagementScripts"
 
 ####################################################
 
-Function Get-AADGroup(){
-    
+Function Test-JSON(){
+
 <#
 .SYNOPSIS
-This function is used to get AAD Groups from the Graph API REST interface
+This function is used to test if the JSON passed to a REST Post request is valid
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any Groups registered with AAD
+The function tests if the JSON passed to the REST Post is valid
 .EXAMPLE
-Get-AADGroup
-Returns all users registered with Azure AD
+Test-JSON -JSON $JSON
+Test if the JSON is valid before calling the Graph REST interface
 .NOTES
-NAME: Get-AADGroup
+NAME: Test-AuthHeader
 #>
-    
-[cmdletbinding()]
-    
-param
-(
-    $GroupName,
-    $id,
-    [switch]$Members
+
+param (
+
+$JSON
+
 )
-    
-# Defining Variables
-$graphApiVersion = "v1.0"
-$Group_resource = "groups"
-    
+
     try {
-    
-        if($id){
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=id eq '$id'"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
-        }
-    
-        elseif($GroupName -eq "" -or $GroupName -eq $null){
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
-        }
-    
-        else {
-    
-            if(!$Members){
-    
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
-            }
-    
-            elseif($Members){
-    
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)?`$filter=displayname eq '$GroupName'"
-            $Group = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
-                if($Group){
-    
-                $GID = $Group.id
-    
-                $Group.displayName
-                write-host
-    
-                $uri = "https://graph.microsoft.com/$graphApiVersion/$($Group_resource)/$GID/Members"
-                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
-                }
-    
-            }
-    
-        }
-    
+
+    $TestJSON = ConvertFrom-Json $JSON -ErrorAction Stop
+    $validJson = $true
+
     }
-    
+
     catch {
-    
-    $ex = $_.Exception
-    $errorResponse = $ex.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($errorResponse)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd();
-    Write-Host "Response content:`n$responseBody" -f Red
-    Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
-    write-host
-    break
-    
+
+    $validJson = $false
+    $_.Exception
+
     }
+
+    if (!$validJson){
     
+    Write-Host "Provided JSON isn't in valid JSON format" -f Red
+    break
+
+    }
+
 }
-    
+
 ####################################################
 
 #region Authentication
 
-Write-Host
+write-host
 
 # Checking if authToken exists before running authentication
 if($global:authToken){
@@ -320,8 +273,8 @@ if($global:authToken){
 
         if($TokenExpires -le 0){
 
-        Write-Host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
-        Write-Host
+        write-host "Authentication Token expired" $TokenExpires "minutes ago" -ForegroundColor Yellow
+        write-host
 
             # Defining User Principal Name if not present
 
@@ -357,65 +310,35 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$PSScripts = Get-DeviceManagementScripts
+$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
 
-if($PSScripts){
+# Replacing quotes for Test-Path
+$ImportPath = $ImportPath.replace('"','')
 
-    write-host "-------------------------------------------------------------------"
-    Write-Host
+if(!(Test-Path "$ImportPath")){
 
-    $PSScripts | foreach {
-
-    $ScriptId = $_.id
-    $DisplayName = $_.displayName
-
-    Write-Host "PowerShell Script: $DisplayName..." -ForegroundColor Yellow
-
-    $_
-
-    write-host "Device Management Scripts - Assignments" -f Cyan
-
-    $Assignments = $_.groupAssignments.targetGroupId
-    
-        if($Assignments){
-    
-            foreach($Group in $Assignments){
-    
-            (Get-AADGroup -id $Group).displayName
-    
-            }
-    
-            Write-Host
-    
-        }
-    
-        else {
-    
-        Write-Host "No assignments set for this policy..." -ForegroundColor Red
-        Write-Host
-    
-        }
-
-    $Script = Get-DeviceManagementScripts -ScriptId $ScriptId
-
-    $ScriptContent = $Script.scriptContent
-
-    Write-Host "Script Content:" -ForegroundColor Cyan
-
-    [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String("$ScriptContent"))
-
-    Write-Host
-    write-host "-------------------------------------------------------------------"
-    Write-Host
-
-    }
+Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+Write-Host "Script can't continue..." -ForegroundColor Red
+Write-Host
+break
 
 }
 
-else {
+####################################################
 
-Write-Host
-Write-Host "No PowerShell scripts have been added to the service..." -ForegroundColor Red
-Write-Host
+$JSON_Data = gc "$ImportPath"
 
-}
+# Excluding entries that are not required - id,createdDateTime,lastModifiedDateTime,version
+$JSON_Convert = $JSON_Data | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,supportsScopeTags
+
+$DisplayName = $JSON_Convert.name
+
+$JSON_Output = $JSON_Convert | ConvertTo-Json -Depth 20
+            
+write-host
+write-host "Settings Catalog Policy '$DisplayName' Found..." -ForegroundColor Yellow
+write-host
+$JSON_Output
+write-host
+Write-Host "Adding Settings Catalog Policy '$DisplayName'" -ForegroundColor Yellow
+Add-SettingsCatalogPolicy -JSON $JSON_Output

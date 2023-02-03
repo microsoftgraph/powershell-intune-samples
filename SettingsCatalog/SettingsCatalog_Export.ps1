@@ -1,4 +1,4 @@
-
+﻿
 <#
 
 .COPYRIGHT
@@ -149,72 +149,53 @@ $authority = "https://login.microsoftonline.com/$Tenant"
 
 ####################################################
 
-Function Get-ManagedDevices(){
+Function Get-SettingsCatalogPolicy(){
 
 <#
 .SYNOPSIS
-This function is used to get Intune Managed Devices from the Graph API REST interface
+This function is used to get Settings Catalog policies from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any Intune Managed Device
+The function connects to the Graph API Interface and gets any Settings Catalog policies
 .EXAMPLE
-Get-ManagedDevices
-Returns all managed devices but excludes EAS devices registered within the Intune Service
-.EXAMPLE
-Get-ManagedDevices -IncludeEAS
-Returns all managed devices including EAS devices registered within the Intune Service
+Get-SettingsCatalogPolicy
+Returns any Settings Catalog policies configured in Intune
+Get-SettingsCatalogPolicy -Platform windows10
+Returns any Windows 10 Settings Catalog policies configured in Intune
+Get-SettingsCatalogPolicy -Platform macOS
+Returns any MacOS Settings Catalog policies configured in Intune
 .NOTES
-NAME: Get-ManagedDevices
+NAME: Get-SettingsCatalogPolicy
 #>
 
 [cmdletbinding()]
 
 param
 (
-    [switch]$IncludeEAS,
-    [switch]$ExcludeMDM
+ [parameter(Mandatory=$false)]
+ [ValidateSet("windows10","macOS")]
+ [ValidateNotNullOrEmpty()]
+ [string]$Platform
 )
 
-# Defining Variables
 $graphApiVersion = "beta"
-$Resource = "deviceManagement/managedDevices"
 
-try {
-
-    $Count_Params = 0
-
-    if($IncludeEAS.IsPresent){ $Count_Params++ }
-    if($ExcludeMDM.IsPresent){ $Count_Params++ }
+    if($Platform){
         
-        if($Count_Params -gt 1){
+        $Resource = "deviceManagement/configurationPolicies?`$filter=platforms has '$Platform' and technologies has 'mdm'"
 
-        write-warning "Multiple parameters set, specify a single parameter -IncludeEAS, -ExcludeMDM or no parameter against the function"
-        Write-Host
-        break
+    }
 
-        }
-        
-        elseif($IncludeEAS){
+    else {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
+        $Resource = "deviceManagement/configurationPolicies?`$filter=technologies has 'mdm'"
 
-        }
+    }
 
-        elseif($ExcludeMDM){
+    try {
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'eas'"
-
-        }
-        
-        else {
-    
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
-        Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
-        Write-Host
-
-        }
-
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
         (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-    
+
     }
 
     catch {
@@ -236,63 +217,51 @@ try {
 
 ####################################################
 
-Function Get-AADUser(){
+Function Get-SettingsCatalogPolicySettings(){
 
 <#
 .SYNOPSIS
-This function is used to get AAD Users from the Graph API REST interface
+This function is used to get Settings Catalog policy Settings from the Graph API REST interface
 .DESCRIPTION
-The function connects to the Graph API Interface and gets any users registered with AAD
+The function connects to the Graph API Interface and gets any Settings Catalog policy Settings
 .EXAMPLE
-Get-AADUser
-Returns all users registered with Azure AD
-.EXAMPLE
-Get-AADUser -userPrincipleName user@domain.com
-Returns specific user by UserPrincipalName registered with Azure AD
+Get-SettingsCatalogPolicySettings -policyid policyid
+Returns any Settings Catalog policy Settings configured in Intune
 .NOTES
-NAME: Get-AADUser
+NAME: Get-SettingsCatalogPolicySettings
 #>
 
 [cmdletbinding()]
 
 param
 (
-    $userPrincipalName,
-    $Property
+    [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $policyid
 )
 
-# Defining Variables
-$graphApiVersion = "v1.0"
-$User_resource = "users"
+$graphApiVersion = "beta"
+$Resource = "deviceManagement/configurationPolicies('$policyid')/settings?`$expand=settingDefinitions"
 
     try {
 
-        if($userPrincipalName -eq "" -or $userPrincipalName -eq $null){
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
 
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)"
-        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
+        $Response = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
 
-        }
+        $AllResponses = $Response.value
+     
+        $ResponseNextLink = $Response."@odata.nextLink"
 
-        else {
+        while ($ResponseNextLink -ne $null){
 
-            if($Property -eq "" -or $Property -eq $null){
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName"
-            Write-Verbose $uri
-            Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get
-
-            }
-
-            else {
-
-            $uri = "https://graph.microsoft.com/$graphApiVersion/$($User_resource)/$userPrincipalName/$Property"
-            Write-Verbose $uri
-            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value
-
-            }
+            $Response = (Invoke-RestMethod -Uri $ResponseNextLink -Headers $authToken -Method Get)
+            $ResponseNextLink = $Response."@odata.nextLink"
+            $AllResponses += $Response.value
 
         }
+
+        return $AllResponses
 
     }
 
@@ -308,6 +277,79 @@ $User_resource = "users"
     Write-Error "Request to $Uri failed with HTTP Status $($ex.Response.StatusCode) $($ex.Response.StatusDescription)"
     write-host
     break
+
+    }
+
+}
+
+####################################################
+
+Function Export-JSONData(){
+
+<#
+.SYNOPSIS
+This function is used to export JSON data returned from Graph
+.DESCRIPTION
+This function is used to export JSON data returned from Graph
+.EXAMPLE
+Export-JSONData -JSON $JSON
+Export the JSON inputted on the function
+.NOTES
+NAME: Export-JSONData
+#>
+
+param (
+
+$JSON,
+$ExportPath
+
+)
+
+    try {
+
+        if($JSON -eq "" -or $JSON -eq $null){
+
+            write-host "No JSON specified, please specify valid JSON..." -f Red
+
+        }
+
+        elseif(!$ExportPath){
+
+            write-host "No export path parameter set, please provide a path to export the file" -f Red
+
+        }
+
+        elseif(!(Test-Path $ExportPath)){
+
+            write-host "$ExportPath doesn't exist, can't export JSON Data" -f Red
+
+        }
+
+        else {
+
+            $JSON1 = ConvertTo-Json $JSON -Depth 20
+
+            $JSON_Convert = $JSON1 | ConvertFrom-Json
+
+            $displayName = $JSON_Convert.name
+
+            # Updating display name to follow file naming conventions - https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
+            $DisplayName = $DisplayName -replace '\<|\>|:|"|/|\\|\||\?|\*', "_"
+
+            $FileName_JSON = "$DisplayName" + "_" + $(get-date -f dd-MM-yyyy-H-mm-ss) + ".json"
+
+            write-host "Export Path:" "$ExportPath"
+
+            $JSON1 | Set-Content -LiteralPath "$ExportPath\$FileName_JSON"
+            write-host "JSON created in $ExportPath\$FileName_JSON..." -f cyan
+            
+        }
+
+    }
+
+    catch {
+
+    $_.Exception
 
     }
 
@@ -367,30 +409,91 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-$ManagedDevices = Get-ManagedDevices
+$ExportPath = Read-Host -Prompt "Please specify a path to export the policy data to e.g. C:\IntuneOutput"
 
-if($ManagedDevices){
+    # If the directory path doesn't exist prompt user to create the directory
+    $ExportPath = $ExportPath.replace('"','')
 
-    foreach($Device in $ManagedDevices){
+    if(!(Test-Path "$ExportPath")){
 
-    $DeviceID = $Device.id
-
-    write-host "Managed Device" $Device.deviceName "found..." -ForegroundColor Yellow
     Write-Host
-    $Device
+    Write-Host "Path '$ExportPath' doesn't exist, do you want to create this directory? Y or N?" -ForegroundColor Yellow
 
-        if($Device.deviceRegistrationState -eq "registered"){
+    $Confirm = read-host
 
-        $UserId = $Device.userId
+        if($Confirm -eq "y" -or $Confirm -eq "Y"){
 
-        $User = Get-AADUser $userId
-
-        Write-Host "Device Registered User:" $User.displayName -ForegroundColor Cyan
-        Write-Host "User Principle Name:" $User.userPrincipalName
+        new-item -ItemType Directory -Path "$ExportPath" | Out-Null
+        Write-Host
 
         }
 
-    Write-Host
+        else {
+
+        Write-Host "Creation of directory path was cancelled..." -ForegroundColor Red
+        Write-Host
+        break
+
+        }
+
+    }
+
+####################################################
+
+$Policies = Get-SettingsCatalogPolicy
+
+if($Policies){
+
+    foreach($policy in $Policies){
+
+        Write-Host $policy.name -ForegroundColor Yellow
+
+        $AllSettingsInstances = @()
+
+        $policyid = $policy.id
+        $Policy_Technologies = $policy.technologies
+        $Policy_Platforms = $Policy.platforms
+        $Policy_Name = $Policy.name
+        $Policy_Description = $policy.description
+
+        $PolicyBody = New-Object -TypeName PSObject
+
+        Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'name' -Value "$Policy_Name"
+        Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'description' -Value "$Policy_Description"
+        Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'platforms' -Value "$Policy_Platforms"
+        Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'technologies' -Value "$Policy_Technologies"
+
+        # Checking if policy has a templateId associated
+        if($policy.templateReference.templateId){
+
+            Write-Host "Found template reference" -f Cyan
+            $templateId = $policy.templateReference.templateId
+
+            $PolicyTemplateReference = New-Object -TypeName PSObject
+
+            Add-Member -InputObject $PolicyTemplateReference -MemberType 'NoteProperty' -Name 'templateId' -Value $templateId
+
+            Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'templateReference' -Value $PolicyTemplateReference
+
+        }
+
+        $SettingInstances = Get-SettingsCatalogPolicySettings -policyid $policyid
+
+        $Instances = $SettingInstances.settingInstance
+
+        foreach($object in $Instances){
+
+            $Instance = New-Object -TypeName PSObject
+
+            Add-Member -InputObject $Instance -MemberType 'NoteProperty' -Name 'settingInstance' -Value $object
+            $AllSettingsInstances += $Instance
+
+        }
+
+        Add-Member -InputObject $PolicyBody -MemberType 'NoteProperty' -Name 'settings' -Value @($AllSettingsInstances)
+
+        Export-JSONData -JSON $PolicyBody -ExportPath "$ExportPath"
+        Write-Host
 
     }
 
@@ -398,8 +501,7 @@ if($ManagedDevices){
 
 else {
 
-Write-Host
-Write-Host "No Managed Devices found..." -ForegroundColor Red
-Write-Host
+    Write-Host "No Settings Catalog policies found..." -ForegroundColor Red
+    Write-Host
 
 }
