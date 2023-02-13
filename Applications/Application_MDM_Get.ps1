@@ -434,7 +434,7 @@ $App_Assignment = Get-ApplicationAssignment -ApplicationId $_.id
 
         foreach($Assignment in $App_Assignment){
 
-        write-host "AAD Group:"(Get-AADGroup -id $Assignment.target.GroupId).displayName "- Install Intent:"$Assignment.intent
+        write-host "AAD Group:"(Get-AADGroup -groupId $Assignment.target.GroupId).displayName "- Install Intent:"$Assignment.intent
 
         }
 
