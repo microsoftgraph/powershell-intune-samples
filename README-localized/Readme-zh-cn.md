@@ -16,7 +16,7 @@ extensions:
 
 此 PowerShell 示例脚本的存储库演示如何访问 Intune 服务资源。他们通过从 PowerShell 向 Microsoft Graph API 发出 HTTPS RESTful API 请求来证明这一点。
 
-有关 Intune 和 Microsoft Graph 的文档，请查看[Intune Graph 文档](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)。
+有关 Intune 和 Microsoft Graph 的文档，请查看[Intune Graph 文档](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)。
 
 这些示例演示了 Intune 管理员或 Microsoft 合作伙伴管理 Intune 资源的典型操作。
 
@@ -125,7 +125,7 @@ Microsoft Intune PowerShell needs permission to:
 * [Microsoft Graph API 文档](https://developer.microsoft.com/en-us/graph/docs)
 * [Microsoft Graph 门户](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Microsoft 代码示例](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Intune Graph 文档](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Intune Graph 文档](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## 版权信息
 版权所有 (c) 2017 Microsoft。保留所有权利。

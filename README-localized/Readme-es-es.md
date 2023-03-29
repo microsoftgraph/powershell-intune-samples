@@ -16,7 +16,7 @@ extensions:
 
 Este repositorio de scripts de ejemplo de PowerShell muestra cómo obtener acceso a los recursos del servicio Intune. Lo muestran haciendo solicitudes de la API de REST de HTTPS a la API de Microsoft Graph desde PowerShell.
 
-La documentación de Intune y Microsoft Graph se encuentra aquí [Documentación de Graph de Intune](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+La documentación de Intune y Microsoft Graph se encuentra aquí [Documentación de Graph de Intune](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
 En estos ejemplos se muestran las acciones de administrador de Intune o de asociado de Microsoft habituales para administrar recursos de Intune.
 
@@ -125,7 +125,7 @@ Su opinión es importante para nosotros. Conéctese con nosotros en Stack Overfl
 * [Documentación de la API de Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs)
 * [Portal de Microsoft Graph](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Muestras de código de Microsoft ](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Documentación de Graph de Intune](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Documentación de Graph de Intune](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## Derechos de autor
 Copyright (c) 2017 Microsoft. Todos los derechos reservados.

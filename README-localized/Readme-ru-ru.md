@@ -16,7 +16,7 @@ extensions:
 
 Этот репозиторий примеров скриптов PowerShell демонстрирует, как получать доступ к ресурсам службы Intune. Для этого совершаются HTTPS-запросы RESTful API к API Microsoft Graph из PowerShell.
 
-Документация для Intune и Microsoft Graph можно найти здесь [документации Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+Документация для Intune и Microsoft Graph можно найти здесь [документации Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
 Эти примеры демонстрируют типичные действия администратора Intune или партнера Microsoft по управлению ресурсами Intune.
 
@@ -125,7 +125,7 @@ Microsoft Intune PowerShell needs permission to:
 * [Документация по Microsoft Graph API](https://developer.microsoft.com/en-us/graph/docs)
 * [Портал Microsoft Graph](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Примеры программного кода Майкрософт](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Документация Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Документация Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## Авторские права
 (c) Корпорация Майкрософт (Microsoft Corporation), 2017. Все права защищены.

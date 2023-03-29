@@ -88,7 +88,7 @@ Your feedback is important to us. Connect with us on Stack Overflow. Tag your qu
 * [Microsoft Graph API documentation](https://developer.microsoft.com/en-us/graph/docs)
 * [Microsoft Graph Portal](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Microsoft code samples](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Intune Graph Documentation](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## Copyright
 Copyright (c) 2019 Microsoft. All rights reserved.

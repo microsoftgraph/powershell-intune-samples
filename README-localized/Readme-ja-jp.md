@@ -16,7 +16,7 @@ extensions:
 
 この PowerShell サンプル スクリプトのリポジトリは、Intune サービス リソースにアクセスする方法を示しています。PowerShell から Microsoft Graph API に HTTPS RESTful API 要求を行うことにより、その方法を示します。
 
-Intune および Microsoft Graph のドキュメントについては、「[Intune Graph のドキュメント](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)」を参照してください。
+Intune および Microsoft Graph のドキュメントについては、「[Intune Graph のドキュメント](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)」を参照してください。
 
 これらのサンプルでは、一般的な Intune 管理者、または Intune リソースを管理するための Microsoft パートナーの操作を示します。
 
@@ -125,7 +125,7 @@ PowerShell のサンプルに関するフィードバックをお寄せくださ
 * [Microsoft Graph API ドキュメント](https://developer.microsoft.com/en-us/graph/docs)
 * [Microsoft Graph ポータル](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Microsoft コード サンプル](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Intune Graph ドキュメント](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Intune Graph ドキュメント](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## 著作権
 Copyright (c) 2017 Microsoft.All rights reserved.
