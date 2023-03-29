@@ -59,7 +59,7 @@ Intune proporciona datos a Microsoft Graph igual que lo hacen otros servicios en
 ## Requisitos previos
 El uso de estos ejemplos de PowerShell de Intune de la API de Microsoft Graph requiere lo siguiente:
 * Instalar el módulo de AzureAD PowerShell ejecutando "Install-Module AzureAD" o "Install-Module AzureADPreview" desde un símbolo del sistema de PowerShell con privilegios elevados
-* Un espacio empresarial de Intune que admita Azure Portal con una licencia de producción o de prueba (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* Un espacio empresarial de Intune que admita Azure Portal con una licencia de producción o de prueba (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * Usar las API de Microsoft Graph para configurar las directivas y los controles de Intune requiere una licencia de Intune.
 * Una cuenta con permisos para administrar el servicio de Intune
 * PowerShell v5.0 en Windows 10 x64 (PowerShell v4.0 es un requisito mínimo para que los scripts funcionen correctamente)

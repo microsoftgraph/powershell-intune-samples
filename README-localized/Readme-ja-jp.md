@@ -59,7 +59,7 @@ Intune は、豊富なエンティティ情報とリレーションシップの�
 ## 前提条件
 これらの Microsoft Graph API Intune PowerShell のサンプルを使用するには、以下が必要です。
 * 管理者特権の PowerShell プロンプトから「Install-Module AzureAD」または「Install-Module AzureADPreview」を実行して、AzureAD PowerShell モジュールをインストールすること
-* 本番ライセンスまたは試用ライセンスで Azure Portal をサポートする Intune テナント (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* 本番ライセンスまたは試用ライセンスで Azure Portal をサポートする Intune テナント (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * Microsoft Graph API を使用して Intune 制御とポリシーを構成するには、Intune ライセンスが必要です。
 * Intune サービスを管理する権限を持つアカウント
 * Windows 10 x64 上の PowerShell v5.0 (PowerShell v4.0 は、スクリプトが正しく機能するための最小要件です)
