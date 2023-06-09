@@ -227,7 +227,7 @@ $graphApiVersion = "beta"
         
         $Resource = "deviceManagement/depOnboardingSettings/$tokenid/"
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
                 
         }
 
@@ -235,7 +235,7 @@ $graphApiVersion = "beta"
         
         $Resource = "deviceManagement/depOnboardingSettings/"
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
         
         }
                

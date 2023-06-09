@@ -222,7 +222,7 @@ Param(
                 
                 $Resource = "deviceManagement/depOnboardingSettings/$tokenid/"
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
                      
                 }
     
@@ -230,7 +230,7 @@ Param(
                 
                 $Resource = "deviceManagement/depOnboardingSettings/"
                 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-                (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+                (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
                 
                 }
                    
@@ -501,7 +501,7 @@ $graphApiVersion = "beta"
 $Resource = "deviceManagement/depOnboardingSettings/$($id)/importedAppleDeviceIdentities?`$filter=discoverySource eq 'deviceEnrollmentProgram' and contains(serialNumber,'$DeviceSerialNumber')"
 
 $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-$SearchResult = (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+$SearchResult = (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
 
 if (!($SearchResult)){
 
