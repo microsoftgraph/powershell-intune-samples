@@ -29,6 +29,7 @@ Here is a description of the parameter you can pass the script:
 | Username | Yes | Azure AD Username for the Administrator |
 | Upn | Yes | User principal name to export data for |
 | IncludeAzureAD | No | Include Azure AD data in the export |
+| IncludeNonAzureADUpn | No | Include data For Non Azure AD Upn in export |
 | All | No | Include all data in the export |
 | OutputPath | Yes | Path to export data to |
 | ExportFormat | No | Format to export data in, default value is ```json```, other supported values are ```xml``` and ```csv``` |
