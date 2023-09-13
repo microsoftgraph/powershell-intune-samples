@@ -779,10 +779,9 @@ function Export-IntuneReportUsingGraph($RequestBody, $ZipName) {
         return
     }
 
-    # -Headers $headers 
     $IntuneReportOutFile = $OutputPath + "/" + $ZipName + ".zip"
     $DownloadZipFile = Invoke-RestMethod -Method Get -Uri $IntuneReportDataGETResponse.url -ContentType "application/zip" -Outfile $IntuneReportOutFile
-    Log-Verbose "Zip file downloadeded to $IntuneReportOutFile"
+    Log-Verbose "Zip file downloaded to $IntuneReportOutFile"
 }
 
 ####################################################
@@ -987,7 +986,7 @@ if ($All) {
     Log-Info "All data will be exported"
 } elseif ($IncludeAzureAD) {
     Log-Info "Including AzureAD data in export"
-}
+} 
 
 ####################################################
 
@@ -998,7 +997,7 @@ $AuthHeader = Get-AuthToken -User $Username
 # Get Data for Non AzureAD UPN (if requested)
 
 if ($IncludeNonAzureADUpn -or $All) {
-    $ChromeOSDeviceReportData = Export-ChromeOSDeviceReportData
+    Export-ChromeOSDeviceReportData
 }
 
 
