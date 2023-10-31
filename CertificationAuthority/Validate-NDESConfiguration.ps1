@@ -1,4 +1,4 @@
-﻿
+
 <#
 
 .SYNOPSIS
@@ -1346,16 +1346,16 @@ Log-ScriptEvent $LogFilePath "LastBootTime:$LastBoot"  NDES_Validation 1
 
 #################################################################
 
-#region Checking Intune Connector is installed
+#region Checking Certificate Connector for Microsoft Intune is installed
 
 Write-host
 Write-host "......................................................."
 Write-host
-Write-Host "Checking Intune Connector is installed..." -ForegroundColor Yellow
+Write-Host "Checking Certificate Connector for Microsoft Intune is installed..." -ForegroundColor Yellow
 Write-host
-Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Validation 1 
+Log-ScriptEvent $LogFilePath "Checking Certificate Connector for Microsoft Intune is installed" NDES_Validation 1 
 
-    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
+    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Certificate Connector for Microsoft Intune"}){
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
@@ -1369,7 +1369,7 @@ Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Valid
 
     else {
 
-        Write-Host "Error: Intune Connector not installed" -BackgroundColor red 
+        Write-Host "Error: Certificate Connector for Microsoft Intune not installed" -BackgroundColor red 
         Write-Host 'Please review "Step 5 - Enable, install, and configure the Intune certificate connector".'
         write-host "URL: https://docs.microsoft.com/en-us/intune/certificates-scep-configure#configure-your-infrastructure"
         Write-Host
@@ -1382,14 +1382,14 @@ Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Valid
 
 #################################################################
 
-#region Checking Intune Connector registry keys (KeyRecoveryAgentCertificate, PfxSigningCertificate and SigningCertificate)
+#region Checking Certificate Connector for Microsoft Intune registry keys (KeyRecoveryAgentCertificate, PfxSigningCertificate and SigningCertificate)
 
 Write-host
 Write-host "......................................................."
 Write-host
-Write-Host "Checking Intune Connector registry keys are intact" -ForegroundColor Yellow
+Write-Host "Checking Certificate Connector for Microsoft Intune registry keys are intact" -ForegroundColor Yellow
 Write-host
-Log-ScriptEvent $LogFilePath "Checking Intune Connector registry keys are intact" NDES_Validation 1
+Log-ScriptEvent $LogFilePath "Checking Certificate Connector for Microsoft Intune registry keys are intact" NDES_Validation 1
 $ErrorActionPreference = "SilentlyContinue"
 
 $KeyRecoveryAgentCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\KeyRecoveryAgentCertificate"
