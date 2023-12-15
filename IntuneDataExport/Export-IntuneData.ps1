@@ -16,6 +16,9 @@ param(
     [Parameter(HelpMessage = "Include AzureAD data in export")]
     [switch]
     $IncludeAzureAD,
+    [Parameter(HelpMessage = "Include data For Non Azure AD Upn in export")]
+    [switch]
+    $IncludeNonAzureADUpn,
     [Parameter(HelpMessage = "Include all data in the export")]
     [switch]
     $All,
@@ -266,6 +269,33 @@ function Get-MsGraphCollection($Path) {
     Log-Verbose "Got $($Collection.Count) object(s)"
 
     return $Collection
+}
+
+####################################################
+
+function Post-MsGraphObject($Path, $RequestBody) {
+    $FullUri = "https://$MsGraphHost/$MsGraphVersion/$Path"
+
+    try {
+        Log-Verbose "POST $Fulluri"
+
+        $RequestBodyJson = $RequestBody | ConvertTo-Json
+
+        Log-Verbose "Request Body Json:"
+        Log-Verbose $RequestBodyJson
+
+        $Result = Invoke-RestMethod -Method Post -Uri $FullUri -Headers $AuthHeader -Body $RequestBodyJson
+        return $Result
+    } 
+    catch {
+        $ResponseStream = $_.Exception.Response.GetResponseStream()
+        $ResponseReader = New-Object System.IO.StreamReader $ResponseStream
+        $ResponseContent = $ResponseReader.ReadToEnd()
+        Log-Error "Request Failed: $($_.Exception.Message)`n$($_.ErrorDetails)"
+        Log-Error "Request URL: $NextLink"
+        Log-Error "Response Content:`n$ResponseContent"
+        break
+    }
 }
 
 ####################################################
@@ -723,6 +753,54 @@ function Get-TermsAndConditionsAcceptanceStatuses {
     return $TermsAndConditionsAcceptanceStatuses
 }
 
+####################################################
+
+function Export-IntuneReportUsingGraph($RequestBody, $ZipName) {
+    Log-Info "Exporting Intune Report Using Graph for user '$UPN'"
+
+    $IntuneReportDataPOSTResponse = Post-MsGraphObject "deviceManagement/reports/exportJobs" $RequestBody
+    Log-Verbose $IntuneReportDataPOSTResponse
+
+    $ReportId = $IntuneReportDataPOSTResponse.Id
+    $ReportIdPath = "deviceManagement/reports/exportJobs('" + $ReportId + "')"
+
+    $Attempts = 0
+    $MaxAttempts = 20
+    do {
+        Start-Sleep -Seconds 15
+        $IntuneReportDataGETResponse = Get-MsGraphObject $ReportIdPath
+        Log-Verbose $IntuneReportDataGETResponse
+        $Attempts += 1
+    }
+    while (($IntuneReportDataGETResponse.status -ne "completed") -or $Attempts -ge $MaxAttempts)
+
+    if ($Attempts -ge $MaxAttempts) {
+        Log-Error "Attempt count exceeded, report not generated"
+        return
+    }
+
+    $IntuneReportOutFile = $OutputPath + "/" + $ZipName + ".zip"
+    $DownloadZipFile = Invoke-RestMethod -Method Get -Uri $IntuneReportDataGETResponse.url -ContentType "application/zip" -Outfile $IntuneReportOutFile
+    Log-Verbose "Zip file downloaded to $IntuneReportOutFile"
+}
+
+####################################################
+
+function Export-ChromeOSDeviceReportData {
+    Log-Info "Exporting ChromeOS Device Report Data for user '$UPN'"
+
+    $FilterString = "(MostRecentUserEmail eq '" + $UPN + "')"
+
+    $ChromeRequestBody = @{ 
+        reportName = "ChromeOSDevices"
+        localizationType = "LocalizedValuesAsAdditionalColumn"
+        filter = $FilterString
+        format = "json"
+    }
+
+    Export-IntuneReportUsingGraph $ChromeRequestBody "ChromeOSDeviceReport"
+}
+
 #endregion
 
 ####################################################
@@ -916,10 +994,20 @@ $AuthHeader = Get-AuthToken -User $Username
 
 ####################################################
 
+# Get Data for Non AzureAD UPN (if requested)
+
+if ($IncludeNonAzureADUpn -or $All) {
+    Export-ChromeOSDeviceReportData
+}
+
+
+####################################################
+
+
 $User = Get-User
 
 if ($User -eq $null) {
-    Log-Warning "User with UPN $UPN was not found"
+    Log-Warning "Azure AD User with UPN $UPN was not found"
     return
 }
 

@@ -29,6 +29,7 @@ Here is a description of the parameter you can pass the script:
 | Username | Yes | Azure AD Username for the Administrator |
 | Upn | Yes | User principal name to export data for |
 | IncludeAzureAD | No | Include Azure AD data in the export |
+| IncludeNonAzureADUpn | No | Include data For Non Azure AD Upn in export |
 | All | No | Include all data in the export |
 | OutputPath | Yes | Path to export data to |
 | ExportFormat | No | Format to export data in, default value is ```json```, other supported values are ```xml``` and ```csv``` |
@@ -119,3 +120,11 @@ This file captures the User Specific information retained in the Service. **Data
 | MSADeviceId | `00000000-0000-0000-0000-000000000000` | Internal representation of the Microsoft Account ID |
 | ActualEasIdFromActivationItem | `F91F9EA87EB7425694DBD208A286A22C` | The EAS ID from the most recent entry in the ExchangeActivationItems collection |
 | DeviceId | `09c7bb08-b7bb-47ca-9c6b-86761df25504` | Internal representation ID of the Device |
+
+#### ChromeOSDeviceReport.zip
+
+This file captures the User Specific information retained in the Service. **Data below is representative of the results of an export operation.**
+**Not all possible values are shown. See actual results for full list.**
+
+The zip file contains the ChromeOS Devices Report information pertaining to the relevant UPN.
+Note, the UPN does not need to correspond to an AzureAD user.
