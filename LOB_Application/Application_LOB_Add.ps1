@@ -692,6 +692,138 @@ Process {
 
 ####################################################
 
+function Get-MSIXManifest(){
+
+	param(
+		[parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[System.IO.FileInfo]$Path
+	)
+
+		try {
+			Test-SourceFile "c:\temp"
+
+			Add-Type -AssemblyName System.IO.Compression.FileSystem
+			$tempZip = 'c:\temp\tempZip.zip'
+			copy-item -Path $Path -Destination $tempZip
+			$zip = [System.IO.Compression.ZipFile]::OpenRead($tempZip)
+			$manifest = $zip.Entries | Where-Object { $_.FullName -like 'AppxManifest.xml' }
+			[System.IO.Compression.ZipFileExtensions]::ExtractToFile($manifest, 'c:\temp\manifest.xml', $true)
+			$zip.Dispose()
+			[xml]$xml = get-content -Path 'c:\temp\manifest.xml'
+			Remove-Item -Path 'c:\temp\manifest.xml'
+			Remove-Item -Path $tempZip
+
+			# Return the value
+			return $xml
+		}
+
+		catch {
+		    Write-Warning -Message $_.Exception.Message;
+			break;
+		}
+	}
+
+	####################################################
+
+	function Get-MSIXPublisherId {
+
+	param(
+		[parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[string]$Publisher
+	)
+
+		$EncUTF16LE = [system.Text.Encoding]::Unicode
+		$EncSha256 = [System.Security.Cryptography.HashAlgorithm]::Create("SHA256")
+
+		# Convert to UTF16 Little Endian
+		$UTF16LE = $EncUTF16LE.GetBytes($Publisher)
+
+		# Calculate SHA256 hash on UTF16LE Byte array. Store first 8 bytes in new Byte Array
+		$Bytes = @()
+		(($EncSha256.ComputeHasH($UTF16LE))[0..7]) | % { $Bytes += '{0:x2}' -f $_ }
+
+		# Convert Byte Array to Binary string; Adding padding zeros on end to it has 13*5 bytes
+		$BytesAsBinaryString = -join $Bytes.ForEach{ [convert]::tostring([convert]::ToByte($_,16),2).padleft(8,'0') }
+		$BytesAsBinaryString = $BytesAsBinaryString.PadRight(65,'0')
+
+		# Crockford Base32 encode. Read each 5 bits; convert to decimal. Lookup position in lookup table
+		$Coded = $null
+		For ($i=0;$i -lt (($BytesAsBinaryString.Length)); $i+=5) {
+			$String = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+			[int]$Int = [convert]::Toint32($BytesAsBinaryString.Substring($i,5),2)
+			$Coded += $String.Substring($Int,1)
+		}
+		Return $Coded.tolower()
+	}
+
+	####################################################
+
+	function Get-MSIXFileInformation(){
+
+	param(
+		[parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[System.IO.FileInfo]$Path,
+
+		[parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[ValidateSet("DisplayName", "Description", "Publisher", "IdentityVersion", "PublisherHash", "IdentityName")]
+		[string]$Property
+	)
+
+		try {
+			[xml]$xml = Get-MSIXManifest -Path $Path
+
+			switch ($Property) {
+				'DisplayName'     { $Value = $Xml.Package.Properties.DisplayName }
+				'Description'     { $Value = $Xml.Package.Applications.Application.VisualElements.Description }
+				'Publisher'       { $Value = $Xml.Package.Properties.PublisherDisplayName }
+				'IdentityVersion' { $Value = $Xml.Package.Identity.Version }
+				'PublisherHash'   { $Value = Get-MSIXPublisherId -Publisher $Xml.Package.Identity.Publisher }
+				'IdentityName'    { $Value = $Xml.Package.Identity.Name }
+			}
+			# Return the value
+			return $Value
+		}
+
+		catch {
+		    Write-Warning -Message $_.Exception.Message;
+			break;
+		}
+	}
+
+	####################################################
+
+	function GetMSIXAppBody($displayName, $description, $publisher, $filename, $identityVersion, $identityName, $identityPublisherHash){
+
+		$supportedOS = @{v8_0 = $false ; v8_1 = $false ; v10_0 = $true}
+
+		$body = @{ "@odata.type" = "#microsoft.graph.windowsUniversalAppX" };
+		$body.displayName = $displayName;
+		$body.description = $description;
+		$body.publisher = $publisher;
+		$body.largeIcon = $null;
+		$body.isFeatured = $false;
+		$body.privacyInformationUrl = "";
+		$body.informationUrl = $null;
+		$body.owner = "";
+		$body.developer = "";
+		$body.notes = "";
+		$body.fileName = $filename;
+		$body.applicableArchitectures = "x64";
+		$body.applicableDeviceTypes = "desktop";
+		$body.identityName = $identityName;
+		$body.identityPublisherHash = $identityPublisherHash;
+		$body.identityVersion = $identityVersion;
+		$body.minimumSupportedOperatingSystem = $supportedOS
+
+		$body;
+	}
+
+	####################################################
+
 Function Test-SourceFile(){
 
 param
@@ -1310,6 +1442,146 @@ param
 
 ####################################################
 
+function Upload-MSIXLob(){
+
+	<#
+	.SYNOPSIS
+	This function is used to upload an MSIX LOB Application to the Intune Service
+	.DESCRIPTION
+	This function is used to upload an MSIX LOB Application to the Intune Service
+	.EXAMPLE
+	Upload-MSIXLob -SourceFile "C:\temp\Orca.Msix"
+
+	This example uses all parameters required to add an MSIX Application into the Intune Service
+
+	.NOTES
+	NAME: Upload-MSIXLOB
+	#>
+
+	[cmdletbinding()]
+
+	param
+	(
+		[parameter(Mandatory=$true,Position=1)]
+		[ValidateNotNullOrEmpty()]
+		[string]$SourceFile
+	)
+
+		try	{
+			$LOBType = "microsoft.graph.windowsUniversalAppX"
+
+			Write-Host "Testing if SourceFile '$SourceFile' Path is valid..." -ForegroundColor Yellow
+			Test-SourceFile "$SourceFile"
+
+			$MSIXPath = "$SourceFile"
+
+			# Creating temp file name from Source File path
+			$tempFile = [System.IO.Path]::GetDirectoryName("$SourceFile") + "\" + [System.IO.Path]::GetFileNameWithoutExtension("$SourceFile") + "_temp.bin"
+
+			Write-Host
+			Write-Host "Creating JSON data to pass to the service..." -ForegroundColor Yellow
+
+			$FileName = [System.IO.Path]::GetFileName("$MSIXPath")
+
+			$DN = (Get-MSIXFileInformation -Path "$SourceFile" -Property DisplayName | Out-String).trimend()
+			$DE = (Get-MSIXFileInformation -Path "$SourceFile" -Property Description | Out-String).trimend()
+			$PB = (Get-MSIXFileInformation -Path "$SourceFile" -Property Publisher | Out-String).trimend()
+			$IV = (Get-MSIXFileInformation -Path "$SourceFile" -Property IdentityVersion | Out-String).trimend()
+			$PH = (Get-MSIXFileInformation -Path "$SourceFile" -Property PublisherHash | Out-String).trimend()
+			$IN = (Get-MSIXFileInformation -Path "$SourceFile" -Property IdentityName | Out-String).trimend()
+
+			# Create a new MSI LOB app.
+			$mobileAppBody = GetMSIXAppBody -displayName "$DN" -description "$DE" -publisher "$PB" -filename "$FileName" -identityVersion "$IV" -identityName "$IN" -identityPublisherHash "$PH"
+
+			Write-Host
+			Write-Host "Creating application in Intune..." -ForegroundColor Yellow
+			$mobileApp = MakePostRequest "mobileApps" ($mobileAppBody | ConvertTo-Json);
+
+			# Get the content version for the new app (this will always be 1 until the new app is committed).
+			Write-Host
+			Write-Host "Creating Content Version in the service for the application..." -ForegroundColor Yellow
+			$appId = $mobileApp.id;
+			$contentVersionUri = "mobileApps/$appId/$LOBType/contentVersions";
+			$contentVersion = MakePostRequest $contentVersionUri "{}";
+
+			# Encrypt file and Get File Information
+			Write-Host
+			Write-Host "Ecrypting the file '$SourceFile'..." -ForegroundColor Yellow
+			$encryptionInfo = EncryptFile $sourceFile $tempFile;
+			$Size = (Get-Item "$sourceFile").Length
+			$EncrySize = (Get-Item "$tempFile").Length
+
+			Write-Host
+			Write-Host "Creating the manifest file used to install the application on the device..." -ForegroundColor Yellow
+
+			# Get Manifest File Info
+			[xml]$manifestXML = Get-MSIXManifest -Path $SourceFile
+
+			$manifestXML_Output = $manifestXML.OuterXml.ToString()
+
+			$Bytes = [System.Text.Encoding]::ASCII.GetBytes($manifestXML_Output)
+			$EncodedText =[Convert]::ToBase64String($Bytes)
+
+			# Create a new file for the app.
+			Write-Host
+			Write-Host "Creating a new file entry in Azure for the upload..." -ForegroundColor Yellow
+			$contentVersionId = $contentVersion.id;
+			$fileBody = GetAppFileBody "$FileName" $Size $EncrySize "$EncodedText";
+			$filesUri = "mobileApps/$appId/$LOBType/contentVersions/$contentVersionId/files";
+			$file = MakePostRequest $filesUri ($fileBody | ConvertTo-Json);
+
+			# Wait for the service to process the new file request.
+			Write-Host
+			Write-Host "Waiting for the file entry URI to be created..." -ForegroundColor Yellow
+			$fileId = $file.id;
+			$fileUri = "mobileApps/$appId/$LOBType/contentVersions/$contentVersionId/files/$fileId";
+			$file = WaitForFileProcessing $fileUri "AzureStorageUriRequest";
+
+			# Upload the content to Azure Storage.
+			Write-Host
+			Write-Host "Uploading file to Azure Storage..." -f Yellow
+
+			$sasUri = $file.azureStorageUri;
+			UploadFileToAzureStorage $file.azureStorageUri $tempFile;
+
+			# Commit the file.
+			Write-Host
+			Write-Host "Committing the file into Azure Storage..." -ForegroundColor Yellow
+			$commitFileUri = "mobileApps/$appId/$LOBType/contentVersions/$contentVersionId/files/$fileId/commit";
+			MakePostRequest $commitFileUri ($encryptionInfo | ConvertTo-Json);
+
+			# Wait for the service to process the commit file request.
+			Write-Host
+			Write-Host "Waiting for the service to process the commit file request..." -ForegroundColor Yellow
+			$file = WaitForFileProcessing $fileUri "CommitFile";
+
+			# Commit the app.
+			Write-Host
+			Write-Host "Committing the file into Azure Storage..." -ForegroundColor Yellow
+			$commitAppUri = "mobileApps/$appId";
+			$commitAppBody = GetAppCommitBody $contentVersionId $LOBType;
+			MakePatchRequest $commitAppUri ($commitAppBody | ConvertTo-Json);
+
+			Write-Host "Removing Temporary file '$tempFile'..." -f Gray
+			Remove-Item -Path "$tempFile" -Force
+			Write-Host
+
+			Write-Host "Sleeping for $sleep seconds to allow patch completion..." -f Magenta
+			Start-Sleep $sleep
+			Write-Host
+
+		}
+
+		catch {
+
+			Write-Host "";
+			Write-Host -ForegroundColor Red "Aborting with exception: $($_.Exception.ToString())";
+
+		}
+	}
+
+	####################################################
+
 #region Authentication
 
 write-host
@@ -1387,3 +1659,6 @@ $sleep = 30
 
 #### iOS
 # Upload-iOSLob -sourceFile "C:\Software\iOS\MyApp.ipa" -displayName "MyApp.ipa" -publisher "MyApp" -description "MyApp" -bundleId "com.microsoft.myApp" -identityVersion "1.0.0.0" -versionNumber "3.0.0" -expirationDateTime "2018-03-14T20:53:52Z"
+
+#### MSIX
+# Upload-MSIXLob -SourceFile "C:\temp\Orca.Msix"
