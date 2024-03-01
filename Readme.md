@@ -13,6 +13,21 @@ extensions:
   createdDate: 4/4/2017 9:41:27 AM
 noDependencies: true
 ---
+# IMPORTANT
+
+Last year we announced a new Microsoft Intune GitHub repository [here](https://aka.ms/Intune/Scripts-blog) based on the Microsoft Graph SDK-based PowerShell module. This legacy Microsoft Intune PowerShell sample scripts GitHub repository is now read-only. Additionally, starting on April 1, 2024, due to updated authentication methods in the Graph SDK-based PowerShell module, the global Microsoft Intune PowerShell application (client) ID based authentication method is being removed.
+
+### How this will affect your organization
+
+If you are using the Intune PowerShell application ID (d1ddf0e4-d672-4dae-b554-9d5bdfd93547), you will need to update your scripts with a Microsoft Entra ID registered application ID to prevent your scripts from breaking.
+
+### What you need to do to prepare
+
+Before April 1, 2024, update your PowerShell scripts by: 
+
+1) Creating a new app registration in the Microsoft Entra admin center. For detailed instructions, read: [Quickstart: Register an application with the Microsoft identity platform](https://learn.microsoft.com/entra/identity-platform/quickstart-register-app).
+2) Update scripts containing the Intune application ID (d1ddf0e4-d672-4dae-b554-9d5bdfd93547) with the new application ID created in step 1.
+
 # Intune Graph Samples
 
 This repository of PowerShell sample scripts show how to access Intune service resources.  They demonstrate this by making HTTPS RESTful API requests to the Microsoft Graph API from PowerShell.
