@@ -169,7 +169,7 @@ $Resource = "deviceManagement/androidDeviceOwnerEnrollmentProfiles"
         
         $now = (Get-Date -Format s)    
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$filter=tokenExpirationDateTime gt $($now)z"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
     
     }
     
@@ -218,7 +218,7 @@ $graphApiVersion = "Beta"
             
         $Resource = "deviceManagement/androidDeviceOwnerEnrollmentProfiles/$($Profileid)?`$select=qrCodeImage"
         $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
                     
     }
     

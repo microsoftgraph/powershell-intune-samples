@@ -228,7 +228,7 @@ $Resource = "deviceAppManagement/vppTokens"
     try {
                 
         $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-        (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+        (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
             
     }
     

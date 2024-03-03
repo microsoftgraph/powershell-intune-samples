@@ -242,21 +242,21 @@ $Resource = "deviceAppManagement/mobileApps"
         if($displayName){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)?`$filter=displayName eq '$displayName'"
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).value
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).value
 
         }
         
         elseif($id){
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)/$id"
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get)
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get)
 
         }
 
         else {
 
             $uri = "https://graph.microsoft.com/$graphApiVersion/$($Resource)"
-            (Invoke-RestMethod -Uri $uri –Headers $authToken –Method Get).Value | ? { (!($_.'@odata.type').Contains("managed")) }
+            (Invoke-RestMethod -Uri $uri -Headers $authToken -Method Get).Value | ? { (!($_.'@odata.type').Contains("managed")) }
         
         }
     }
@@ -331,7 +331,7 @@ $JSON = @"
 
         else {
 
-            $object = New-Object –TypeName PSObject
+            $object = New-Object -TypeName PSObject
             $object | Add-Member -MemberType NoteProperty -Name '@odata.type' -Value "$Type"
             $object | Add-Member -MemberType NoteProperty -Name 'roleScopeTagIds' -Value @($ScopeTags)
             $JSON = $object | ConvertTo-Json

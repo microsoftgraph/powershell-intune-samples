@@ -294,7 +294,7 @@ $JSON = @"
 
         else {
 
-        $object = New-Object –TypeName PSObject
+        $object = New-Object -TypeName PSObject
         $object | Add-Member -MemberType NoteProperty -Name 'roleScopeTagIds' -Value @($ScopeTags)
 
         $JSON = $object | ConvertTo-Json
