@@ -98,7 +98,10 @@ Write-Host "Checking for AzureAD module..."
 
 [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
 
-$clientId = "d1ddf0e4-d672-4dae-b554-9d5bdfd93547"
+# Using this authentication method requires a clientID.  Register a new app in the Entra ID admin center to obtain a clientID.  More information
+# on app registration and clientID is available here: https://learn.microsoft.com/entra/identity-platform/quickstart-register-app 
+
+$clientId = "<replace with your clientID>"
 
 $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
 
