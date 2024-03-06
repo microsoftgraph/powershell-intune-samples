@@ -16,7 +16,7 @@ extensions:
 
 Ce référentiel d’exemples de scripts PowerShell présente comment accéder aux ressources du service Intune. Les exemples illustrent l'envoi de demandes d’API RESTful HTTPS à l’API Microsoft Graph à partir de PowerShell.
 
-La documentation sur Intune et Microsoft Graph est disponible ici [Documentation Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+La documentation sur Intune et Microsoft Graph est disponible ici [Documentation Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
 Ces exemples illustrent des actions classiques d'administrateurs Intune ou de partenaires Microsoft pour la gestion des ressources Intune.
 
@@ -59,7 +59,7 @@ Intune fournit des données dans Microsoft Graph Intune de la même façon que d
 ## Conditions préalables
 Pour utiliser les exemples d’API Intune PowerShell de Microsoft Graph, les éléments suivants sont nécessaires :
 * installer le module AzureAD PowerShell en exécutant « Install-Module AzureAD » ou « Install-Module AzureADPreview » à partir d’une invite PowerShell avec élévation de privilèges
-* Un client Intune qui prend en charge le Portail Azure avec une licence de production ou d’évaluation (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* Un client Intune qui prend en charge le Portail Azure avec une licence de production ou d’évaluation (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * Une licence Intune est nécessaire pour l'utilisation des API Microsoft pour configurer les stratégies et les contrôles
 * Un compte disposant des autorisations pour administrer le service Intune
 * PowerShell v5.0 sur Windows 10 x64 (PowerShell v4.0 est une condition minimale requise pour que les scripts fonctionnent correctement)
@@ -125,7 +125,7 @@ Votre avis compte beaucoup pour nous. Communiquez avec nous sur Stack Overflow. 
 * [Documentation de l’API Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs)
 * [Portail Microsoft Graph](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Exemple de codes Microsoft](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Documentation d'Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Documentation d'Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## Copyright
 Copyright (c) 2017 Microsoft. Tous droits réservés.

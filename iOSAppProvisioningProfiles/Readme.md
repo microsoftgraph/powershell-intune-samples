@@ -6,7 +6,7 @@ This repository of PowerShell sample scripts show how to access Intune service r
 
  
 
-Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
  
 

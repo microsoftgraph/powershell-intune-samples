@@ -16,7 +16,7 @@ extensions:
 
 此 PowerShell 示例脚本的存储库演示如何访问 Intune 服务资源。他们通过从 PowerShell 向 Microsoft Graph API 发出 HTTPS RESTful API 请求来证明这一点。
 
-有关 Intune 和 Microsoft Graph 的文档，请查看[Intune Graph 文档](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)。
+有关 Intune 和 Microsoft Graph 的文档，请查看[Intune Graph 文档](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)。
 
 这些示例演示了 Intune 管理员或 Microsoft 合作伙伴管理 Intune 资源的典型操作。
 
@@ -59,7 +59,7 @@ Intune 向 Microsoft Graph 提供数据的方式与其他云服务相同，具�
 ## 先决条件
 使用这些 Microsoft Graph API Intune PowerShell 示例需要下列内容：
 * 通过在提升的 PowerShell 命令提示符处运行 'Install-Module AzureAD' 或 'Install-Module AzureADPreview' 安装 AzureAD PowerShell 模块
-* 具有生产或试用许可证，支持 Azure 门户的 Intune 租户 (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* 具有生产或试用许可证，支持 Azure 门户的 Intune 租户 (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * 使用 Microsoft Graph APIs 来配置 Intune 控件和策略需要 Intune 许可证。
 * 一个具有管理 Intune 服务权限的账户
 * 适用于 Windows 10 x64 的 PowerShell v5.0（PowerShell v4.0 是正确运行脚本的最低要求）
@@ -125,7 +125,7 @@ Microsoft Intune PowerShell needs permission to:
 * [Microsoft Graph API 文档](https://developer.microsoft.com/en-us/graph/docs)
 * [Microsoft Graph 门户](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Microsoft 代码示例](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Intune Graph 文档](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Intune Graph 文档](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## 版权信息
 版权所有 (c) 2017 Microsoft。保留所有权利。

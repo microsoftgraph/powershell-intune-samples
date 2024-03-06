@@ -41,7 +41,7 @@
 
 .NOTES
   This script uses functions provided by Microsoft Graph team:
-  Microsoft Graph API's for Intune: https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview
+  Microsoft Graph API's for Intune: https://learn.microsoft.com/graph/api/resources/intune-graph-overview
   Sample PowerShell Scripts: https://github.com/microsoftgraph/powershell-intune-samples
   https://github.com/microsoftgraph/powershell-intune-samples/tree/master/RBAC
 

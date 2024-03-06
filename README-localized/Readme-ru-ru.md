@@ -16,7 +16,7 @@ extensions:
 
 Этот репозиторий примеров скриптов PowerShell демонстрирует, как получать доступ к ресурсам службы Intune. Для этого совершаются HTTPS-запросы RESTful API к API Microsoft Graph из PowerShell.
 
-Документация для Intune и Microsoft Graph можно найти здесь [документации Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+Документация для Intune и Microsoft Graph можно найти здесь [документации Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
 Эти примеры демонстрируют типичные действия администратора Intune или партнера Microsoft по управлению ресурсами Intune.
 
@@ -59,7 +59,7 @@ Intune предоставляет данные в Microsoft Graph так же, �
 ## Предварительные требования
 Для использования этих примеров Microsoft Graph API Intune PowerShell требуется следующее:
 * Установите модуль AzureAD PowerShell, запустив «Install-Module AzureAD» или «Install-Module AzureADPreview» из командной строки PowerShell с повышенными привилегиями.
-* Клиент Intune, который поддерживает портал Azure с помощью производственная или пробная лицензия (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* Клиент Intune, который поддерживает портал Azure с помощью производственная или пробная лицензия (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * Для использования API-интерфейсов Microsoft Graph для настройки элементов управления и политик Intune требуется лицензия Intune.
 * Учетная запись с разрешениями на администрирование службы Intune.
 * PowerShell v5.0 в Windows 10 x64 (PowerShell v4.0 является минимальным требованием для правильной работы сценариев).
@@ -125,7 +125,7 @@ Microsoft Intune PowerShell needs permission to:
 * [Документация по Microsoft Graph API](https://developer.microsoft.com/en-us/graph/docs)
 * [Портал Microsoft Graph](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Примеры программного кода Майкрософт](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Документация Intune Graph](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Документация Intune Graph](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## Авторские права
 (c) Корпорация Майкрософт (Microsoft Corporation), 2017. Все права защищены.
