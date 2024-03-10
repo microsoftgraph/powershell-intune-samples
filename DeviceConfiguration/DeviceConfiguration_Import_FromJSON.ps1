@@ -314,22 +314,20 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-If (Test-Path -Path $FileName -Type Leaf) {
-	$ImportPath = $FileName
-} Else {
-	$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+if ($FileName -ne $null -and $FileName -ne "") {
+    $ImportPath = $FileName
+} else {
+    $ImportPath = Read-Host -Prompt "Please specify a path to the JSON file to import data from (e.g., C:\IntuneOutput\Policies\policy.json)"
 }
 
 # Replacing quotes for Test-Path
-$ImportPath = $ImportPath.replace('"','')
+$ImportPath = $ImportPath.Replace('"','')
 
-if(!(Test-Path "$ImportPath")){
-
-Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
-Write-Host "Script can't continue..." -ForegroundColor Red
-Write-Host
-break
-
+if(!(Test-Path -Path $ImportPath -Type Leaf)){
+    Write-Host "Import Path for JSON file doesn't exist..." -ForegroundColor Red
+    Write-Host "Script can't continue..." -ForegroundColor Red
+    Write-Host
+    break
 }
 
 ####################################################
@@ -350,3 +348,5 @@ $JSON_Output
 write-host
 Write-Host "Adding Device Configuration Policy '$DisplayName'" -ForegroundColor Yellow
 Add-DeviceConfigurationPolicy -JSON $JSON_Output
+
+Read-Host -Prompt "Press Enter to exit"
