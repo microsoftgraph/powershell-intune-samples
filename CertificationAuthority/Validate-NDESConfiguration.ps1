@@ -1355,7 +1355,7 @@ Write-Host "Checking Intune Connector is installed..." -ForegroundColor Yellow
 Write-host
 Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Validation 1 
 
-    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
+    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Certificate Connector for Microsoft Intune"}){
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
@@ -1510,22 +1510,22 @@ Write-Host "Checking Event logs for pertinent errors..." -ForegroundColor Yellow
 Write-host
 Log-ScriptEvent $LogFilePath "Checking Event logs for pertinent errors" NDES_Validation 1
 
-    if (-not (Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error -After $EventLogCollDays -ErrorAction silentlycontinue)) {
+    if (-not (Get-EventLog -LogName "Certificate Connector for Microsoft Intune" -EntryType Error -After $EventLogCollDays -ErrorAction silentlycontinue)) {
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
-        write-host "No errors found in the Microsoft Intune Connector"
+        write-host "No errors found in the Certificate Connector for Microsoft Intune"
         Write-host
-        Log-ScriptEvent $LogFilePath "No errors found in the Microsoft Intune Connector"  NDES_Validation 1
+        Log-ScriptEvent $LogFilePath "No errors found in the Certificate Connector for Microsoft Intune"  NDES_Validation 1
 
     }
 
     else {
 
-        Write-Warning "Errors found in the Microsoft Intune Connector Event log. Please see below for the most recent 5, and investigate further in Event Viewer."
+        Write-Warning "Errors found in the Certificate Connector for Microsoft Intune Event log. Please see below for the most recent 5, and investigate further in Event Viewer."
         Write-Host
-        $EventsCol1 = (Get-EventLog -LogName "Microsoft Intune Connector" -EntryType Error -After $EventLogCollDays -Newest 5 | select TimeGenerated,Source,Message)
+        $EventsCol1 = (Get-EventLog -LogName "Certificate Connector for Microsoft Intune" -EntryType Error -After $EventLogCollDays -Newest 5 | select TimeGenerated,Source,Message)
         $EventsCol1 | fl
-        Log-ScriptEvent $LogFilePath "Errors found in the Microsoft Intune Connector Event log"  NDES_Eventvwr 3
+        Log-ScriptEvent $LogFilePath "Errors found in the Certificate Connector for Microsoft Intune Event log"  NDES_Eventvwr 3
         $i = 0
         $count = @($EventsCol1).count
 
