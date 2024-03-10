@@ -652,3 +652,12 @@ $Application = Get-IntuneApplication -Name "Microsoft Teams"
 Get-InstallaStatusForApp -AppId $Application.id
 ```
 
+### 20. Application_Detected_Apps_Get.ps1
+This script returns the list of all applications that Intune has detected are installed on managed devices in an organization.
+
+#### Get-DetectedApps Function
+This function is used to get all detected applications from the Intune Service.  Because this list tends to be rather large, paging is supported by default.  The API will return the display name of the application along with the number of devices it is detected on.
+
+```PowerShell
+# Returns all MDM applications in the Intune Service
+Get-DetectedApps
