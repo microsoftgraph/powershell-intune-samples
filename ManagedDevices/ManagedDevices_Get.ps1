@@ -210,7 +210,7 @@ try {
         
         else {
     
-        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm'"
+        $uri = "https://graph.microsoft.com/$graphApiVersion/$Resource`?`$filter=managementAgent eq 'mdm' and managementAgent eq 'easmdm' and managementAgent eq 'googleCloudDevicePolicyController'"
         Write-Warning "EAS Devices are excluded by default, please use -IncludeEAS if you want to include those devices"
         Write-Host
 
