@@ -1355,7 +1355,7 @@ Write-Host "Checking Intune Connector is installed..." -ForegroundColor Yellow
 Write-host
 Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Validation 1 
 
-    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
+    if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Certificate Connector for Microsoft Intune"}){
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
