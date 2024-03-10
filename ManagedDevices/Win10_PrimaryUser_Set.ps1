@@ -371,7 +371,7 @@ $IntuneDeviceId,
 $userId
 )
     $graphApiVersion = "beta"
-    $Resource = "deviceManagement/managedDevices('$IntuneDeviceId')/users/`$ref"
+    $Resource = "deviceManagement/managedDevices/$IntuneDeviceId/users/`$ref"
 
     try {
         
