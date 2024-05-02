@@ -40,7 +40,7 @@ To modify your PowerShell scripts:
 
 Add the following before the line in your script: "connect-MsGraph":
 
-**_Update-MSGraphEnvironment -AppId {replace here with your device id}_**
+**_Update-MSGraphEnvironment -AppId {replace here with your app id}_**
 
 Sample script for delegated access.
 
