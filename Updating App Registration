@@ -9,7 +9,7 @@ Option 2: Register app in Entra ID and give Intune Graph permission in it:
 **Steps to register Application in Entra ID to access Intune data via Graph API:**
 
 1\. Login to **Portal.Azure.com,** select Entra ID> App registrations and click "New registration"  
-<br/>2\. Enter a display name for the application and select the supported account type. Typically this will be "Accounts in this organizational directory only". This means your application is only used by users (or guests) in your tenant. Enter the redirect Url "**urn:ietf:wg:oauth:2.0:oob**" Then, click register.
+<br/>2\. Enter a display name for the application and select the supported account type. Typically this will be "Accounts in this organizational directory only". This means your application is only used by users (or guests) in your tenant. For Platform, select "Public client/native (mobile & desktop)". Enter the redirect Url "**urn:ietf:wg:oauth:2.0:oob**" Then, click register.
 
 3\. Select the App Registration page, choose your app, then click “API permissions”>"+Add a permission"> "Microsoft Graph"
 
