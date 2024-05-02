@@ -23,10 +23,12 @@ If you are using the Intune PowerShell application ID (d1ddf0e4-d672-4dae-b554-9
 
 ### What you need to do to prepare
 
-Before April 1, 2024, update your PowerShell scripts by: 
+Before May 6, 2024, update your PowerShell scripts by: 
 
 1) Creating a new app registration in the Microsoft Entra admin center. For detailed instructions, read: [Quickstart: Register an application with the Microsoft identity platform](https://learn.microsoft.com/entra/identity-platform/quickstart-register-app).
 2) Update scripts containing the Intune application ID (d1ddf0e4-d672-4dae-b554-9d5bdfd93547) with the new application ID created in step 1.
+
+Review the "Updating App Registration" file for detailed instructions. (https://github.com/microsoftgraph/powershell-intune-samples/blob/master/Updating%20App%20Registration)
 
 # Intune Graph Samples
 
