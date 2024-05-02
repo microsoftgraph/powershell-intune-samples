@@ -24,7 +24,7 @@ Option 2: Register app in Entra ID and give Intune Graph permission in it:
 | Who can consent | \- Users can consent for their data  <br>\- Admins can consent for all users | Only admin can consent |
 | Consent methods | \- Static: configured list on app registration  <br>\- Dynamic: request individual permissions at login | \- Static ONLY: configured list on app registration |
 
-For this example, we use delegated permission and assign needed permissions to this application. Intune permissions start with DeviceManagement\*. Select checkbox next to the required permissions, then click add permission.
+For this example, we use delegated permission and assign needed permissions to this application. Intune permissions start with DeviceManagement\*. Select the checkbox next to the required permissions, then click add permission. You need to identify the permissions required for your script actions.  It is recommended to use Read permissions if your script does not make any changes in Intune.  For example, if your script reads application information, add the DeviceManagementApps.Read.All permission.
 
 5\. Click "Grant admin consent for &lt;companyname&gt;"
 
