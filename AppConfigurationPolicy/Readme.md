@@ -1,7 +1,7 @@
 # Intune App Configuration Policy Script Samples
 This repository of PowerShell sample scripts show how to access Intune service resources. They demonstrate this by making HTTPS RESTful API requests to the Microsoft Graph API from PowerShell.
 
-Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview).
+Documentation for Intune and Microsoft Graph can be found here [Intune Graph Documentation](https://learn.microsoft.com/graph/api/resources/intune-graph-overview).
 
 #### Disclaimer
 Some script samples retrieve information from your Intune tenant, and others create, delete or update data in your Intune tenant. Understand the impact of each sample script prior to running it; samples should be run using a non-production or "test" tenant account.

@@ -16,7 +16,7 @@ extensions:
 
 この PowerShell サンプル スクリプトのリポジトリは、Intune サービス リソースにアクセスする方法を示しています。PowerShell から Microsoft Graph API に HTTPS RESTful API 要求を行うことにより、その方法を示します。
 
-Intune および Microsoft Graph のドキュメントについては、「[Intune Graph のドキュメント](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)」を参照してください。
+Intune および Microsoft Graph のドキュメントについては、「[Intune Graph のドキュメント](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)」を参照してください。
 
 これらのサンプルでは、一般的な Intune 管理者、または Intune リソースを管理するための Microsoft パートナーの操作を示します。
 
@@ -59,7 +59,7 @@ Intune は、豊富なエンティティ情報とリレーションシップの�
 ## 前提条件
 これらの Microsoft Graph API Intune PowerShell のサンプルを使用するには、以下が必要です。
 * 管理者特権の PowerShell プロンプトから「Install-Module AzureAD」または「Install-Module AzureADPreview」を実行して、AzureAD PowerShell モジュールをインストールすること
-* 本番ライセンスまたは試用ライセンスで Azure Portal をサポートする Intune テナント (https://docs.microsoft.com/en-us/intune-azure/introduction/what-is-microsoft-intune)
+* 本番ライセンスまたは試用ライセンスで Azure Portal をサポートする Intune テナント (https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune)
 * Microsoft Graph API を使用して Intune 制御とポリシーを構成するには、Intune ライセンスが必要です。
 * Intune サービスを管理する権限を持つアカウント
 * Windows 10 x64 上の PowerShell v5.0 (PowerShell v4.0 は、スクリプトが正しく機能するための最小要件です)
@@ -125,7 +125,7 @@ PowerShell のサンプルに関するフィードバックをお寄せくださ
 * [Microsoft Graph API ドキュメント](https://developer.microsoft.com/en-us/graph/docs)
 * [Microsoft Graph ポータル](https://developer.microsoft.com/en-us/graph/graph-explorer)
 * [Microsoft コード サンプル](https://developer.microsoft.com/en-us/graph/code-samples-and-sdks)
-* [Intune Graph ドキュメント](https://developer.microsoft.com/en-us/graph/docs/api-reference/beta/resources/intune_graph_overview)
+* [Intune Graph ドキュメント](https://learn.microsoft.com/graph/api/resources/intune-graph-overview)
 
 ## 著作権
 Copyright (c) 2017 Microsoft.All rights reserved.
