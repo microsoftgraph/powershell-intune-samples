@@ -314,10 +314,14 @@ $global:authToken = Get-AuthToken -User $User
 
 ####################################################
 
-If (Test-Path -Path $FileName -Type Leaf) {
+If ($(try { [bool]([System.IO.FileInfo]$FileName) } catch { $false })) {
 	$ImportPath = $FileName
 } Else {
 	$ImportPath = Read-Host -Prompt "Please specify a path to a JSON file to import data from e.g. C:\IntuneOutput\Policies\policy.json"
+}
+If (-not($(try { [bool]([System.IO.FileInfo]$ImportPath) } catch { }))) {
+    Write-Error -Exception "[$ImportPath] is not a valid file name"
+    exit 123 #123 (0x7B) ERROR_INVALID_NAME The filename, directory name, or volume label syntax is incorrect.
 }
 
 # Replacing quotes for Test-Path
