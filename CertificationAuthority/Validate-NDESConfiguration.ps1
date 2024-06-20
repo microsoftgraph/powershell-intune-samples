@@ -1,4 +1,4 @@
-﻿
+
 <#
 
 .SYNOPSIS
@@ -1358,6 +1358,20 @@ Log-ScriptEvent $LogFilePath "Checking Intune Connector is installed" NDES_Valid
     if ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Microsoft Intune Connector"}){
 
         Write-Host "Success: " -ForegroundColor Green -NoNewline
+        Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
+        Write-Host "$($IntuneConnector.InstallDate) " -ForegroundColor Cyan -NoNewline 
+        write-host "and is version " -NoNewline
+        Write-Host "$($IntuneConnector.DisplayVersion)" -ForegroundColor Cyan
+        write-warning "This version of the Intune certificate connector has been replaced by the Certificate Connector for Microsoft Intune"
+        write-warning "URL: https://learn.microsoft.com/en-us/mem/intune/protect/certificate-connector-overview" 
+        Write-host
+        Log-ScriptEvent $LogFilePath "ConnectorVersion:$IntuneConnector"  NDES_Validation 1
+
+    }
+
+    elseif ($IntuneConnector = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | ? {$_.DisplayName -eq "Certificate Connector for Microsoft Intune"}){
+
+    Write-Host "Success: " -ForegroundColor Green -NoNewline
         Write-Host "$($IntuneConnector.DisplayName) was installed on " -NoNewline 
         Write-Host "$($IntuneConnector.InstallDate) " -ForegroundColor Cyan -NoNewline 
         write-host "and is version " -NoNewline
