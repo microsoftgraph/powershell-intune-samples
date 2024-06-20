@@ -1392,9 +1392,9 @@ Write-host
 Log-ScriptEvent $LogFilePath "Checking Intune Connector registry keys are intact" NDES_Validation 1
 $ErrorActionPreference = "SilentlyContinue"
 
-$KeyRecoveryAgentCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\KeyRecoveryAgentCertificate"
-$PfxSigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\PfxSigningCertificate"
-$SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\SigningCertificate"
+$KeyRecoveryAgentCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\KeyRecoveryAgentCertificate"
+$PfxSigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\PfxSigningCertificate"
+$SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\SigningCertificate"
 
     if (-not ($KeyRecoveryAgentCertificate)){
 
@@ -1406,7 +1406,7 @@ $SigningCertificate = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MicrosoftIntune\NDE
 
         else {
 
-        $KeyRecoveryAgentCertificatePresent = (Get-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\MicrosoftIntune\NDESConnector\ -Name KeyRecoveryAgentCertificate).KeyRecoveryAgentCertificate
+        $KeyRecoveryAgentCertificatePresent = (Get-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\MicrosoftIntune\ -Name KeyRecoveryAgentCertificate).KeyRecoveryAgentCertificate
 
             if (-not ($KeyRecoveryAgentCertificatePresent)) {
     
